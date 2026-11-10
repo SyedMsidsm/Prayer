@@ -9,7 +9,8 @@ enum class ReminderKind {
     BEFORE_JAMAAT,
     TABLE_EXPIRING,
     MIDNIGHT,
-    TEST
+    TEST,
+    PHASE
 }
 
 @Serializable

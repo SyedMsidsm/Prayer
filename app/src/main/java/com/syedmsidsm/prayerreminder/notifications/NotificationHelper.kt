@@ -141,7 +141,7 @@ class NotificationHelper(private val context: Context) {
             ReminderKind.TEST -> {
                 Pair(context.getString(R.string.app_name), context.getString(R.string.notif_test))
             }
-            ReminderKind.MIDNIGHT -> return
+            ReminderKind.MIDNIGHT, ReminderKind.PHASE -> return
         }
 
         val builder = NotificationCompat.Builder(context, channelId)

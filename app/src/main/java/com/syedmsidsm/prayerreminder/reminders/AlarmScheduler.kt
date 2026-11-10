@@ -59,7 +59,8 @@ class AlarmScheduler(
                 }
             }
             ReminderKind.TABLE_EXPIRING,
-            ReminderKind.MIDNIGHT -> {
+            ReminderKind.MIDNIGHT,
+            ReminderKind.PHASE -> {
                 if (canScheduleExact) {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fireAtMillis, pendingIntent)
                 } else {

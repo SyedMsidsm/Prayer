@@ -843,6 +843,35 @@ private fun StepWidget(
             lineHeight = 22.sp
         )
         Spacer(modifier = Modifier.height(36.dp))
+
+        val appWidgetManager = remember { android.appwidget.AppWidgetManager.getInstance(context) }
+        val isPinSupported = remember {
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+                    appWidgetManager.isRequestPinAppWidgetSupported
+        }
+
+        if (isPinSupported) {
+            Button(
+                onClick = {
+                    val provider = android.content.ComponentName(
+                        context,
+                        com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
+                    )
+                    appWidgetManager.requestPinAppWidget(provider, null, null)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Gold),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.add_widget),
+                    color = PrayerReminderColors.Ink,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         PrimaryButton(text = stringResource(R.string.done), onClick = onDone)
     }
 }

@@ -66,7 +66,7 @@ class ReminderPlannerTest {
 
         // Check today's Asr events (Azan 15:59, Jamaat 16:14)
         val todayAsrEvents = events.filter { it.prayer == Prayer.ASR && it.fireAtEpochSeconds < date.plusDays(1).atStartOfDay(zoneId).toEpochSecond() }
-        assertEquals(3, todayAsrEvents.size)
+        assertEquals(4, todayAsrEvents.size)
 
         val beforeAzan = todayAsrEvents.first { it.kind == ReminderKind.BEFORE_AZAN }
         assertEquals(date.atTime(15, 49).atZone(zoneId).toEpochSecond(), beforeAzan.fireAtEpochSeconds)
@@ -79,6 +79,9 @@ class ReminderPlannerTest {
         // Jamaat 16:14 - 5 min = 16:09 (> azan 15:59)
         assertEquals(date.atTime(16, 9).atZone(zoneId).toEpochSecond(), beforeJamaat.fireAtEpochSeconds)
         assertEquals(5, beforeJamaat.minutesOffset)
+
+        val phaseEvent = todayAsrEvents.first { it.kind == ReminderKind.PHASE }
+        assertEquals(date.atTime(16, 14).atZone(zoneId).toEpochSecond(), phaseEvent.fireAtEpochSeconds)
     }
 
     @Test

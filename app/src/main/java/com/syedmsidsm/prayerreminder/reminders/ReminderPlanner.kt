@@ -135,6 +135,25 @@ class ReminderPlanner {
                         )
                     }
                 }
+
+                // 4. PHASE change at jamaat time (silent refresh for widgets and next prayer)
+                if (jamaat != null) {
+                    val fireTime = day.date.atTime(jamaat).atZone(now.zone)
+                    if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
+                        events.add(
+                            ScheduledReminderEvent(
+                                code = calculateCode(day.date, prayer, ReminderKind.PHASE),
+                                fireAtEpochSeconds = fireTime.toEpochSecond(),
+                                prayer = prayer,
+                                kind = ReminderKind.PHASE,
+                                isJumuah = isJumuah,
+                                azanTimeIso = azan.toString(),
+                                jamaatTimeIso = jamaat.toString(),
+                                isEstimated = day.source.isEstimated
+                            )
+                        )
+                    }
+                }
             }
         }
 

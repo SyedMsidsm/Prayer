@@ -258,6 +258,16 @@ class MainActivity : AppCompatActivity() {
                     onSendCurrentToFamily = { table ->
                         val shareIntent = FamilyShare.createShareIntent(this@MainActivity, table)
                         startActivity(shareIntent)
+                    },
+                    onAddWidget = {
+                        val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this@MainActivity)
+                        val provider = android.content.ComponentName(
+                            this@MainActivity,
+                            com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
+                        )
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported) {
+                            appWidgetManager.requestPinAppWidget(provider, null, null)
+                        }
                     }
                 )
             }

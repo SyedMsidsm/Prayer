@@ -57,6 +57,9 @@ object AppRefresher {
 
             // Check missed reminders
             missedDetector.checkMissedReminders(now.toEpochSecond())
+
+            // Update all widgets
+            com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(context)
         }
     }
 }

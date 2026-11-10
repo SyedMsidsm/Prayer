@@ -76,6 +76,13 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             return
         }
 
+        // Handle PHASE: silent refresh for widget and next prayer phase change
+        if (kind == ReminderKind.PHASE) {
+            firedEventLog.record(code, nowEpochSeconds)
+            AppRefresher.refreshAll(context, "phase_change")
+            return
+        }
+
         // Handle TEST reminder
         if (kind == ReminderKind.TEST) {
             val event = ScheduledReminderEvent(
