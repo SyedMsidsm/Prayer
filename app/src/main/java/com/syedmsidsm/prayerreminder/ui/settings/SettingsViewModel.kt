@@ -114,6 +114,12 @@ class SettingsViewModel(
         ""
     )
 
+    val isOnboardingDone: StateFlow<Boolean?> = settingsRepository.isOnboardingDone.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        null
+    )
+
     val timetables: StateFlow<List<Timetable>> = timetableRepository.timetables
 
     val todaySchedule: StateFlow<DaySchedule?> = combine(
@@ -230,6 +236,12 @@ class SettingsViewModel(
         val missedDetector = MissedReminderDetector(ctx, firedLog)
         val scheduler = AlarmScheduler(ctx, missedDetector)
         scheduler.scheduleEvent(event)
+    }
+
+    fun setOnboardingDone(done: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setOnboardingDone(done)
+        }
     }
 
     fun playSample(kind: String, minutes: Int = 10) {

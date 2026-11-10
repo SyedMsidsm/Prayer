@@ -143,6 +143,18 @@
     <string name="continue_btn">Continue</string>
     <string name="skip">Skip</string>
 
+    <string name="reliability_notifications">Notifications allowed</string>
+    <string name="reliability_channels">Notification channels</string>
+    <string name="reliability_alarms">Alarms &amp; reminders (exact alarms)</string>
+    <string name="reliability_battery">Battery optimization off</string>
+    <string name="reliability_oem">Background autostart</string>
+    <string name="reliability_timetable">Active timetable</string>
+    <string name="reliability_missed">Missed reminders (7 days)</string>
+    <string name="reliability_i_done_it">I\'ve done it</string>
+    <string name="dontkillmyapp_note">More help: dontkillmyapp.com</string>
+    <string name="intro_tagline">Azan &amp; jamaat times · voice reminders · widget</string>
+    <string name="intro_skip">Tap to skip</string>
+
     <string-array name="hijri_months">
         <item>Muharram</item><item>Safar</item><item>Rabi al-Awwal</item><item>Rabi al-Thani</item>
         <item>Jumada al-Ula</item><item>Jumada al-Akhirah</item><item>Rajab</item><item>Sha\'ban</item>

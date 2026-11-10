@@ -71,6 +71,7 @@ fun SettingsScreen(
     onNavigateToTimetables: () -> Unit,
     onImportNewTimetable: () -> Unit,
     onSendCurrentToFamily: (Timetable) -> Unit,
+    onNavigateToReliability: () -> Unit = {},
     onAddWidget: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -308,7 +309,7 @@ fun SettingsScreen(
                         icon = Icons.Default.CheckCircle,
                         title = stringResource(R.string.reliability),
                         subtitle = stringResource(R.string.privacy_line),
-                        onClick = {}
+                        onClick = onNavigateToReliability
                     )
                 }
             }

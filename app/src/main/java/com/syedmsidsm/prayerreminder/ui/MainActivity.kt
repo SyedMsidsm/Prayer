@@ -1,5 +1,6 @@
 package com.syedmsidsm.prayerreminder.ui
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
@@ -11,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +33,9 @@ import com.syedmsidsm.prayerreminder.ui.home.HomeViewModel
 import com.syedmsidsm.prayerreminder.ui.importing.ImportReviewScreen
 import com.syedmsidsm.prayerreminder.ui.importing.ImportSavedScreen
 import com.syedmsidsm.prayerreminder.ui.manualentry.ManualEntryScreen
+import com.syedmsidsm.prayerreminder.ui.onboarding.BrandIntroScreen
+import com.syedmsidsm.prayerreminder.ui.onboarding.OnboardingScreen
+import com.syedmsidsm.prayerreminder.ui.reliability.ReliabilityScreen
 import com.syedmsidsm.prayerreminder.ui.settings.JamaatSettingsScreen
 import com.syedmsidsm.prayerreminder.ui.settings.RemindersVoiceSettingsScreen
 import com.syedmsidsm.prayerreminder.ui.settings.SettingsScreen
@@ -47,7 +52,10 @@ enum class Screen {
     TIMETABLES,
     MANUAL_ENTRY,
     IMPORT_REVIEW,
-    IMPORT_SAVED
+    IMPORT_SAVED,
+    RELIABILITY,
+    BRAND_INTRO,
+    ONBOARDING
 }
 
 class MainActivity : AppCompatActivity() {
@@ -108,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         val animationsEnabled = animatorDurationScale > 0f
 
         splash.setKeepOnScreenCondition {
-            val dataReady = homeViewModel.isReady.value
+            val dataReady = homeViewModel.isReady.value && settingsViewModel.isOnboardingDone.value != null
             if (!animationsEnabled) !dataReady else !dataReady || (SystemClock.uptimeMillis() - start < 900)
         }
 
@@ -137,7 +145,19 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     private fun MainAppNavigation() {
-        var currentScreen by remember { mutableStateOf(Screen.HOME) }
+        val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
+        var currentScreen by remember {
+            mutableStateOf(
+                if (settingsViewModel.isOnboardingDone.value == false) Screen.BRAND_INTRO else Screen.HOME
+            )
+        }
+
+        LaunchedEffect(isOnboardingDone) {
+            if (isOnboardingDone == false && currentScreen == Screen.HOME) {
+                currentScreen = Screen.BRAND_INTRO
+            }
+        }
+
         val importState by importViewModel.uiState.collectAsState()
         val timetables by (application as PrayerReminderApp).container.timetableRepository.timetables.collectAsState()
 
@@ -151,6 +171,42 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        val prttPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+            onResult = { uri ->
+                if (uri != null) {
+                    runCatching {
+                        contentResolver.openInputStream(uri)?.use { stream ->
+                            FamilyShare.parseAndValidate(stream).getOrThrow()
+                        } ?: error("Unable to open stream")
+                    }.onSuccess { table ->
+                        importViewModel.loadParsedTable(table)
+                        currentScreen = Screen.IMPORT_REVIEW
+                    }
+                }
+            }
+        )
+
+        LaunchedEffect(intent) {
+            val incomingUri = intent?.data ?: intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            if (incomingUri != null) {
+                val mime = contentResolver.getType(incomingUri) ?: intent?.type ?: ""
+                if (mime.startsWith("image/")) {
+                    importViewModel.processImage(incomingUri)
+                    currentScreen = Screen.IMPORT_REVIEW
+                } else {
+                    runCatching {
+                        contentResolver.openInputStream(incomingUri)?.use { stream ->
+                            FamilyShare.parseAndValidate(stream).getOrThrow()
+                        } ?: error("Unable to open stream")
+                    }.onSuccess { table ->
+                        importViewModel.loadParsedTable(table)
+                        currentScreen = Screen.IMPORT_REVIEW
+                    }
+                }
+            }
+        }
+
         when {
             importState is ImportUiState.Saved && currentScreen == Screen.IMPORT_REVIEW -> {
                 currentScreen = Screen.IMPORT_SAVED
@@ -158,6 +214,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         when (currentScreen) {
+            Screen.BRAND_INTRO -> {
+                BrandIntroScreen(
+                    onFinished = { currentScreen = Screen.ONBOARDING }
+                )
+            }
+            Screen.ONBOARDING -> {
+                OnboardingScreen(
+                    viewModel = settingsViewModel,
+                    onPickImage = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onImportFile = {
+                        prttPickerLauncher.launch(arrayOf("*/*", "application/json", "application/octet-stream"))
+                    },
+                    onFinished = {
+                        settingsViewModel.setOnboardingDone(true)
+                        currentScreen = Screen.HOME
+                    }
+                )
+            }
             Screen.HOME -> {
                 HomeScreen(
                     viewModel = homeViewModel,
@@ -171,6 +249,7 @@ class MainActivity : AppCompatActivity() {
                     onNavigateToJamaat = { currentScreen = Screen.JAMAAT_SETTINGS },
                     onNavigateToRemindersVoice = { currentScreen = Screen.REMINDERS_VOICE_SETTINGS },
                     onNavigateToTimetables = { currentScreen = Screen.TIMETABLES },
+                    onNavigateToReliability = { currentScreen = Screen.RELIABILITY },
                     onImportNewTimetable = {
                         photoPickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -180,6 +259,13 @@ class MainActivity : AppCompatActivity() {
                         val shareIntent = FamilyShare.createShareIntent(this@MainActivity, table)
                         startActivity(shareIntent)
                     }
+                )
+            }
+            Screen.RELIABILITY -> {
+                ReliabilityScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { currentScreen = Screen.SETTINGS },
+                    onNavigateToTimetables = { currentScreen = Screen.TIMETABLES }
                 )
             }
             Screen.JAMAAT_SETTINGS -> {
@@ -230,7 +316,13 @@ class MainActivity : AppCompatActivity() {
             Screen.IMPORT_REVIEW -> {
                 ImportReviewScreen(
                     viewModel = importViewModel,
-                    onCancel = { currentScreen = Screen.TIMETABLES }
+                    onCancel = {
+                        currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
+                            Screen.ONBOARDING
+                        } else {
+                            Screen.TIMETABLES
+                        }
+                    }
                 )
             }
             Screen.IMPORT_SAVED -> {
@@ -243,11 +335,19 @@ class MainActivity : AppCompatActivity() {
                             startActivity(shareIntent)
                         },
                         onDone = {
-                            currentScreen = Screen.HOME
+                            currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
+                                Screen.ONBOARDING
+                            } else {
+                                Screen.HOME
+                            }
                         }
                     )
                 } else {
-                    currentScreen = Screen.HOME
+                    currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
+                        Screen.ONBOARDING
+                    } else {
+                        Screen.HOME
+                    }
                 }
             }
         }

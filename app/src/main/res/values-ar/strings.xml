@@ -143,6 +143,18 @@
     <string name="continue_btn">متابعة</string>
     <string name="skip">تخطٍّ</string>
 
+    <string name="reliability_notifications">السماح بالإشعارات</string>
+    <string name="reliability_channels">قنوات التنبيهات</string>
+    <string name="reliability_alarms">المنبهات والتذكيرات (توقيت دقيق)</string>
+    <string name="reliability_battery">إيقاف تحسين البطارية</string>
+    <string name="reliability_oem">التشغيل التلقائي في الخلفية</string>
+    <string name="reliability_timetable">جدول أوقات نشط</string>
+    <string name="reliability_missed">تذكيرات فائتة (7 أيام)</string>
+    <string name="reliability_i_done_it">لقد فعلت ذلك</string>
+    <string name="dontkillmyapp_note">مزيد من المساعدة: dontkillmyapp.com</string>
+    <string name="intro_tagline">أوقات الأذان والإقامة · تذكيرات صوتية · أداة الشاشة</string>
+    <string name="intro_skip">اضغط للتخطي</string>
+
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربيع الأول</item><item>ربيع الآخر</item>
         <item>جمادى الأولى</item><item>جمادى الآخرة</item><item>رجب</item><item>شعبان</item>

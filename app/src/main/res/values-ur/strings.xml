@@ -143,6 +143,18 @@
     <string name="continue_btn">جاری رکھیں</string>
     <string name="skip">چھوڑیں</string>
 
+    <string name="reliability_notifications">اطلاعات کی اجازت</string>
+    <string name="reliability_channels">اطلاعاتی چینلز</string>
+    <string name="reliability_alarms">الارمز اور یاد دہانیاں (درست وقت)</string>
+    <string name="reliability_battery">بیٹری آپٹیمائزیشن بند</string>
+    <string name="reliability_oem">پس منظر میں خودکار آغاز</string>
+    <string name="reliability_timetable">فعال نظام الاوقات</string>
+    <string name="reliability_missed">چھوٹی ہوئی یاد دہانیاں (7 دن)</string>
+    <string name="reliability_i_done_it">میں نے کر لیا ہے</string>
+    <string name="dontkillmyapp_note">مزید مدد: dontkillmyapp.com</string>
+    <string name="intro_tagline">اذان اور جماعت کے اوقات · آواز والی یاد دہانی · وجٹ</string>
+    <string name="intro_skip">چھوڑنے کے لیے ٹیپ کریں</string>
+
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>
         <item>جمادی الاول</item><item>جمادی الثانی</item><item>رجب</item><item>شعبان</item>
