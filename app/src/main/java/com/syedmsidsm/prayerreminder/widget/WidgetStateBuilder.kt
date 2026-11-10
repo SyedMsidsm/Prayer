@@ -49,7 +49,9 @@ data class WidgetState(
     val countdownText: String = "",
     val progressFraction: Float = 0.65f,
     val rows: List<WidgetPrayerRow>,
-    val appLanguage: String
+    val appLanguage: String,
+    val voiceEnabled: Boolean = true,
+    val nextPrayerKey: String = "FAJR"
 ) {
     val isRtl: Boolean get() = appLanguage == "ar" || appLanguage == "ur"
 }
@@ -82,6 +84,9 @@ object WidgetStateBuilder {
         val rules = runBlocking {
             container.settingsRepository.jamaatRules.firstOrNull()
         } ?: emptyMap()
+        val voiceEnabled = runBlocking {
+            container.settingsRepository.voiceEnabled.firstOrNull()
+        } ?: true
 
         val dayResolver = container.dayScheduleResolver
         val todaySchedule = dayResolver.resolve(today, timetables, rules)
@@ -253,7 +258,9 @@ object WidgetStateBuilder {
             countdownText = countdownText,
             progressFraction = progressFraction,
             rows = rows,
-            appLanguage = lang
+            appLanguage = lang,
+            voiceEnabled = voiceEnabled,
+            nextPrayerKey = nextPrayer.prayer.name
         )
     }
 

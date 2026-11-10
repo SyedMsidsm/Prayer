@@ -64,7 +64,12 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
     val ivoryColor = ColorProvider(Color(0xFFF7F4EC))
     val mutedColor = ColorProvider(Color(0xFFC8D2CF))
     val pastColor = ColorProvider(Color(0xFF7B9390))
-    val groundColor = Color(0xFF0F2A2E)
+    val groundColor = when (state.nextPrayerKey) {
+        "FAJR" -> Color(0xFF122536)
+        "MAGHRIB" -> Color(0xFF1A2332)
+        "ISHA" -> Color(0xFF0B1D22)
+        else -> Color(0xFF0F2A2E)
+    }
     val darkTextOnGold = ColorProvider(Color(0xFF0F2A2E))
     val goldCapsuleBg = Color(0xFFD9AE5C)
     val launchAction = actionStartActivity<MainActivity>()
@@ -189,8 +194,9 @@ private fun SummaryColumn(
         modifier = GlanceModifier.fillMaxSize().clickable(actionStartActivity<MainActivity>()),
         horizontalAlignment = horizontalAlign
     ) {
-        // Place row with pin
-        val placeText = if (state.isRtl) "${state.place} 📍" else "📍 ${state.place}"
+        // Place row with pin + voice reminder status badge
+        val voiceBadge = if (state.voiceEnabled) "🔊" else "🔇"
+        val placeText = if (state.isRtl) "$voiceBadge ${state.place} 📍" else "📍 ${state.place} · $voiceBadge"
         Text(
             text = placeText,
             style = TextStyle(
@@ -265,6 +271,18 @@ private fun SummaryColumn(
         )
 
         Spacer(modifier = GlanceModifier.defaultWeight())
+
+        if (state.sunriseFormatted.isNotEmpty()) {
+            Text(
+                text = "☀️ ${state.sunriseFormatted}",
+                style = TextStyle(
+                    color = goldColor,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = textAlign
+                )
+            )
+        }
 
         // Gregorian + Hijri date footer
         val dateFooter = if (state.gregorianDate.isNotEmpty()) {
