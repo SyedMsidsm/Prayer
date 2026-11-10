@@ -156,7 +156,8 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val themeMode by settingsViewModel.themeMode.collectAsState()
-            PrayerReminderTheme(themeMode = themeMode) {
+            val fontScale by settingsViewModel.fontScale.collectAsState()
+            PrayerReminderTheme(themeMode = themeMode, fontScale = fontScale) {
                 MainAppNavigation()
             }
         }

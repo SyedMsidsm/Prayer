@@ -6,11 +6,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Density
 import androidx.core.os.ConfigurationCompat
 import androidx.core.view.WindowCompat
 
@@ -45,6 +49,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun PrayerReminderTheme(
     themeMode: String = "system",
+    fontScale: String = "normal",
     content: @Composable () -> Unit
 ) {
     val systemDark = isSystemInDarkTheme()
@@ -74,9 +79,25 @@ fun PrayerReminderTheme(
     val currentLocale = ConfigurationCompat.getLocales(configuration).get(0)
     val languageCode = currentLocale?.language ?: "en"
 
-    MaterialTheme(
-        colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
-        typography = getAppTypography(languageCode),
-        content = content
-    )
+    val scaleMultiplier = when (fontScale) {
+        "small" -> 0.88f
+        "large" -> 1.15f
+        "xl" -> 1.28f
+        else -> 1.0f
+    }
+    val currentDensity = LocalDensity.current
+    val scaledDensity = remember(currentDensity, scaleMultiplier) {
+        Density(
+            density = currentDensity.density,
+            fontScale = currentDensity.fontScale * scaleMultiplier
+        )
+    }
+
+    CompositionLocalProvider(LocalDensity provides scaledDensity) {
+        MaterialTheme(
+            colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
+            typography = getAppTypography(languageCode),
+            content = content
+        )
+    }
 }

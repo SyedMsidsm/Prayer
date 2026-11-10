@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Share
@@ -87,6 +88,7 @@ fun SettingsScreen(
     val beforeAzanMin by viewModel.remBeforeAzanMin.collectAsState()
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
+    val fontScale by viewModel.fontScale.collectAsState()
 
     val currentAppLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangTag = if (!currentAppLocales.isEmpty) {
@@ -331,6 +333,48 @@ fun SettingsScreen(
                             modifier = Modifier.weight(1f),
                             onClick = { viewModel.setThemeMode("system") }
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.FormatSize,
+                            contentDescription = null,
+                            tint = PrayerReminderColors.GoldText,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = stringResource(R.string.font_size),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PrayerReminderColors.Ink,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val fontOptions = listOf(
+                            "small" to stringResource(R.string.font_small),
+                            "normal" to stringResource(R.string.font_normal),
+                            "large" to stringResource(R.string.font_large),
+                            "xl" to stringResource(R.string.font_xl)
+                        )
+                        for ((scaleKey, scaleLabel) in fontOptions) {
+                            LanguageChoiceChip(
+                                label = scaleLabel,
+                                isSelected = fontScale == scaleKey,
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setFontScale(scaleKey) }
+                            )
+                        }
                     }
                 }
             }

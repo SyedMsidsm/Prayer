@@ -90,6 +90,7 @@ fun OnboardingScreen(
     val timetables by viewModel.timetables.collectAsState()
     val activeTimetable = timetables.firstOrNull()
     val themeMode by viewModel.themeMode.collectAsState()
+    val fontScale by viewModel.fontScale.collectAsState()
 
     val currentAppLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangTag = if (!currentAppLocales.isEmpty) {
@@ -171,12 +172,14 @@ fun OnboardingScreen(
                 1 -> StepWelcomeAndLanguage(
                     currentLang = currentLangTag,
                     themeMode = themeMode,
+                    fontScale = fontScale,
                     onSelectLanguage = { lang ->
                         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang))
                         viewModel.setAppLanguage(lang)
                         viewModel.setVoiceLanguage(lang)
                     },
                     onSelectTheme = { mode -> viewModel.setThemeMode(mode) },
+                    onSelectFontScale = { scale -> viewModel.setFontScale(scale) },
                     onContinue = {
                         viewModel.setAppLanguage(currentLangTag)
                         currentStep = 2
@@ -210,8 +213,10 @@ fun OnboardingScreen(
 private fun StepWelcomeAndLanguage(
     currentLang: String,
     themeMode: String,
+    fontScale: String,
     onSelectLanguage: (String) -> Unit,
     onSelectTheme: (String) -> Unit,
+    onSelectFontScale: (String) -> Unit,
     onContinue: () -> Unit
 ) {
     Spacer(modifier = Modifier.height(16.dp))
@@ -350,7 +355,57 @@ private fun StepWelcomeAndLanguage(
         }
     }
 
-    Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(22.dp))
+
+    Text(
+        text = stringResource(R.string.font_size),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = PrayerReminderColors.Ink
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val fontChoices = listOf(
+            "small" to stringResource(R.string.font_small),
+            "normal" to stringResource(R.string.font_normal),
+            "large" to stringResource(R.string.font_large),
+            "xl" to stringResource(R.string.font_xl)
+        )
+        for ((scaleKey, scaleLabel) in fontChoices) {
+            val isSelected = fontScale == scaleKey
+            val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
+            val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .clickable { onSelectFontScale(scaleKey) },
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSelected) selectedBg else PrayerReminderColors.Surface,
+                border = BorderStroke(
+                    width = if (isSelected) 2.dp else 1.dp,
+                    color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
+                )
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 4.dp)) {
+                    Text(
+                        text = scaleLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) selectedText else PrayerReminderColors.Ink,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(28.dp))
 
     Button(
         onClick = onContinue,

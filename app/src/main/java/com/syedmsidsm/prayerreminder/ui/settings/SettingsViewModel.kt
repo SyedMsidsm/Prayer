@@ -55,6 +55,18 @@ class SettingsViewModel(
         }
     }
 
+    val fontScale: StateFlow<String> = settingsRepository.fontScale.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "normal"
+    )
+
+    fun setFontScale(scale: String) {
+        viewModelScope.launch {
+            settingsRepository.setFontScale(scale)
+        }
+    }
+
     val jamaatRules: StateFlow<Map<String, JamaatRule>> = settingsRepository.jamaatRules.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
