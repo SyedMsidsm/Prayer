@@ -18,7 +18,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
@@ -35,7 +33,7 @@ import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 @Composable
 fun ImportSavedScreen(
     timetable: Timetable,
-    onSendToFamily: () -> Unit,
+    onSendToFamily: () -> Unit = {},
     onDone: () -> Unit
 ) {
     Column(
@@ -78,10 +76,18 @@ fun ImportSavedScreen(
             color = PrayerReminderColors.Muted
         )
 
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "${timetable.firstDate} to ${timetable.lastDate} (${timetable.days.size} days)",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PrayerReminderColors.Muted
+        )
+
         Spacer(modifier = Modifier.height(36.dp))
 
         Button(
-            onClick = onSendToFamily,
+            onClick = onDone,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
@@ -92,34 +98,9 @@ fun ImportSavedScreen(
             )
         ) {
             Text(
-                text = stringResource(R.string.send_family),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(R.string.send_family_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = PrayerReminderColors.Muted,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedButton(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text(
                 text = stringResource(R.string.done),
                 style = MaterialTheme.typography.titleMedium,
-                color = PrayerReminderColors.Ink
+                fontWeight = FontWeight.Bold
             )
         }
     }

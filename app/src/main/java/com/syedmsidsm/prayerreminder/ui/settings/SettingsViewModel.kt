@@ -127,11 +127,8 @@ class SettingsViewModel(
         timetableRepository.timetables,
         settingsRepository.jamaatRules
     ) { tables, rules ->
-        val now = ZonedDateTime.now(zoneId)
-        val today = now.toLocalDate()
-        val hasToday = tables.any { table -> table.days.any { it.date == today.toString() } }
-        val date = if (hasToday) today else LocalDate.of(2026, 3, 24)
-        dayScheduleResolver.resolve(date, tables, rules)
+        val today = ZonedDateTime.now(zoneId).toLocalDate()
+        dayScheduleResolver.resolve(today, tables, rules)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun setAppLanguage(languageCode: String) {

@@ -1,6 +1,10 @@
 package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
 import android.os.Build
 import android.os.SystemClock
 import android.widget.RemoteViews
@@ -10,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.AndroidRemoteViews
@@ -23,8 +29,10 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -32,6 +40,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.MainActivity
+import java.util.Locale
 
 class SmallPrayerWidget : GlanceAppWidget() {
 
@@ -50,125 +59,156 @@ class SmallPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
-    val horizontalAlign = if (state.isRtl) Alignment.End else Alignment.Start
-    val textAlign = if (state.isRtl) TextAlign.End else TextAlign.Start
-
     val goldColor = ColorProvider(Color(0xFFD9AE5C))
     val ivoryColor = ColorProvider(Color(0xFFF7F4EC))
     val mutedColor = ColorProvider(Color(0xFFC8D2CF))
+    val darkTextOnGold = ColorProvider(Color(0xFF0F2A2E))
     val groundColor = Color(0xFF0F2A2E)
+    val goldCapsuleBg = Color(0xFFD9AE5C)
+    val launchAction = actionStartActivity<MainActivity>()
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(24.dp)
             .background(groundColor)
-            .clickable(actionStartActivity<MainActivity>())
-            .padding(16.dp)
+            .clickable(launchAction)
+            .padding(12.dp)
     ) {
         if (!state.hasTable) {
             Column(
-                modifier = GlanceModifier.fillMaxSize(),
-                horizontalAlignment = horizontalAlign,
+                modifier = GlanceModifier.fillMaxSize().clickable(launchAction),
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = state.place,
                     style = TextStyle(
                         color = goldColor,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = textAlign
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 )
-                Spacer(modifier = GlanceModifier.height(8.dp))
-                val importMsg = when (state.appLanguage) {
-                    "ar" -> "استورد الجدول الجديد"
-                    "ur" -> "نیا نظام الاوقات شامل کریں"
-                    else -> "Import the new timetable"
-                }
+                Spacer(modifier = GlanceModifier.height(6.dp))
                 Text(
-                    text = importMsg,
+                    text = "Open app",
                     style = TextStyle(
                         color = ivoryColor,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = textAlign
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 )
             }
         } else {
+            val ringBitmap = buildProgressRingBitmap(state.progressFraction)
             Column(
-                modifier = GlanceModifier.fillMaxSize(),
-                horizontalAlignment = horizontalAlign
+                modifier = GlanceModifier.fillMaxSize().clickable(launchAction),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Place name
+                // Top-left Place header
                 Text(
-                    text = state.place,
-                    style = TextStyle(
-                        color = mutedColor,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = textAlign
-                    )
-                )
-
-                Spacer(modifier = GlanceModifier.height(8.dp))
-
-                // Title (Prayer name or Prayer · Jamaat)
-                val title = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) {
-                    state.prayerName
-                } else {
-                    when (state.appLanguage) {
-                        "ar" -> "${state.prayerName} · الإقامة"
-                        "ur" -> "${state.prayerName} · جماعت"
-                        else -> "${state.prayerName} · Jamaat"
-                    }
-                }
-                Text(
-                    text = title,
-                    style = TextStyle(
-                        color = goldColor,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = textAlign
-                    )
-                )
-
-                // Big Time
-                Text(
-                    text = state.mainTime,
+                    text = "📍 ${state.place}",
+                    modifier = GlanceModifier.fillMaxWidth(),
                     style = TextStyle(
                         color = ivoryColor,
-                        fontSize = 34.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = textAlign
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = if (state.isRtl) TextAlign.End else TextAlign.Start
                     )
                 )
 
-                // Subtitle
+                // Center Progress Ring + Next Prayer Time
+                Box(
+                    modifier = GlanceModifier.defaultWeight().fillMaxWidth().clickable(launchAction),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        provider = ImageProvider(ringBitmap),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(124.dp)
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = GlanceModifier
+                                .cornerRadius(10.dp)
+                                .background(goldCapsuleBg)
+                                .padding(horizontal = 8.dp, vertical = 1.dp)
+                        ) {
+                            Text(
+                                text = state.prayerName.uppercase(Locale.ROOT),
+                                style = TextStyle(
+                                    color = darkTextOnGold,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+
+                        Spacer(modifier = GlanceModifier.height(2.dp))
+
+                        Text(
+                            text = state.mainTime,
+                            style = TextStyle(
+                                color = ivoryColor,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        )
+
+                        val chronometerViews = buildChronometerRemoteViews(
+                            context,
+                            state.countdownTargetEpochMillis,
+                            state.isRtl
+                        )
+                        AndroidRemoteViews(remoteViews = chronometerViews)
+                    }
+                }
+
+                // Bottom Jamaat line
                 Text(
                     text = state.secondaryTime,
                     style = TextStyle(
                         color = mutedColor,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = textAlign
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
                     )
                 )
-
-                Spacer(modifier = GlanceModifier.defaultWeight())
-
-                // Countdown Row
-                val chronometerViews = buildChronometerRemoteViews(
-                    context,
-                    state.countdownTargetEpochMillis,
-                    state.isRtl
-                )
-                AndroidRemoteViews(remoteViews = chronometerViews)
             }
         }
     }
+}
+
+private fun buildProgressRingBitmap(progressFraction: Float): Bitmap {
+    val size = 320
+    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+    val stroke = 20f
+    val pad = stroke + 6f
+    val oval = RectF(pad, pad, size - pad, size - pad)
+
+    val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#254548")
+        style = Paint.Style.STROKE
+        strokeWidth = stroke
+        strokeCap = Paint.Cap.ROUND
+    }
+    canvas.drawArc(oval, 0f, 360f, false, trackPaint)
+
+    val sweepAngle = 360f * progressFraction.coerceIn(0.15f, 0.92f)
+    val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#D9AE5C")
+        style = Paint.Style.STROKE
+        strokeWidth = stroke
+        strokeCap = Paint.Cap.ROUND
+    }
+    canvas.drawArc(oval, -90f, sweepAngle, false, arcPaint)
+    return bmp
 }
 
 private fun buildChronometerRemoteViews(context: Context, targetEpochMillis: Long, isRtl: Boolean): RemoteViews {

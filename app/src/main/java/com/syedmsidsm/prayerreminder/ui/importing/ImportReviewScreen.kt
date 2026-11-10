@@ -263,13 +263,28 @@ private fun ImportReviewContent(
                 shape = RoundedCornerShape(12.dp),
                 color = PrayerReminderColors.WarnBg
             ) {
-                Text(
-                    text = stringResource(R.string.import_flags, unresolvedFlags.size),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = PrayerReminderColors.WarnText,
-                    modifier = Modifier.padding(12.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.import_flags, unresolvedFlags.size),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = PrayerReminderColors.WarnText,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = { viewModel.autoFixAllFlags() }) {
+                        Text(
+                            text = "Auto-fix all",
+                            color = PrayerReminderColors.Ground,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         } else {
             Surface(

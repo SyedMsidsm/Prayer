@@ -1,6 +1,10 @@
 package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
 import android.os.Build
 import android.os.SystemClock
 import android.widget.RemoteViews
@@ -10,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.AndroidRemoteViews
@@ -57,21 +63,23 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
     val goldColor = ColorProvider(Color(0xFFD9AE5C))
     val ivoryColor = ColorProvider(Color(0xFFF7F4EC))
     val mutedColor = ColorProvider(Color(0xFFC8D2CF))
-    val pastColor = ColorProvider(Color(0xFF9FB0AD))
+    val pastColor = ColorProvider(Color(0xFF7B9390))
     val groundColor = Color(0xFF0F2A2E)
-    val nextCapsuleBg = Color(0xFF23403F)
+    val darkTextOnGold = ColorProvider(Color(0xFF0F2A2E))
+    val goldCapsuleBg = Color(0xFFD9AE5C)
+    val launchAction = actionStartActivity<MainActivity>()
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(24.dp)
             .background(groundColor)
-            .clickable(actionStartActivity<MainActivity>())
+            .clickable(launchAction)
             .padding(14.dp)
     ) {
         if (!state.hasTable) {
             Column(
-                modifier = GlanceModifier.fillMaxSize(),
+                modifier = GlanceModifier.fillMaxSize().clickable(launchAction),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -99,57 +107,62 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                 )
             }
         } else {
+            val progressBarBitmap = buildProgressBarBitmap(state.progressFraction)
             if (state.isRtl) {
-                // RTL layout: Table on Left, Summary Card on Right
-                Row(modifier = GlanceModifier.fillMaxSize()) {
-                    // Right-to-Left: Table column
-                    Box(modifier = GlanceModifier.width(185.dp).fillMaxHeight()) {
+                Row(modifier = GlanceModifier.fillMaxSize().clickable(launchAction)) {
+                    Box(modifier = GlanceModifier.width(188.dp).fillMaxHeight().clickable(launchAction)) {
                         TableColumn(
                             state = state,
                             goldColor = goldColor,
                             ivoryColor = ivoryColor,
                             mutedColor = mutedColor,
                             pastColor = pastColor,
-                            nextCapsuleBg = nextCapsuleBg
+                            darkTextOnGold = darkTextOnGold,
+                            goldCapsuleBg = goldCapsuleBg
                         )
                     }
 
                     Spacer(modifier = GlanceModifier.width(10.dp))
 
-                    // Summary card on Right
-                    Box(modifier = GlanceModifier.defaultWeight().fillMaxHeight()) {
+                    Box(modifier = GlanceModifier.defaultWeight().fillMaxHeight().clickable(launchAction)) {
                         SummaryColumn(
                             context = context,
                             state = state,
+                            progressBarBitmap = progressBarBitmap,
                             goldColor = goldColor,
                             ivoryColor = ivoryColor,
-                            mutedColor = mutedColor
+                            mutedColor = mutedColor,
+                            darkTextOnGold = darkTextOnGold,
+                            goldCapsuleBg = goldCapsuleBg
                         )
                     }
                 }
             } else {
-                // LTR layout: Summary Card on Left, Table on Right
-                Row(modifier = GlanceModifier.fillMaxSize()) {
-                    Box(modifier = GlanceModifier.defaultWeight().fillMaxHeight()) {
+                Row(modifier = GlanceModifier.fillMaxSize().clickable(launchAction)) {
+                    Box(modifier = GlanceModifier.defaultWeight().fillMaxHeight().clickable(launchAction)) {
                         SummaryColumn(
                             context = context,
                             state = state,
+                            progressBarBitmap = progressBarBitmap,
                             goldColor = goldColor,
                             ivoryColor = ivoryColor,
-                            mutedColor = mutedColor
+                            mutedColor = mutedColor,
+                            darkTextOnGold = darkTextOnGold,
+                            goldCapsuleBg = goldCapsuleBg
                         )
                     }
 
                     Spacer(modifier = GlanceModifier.width(10.dp))
 
-                    Box(modifier = GlanceModifier.width(185.dp).fillMaxHeight()) {
+                    Box(modifier = GlanceModifier.width(188.dp).fillMaxHeight().clickable(launchAction)) {
                         TableColumn(
                             state = state,
                             goldColor = goldColor,
                             ivoryColor = ivoryColor,
                             mutedColor = mutedColor,
                             pastColor = pastColor,
-                            nextCapsuleBg = nextCapsuleBg
+                            darkTextOnGold = darkTextOnGold,
+                            goldCapsuleBg = goldCapsuleBg
                         )
                     }
                 }
@@ -162,48 +175,60 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
 private fun SummaryColumn(
     context: Context,
     state: WidgetState,
+    progressBarBitmap: Bitmap,
     goldColor: ColorProvider,
     ivoryColor: ColorProvider,
-    mutedColor: ColorProvider
+    mutedColor: ColorProvider,
+    darkTextOnGold: ColorProvider,
+    goldCapsuleBg: Color
 ) {
     val textAlign = if (state.isRtl) TextAlign.End else TextAlign.Start
     val horizontalAlign = if (state.isRtl) Alignment.End else Alignment.Start
 
     Column(
-        modifier = GlanceModifier.fillMaxSize(),
+        modifier = GlanceModifier.fillMaxSize().clickable(actionStartActivity<MainActivity>()),
         horizontalAlignment = horizontalAlign
     ) {
-        // Place row with icon
-        val placeText = if (state.isRtl) "${state.place} ⌂" else "⌂ ${state.place}"
+        // Place row with pin
+        val placeText = if (state.isRtl) "${state.place} 📍" else "📍 ${state.place}"
         Text(
             text = placeText,
             style = TextStyle(
-                color = mutedColor,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Normal,
+                color = ivoryColor,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
                 textAlign = textAlign
             )
         )
 
         Spacer(modifier = GlanceModifier.height(4.dp))
 
-        // Main Header (Next · Prayer)
-        Text(
-            text = state.mainHeader,
-            style = TextStyle(
-                color = goldColor,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = textAlign
+        // Gold Capsule Pill: NEXT · PRAYER
+        Box(
+            modifier = GlanceModifier
+                .cornerRadius(12.dp)
+                .background(goldCapsuleBg)
+                .padding(horizontal = 8.dp, vertical = 2.dp)
+        ) {
+            Text(
+                text = state.mainHeader,
+                style = TextStyle(
+                    color = darkTextOnGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = textAlign
+                )
             )
-        )
+        }
+
+        Spacer(modifier = GlanceModifier.height(2.dp))
 
         // Big Time
         Text(
             text = state.mainTime,
             style = TextStyle(
                 color = ivoryColor,
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = textAlign
             )
@@ -214,13 +239,13 @@ private fun SummaryColumn(
             text = state.secondaryTime,
             style = TextStyle(
                 color = mutedColor,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 textAlign = textAlign
             )
         )
 
-        Spacer(modifier = GlanceModifier.height(4.dp))
+        Spacer(modifier = GlanceModifier.height(3.dp))
 
         // Countdown Chronometer
         val chronometerViews = buildChronometerRemoteViews(
@@ -230,14 +255,28 @@ private fun SummaryColumn(
         )
         AndroidRemoteViews(remoteViews = chronometerViews)
 
+        Spacer(modifier = GlanceModifier.height(4.dp))
+
+        // Gold Progress Bar
+        Image(
+            provider = ImageProvider(progressBarBitmap),
+            contentDescription = null,
+            modifier = GlanceModifier.fillMaxWidth().height(5.dp)
+        )
+
         Spacer(modifier = GlanceModifier.defaultWeight())
 
-        // Hijri date
+        // Gregorian + Hijri date footer
+        val dateFooter = if (state.gregorianDate.isNotEmpty()) {
+            "${state.gregorianDate} · ${state.hijriDate}"
+        } else {
+            state.hijriDate
+        }
         Text(
-            text = state.hijriDate,
+            text = dateFooter,
             style = TextStyle(
                 color = mutedColor,
-                fontSize = 12.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Normal,
                 textAlign = textAlign
             )
@@ -252,7 +291,8 @@ private fun TableColumn(
     ivoryColor: ColorProvider,
     mutedColor: ColorProvider,
     pastColor: ColorProvider,
-    nextCapsuleBg: Color
+    darkTextOnGold: ColorProvider,
+    goldCapsuleBg: Color
 ) {
     val azanLabel = when (state.appLanguage) {
         "ar" -> "الأذان"
@@ -265,19 +305,19 @@ private fun TableColumn(
         else -> "Jamaat"
     }
 
-    Column(modifier = GlanceModifier.fillMaxSize()) {
+    Column(modifier = GlanceModifier.fillMaxSize().clickable(actionStartActivity<MainActivity>())) {
         // Table Header
         if (state.isRtl) {
             Row(modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 4.dp)) {
                 Text(
                     text = jamaatLabel,
                     modifier = GlanceModifier.width(56.dp),
-                    style = TextStyle(color = mutedColor, fontSize = 11.sp, textAlign = TextAlign.Start)
+                    style = TextStyle(color = mutedColor, fontSize = 10.sp, textAlign = TextAlign.Start)
                 )
                 Text(
                     text = azanLabel,
                     modifier = GlanceModifier.width(56.dp),
-                    style = TextStyle(color = mutedColor, fontSize = 11.sp, textAlign = TextAlign.Start)
+                    style = TextStyle(color = mutedColor, fontSize = 10.sp, textAlign = TextAlign.Start)
                 )
                 Spacer(modifier = GlanceModifier.defaultWeight())
             }
@@ -287,12 +327,12 @@ private fun TableColumn(
                 Text(
                     text = azanLabel,
                     modifier = GlanceModifier.width(56.dp),
-                    style = TextStyle(color = mutedColor, fontSize = 11.sp, textAlign = TextAlign.End)
+                    style = TextStyle(color = mutedColor, fontSize = 10.sp, textAlign = TextAlign.End)
                 )
                 Text(
                     text = jamaatLabel,
                     modifier = GlanceModifier.width(56.dp),
-                    style = TextStyle(color = mutedColor, fontSize = 11.sp, textAlign = TextAlign.End)
+                    style = TextStyle(color = mutedColor, fontSize = 10.sp, textAlign = TextAlign.End)
                 )
             }
         }
@@ -302,7 +342,7 @@ private fun TableColumn(
         // 5 Prayer Rows
         for (row in state.rows) {
             val textColor = when {
-                row.isNext -> goldColor
+                row.isNext -> darkTextOnGold
                 row.isPast -> pastColor
                 else -> ivoryColor
             }
@@ -314,11 +354,11 @@ private fun TableColumn(
                 .then(
                     if (row.isNext) {
                         GlanceModifier
-                            .cornerRadius(6.dp)
-                            .background(nextCapsuleBg)
-                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                            .cornerRadius(10.dp)
+                            .background(goldCapsuleBg)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     } else {
-                        GlanceModifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        GlanceModifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     }
                 )
 
@@ -332,7 +372,7 @@ private fun TableColumn(
                         modifier = GlanceModifier.width(56.dp),
                         style = TextStyle(
                             color = textColor,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = textWeight,
                             textAlign = TextAlign.Start
                         )
@@ -342,7 +382,7 @@ private fun TableColumn(
                         modifier = GlanceModifier.width(56.dp),
                         style = TextStyle(
                             color = textColor,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = textWeight,
                             textAlign = TextAlign.Start
                         )
@@ -352,7 +392,7 @@ private fun TableColumn(
                         modifier = GlanceModifier.defaultWeight(),
                         style = TextStyle(
                             color = textColor,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = textWeight,
                             textAlign = TextAlign.End
                         )
@@ -363,7 +403,7 @@ private fun TableColumn(
                         modifier = GlanceModifier.defaultWeight(),
                         style = TextStyle(
                             color = textColor,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = textWeight,
                             textAlign = TextAlign.Start
                         )
@@ -373,7 +413,7 @@ private fun TableColumn(
                         modifier = GlanceModifier.width(56.dp),
                         style = TextStyle(
                             color = textColor,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = textWeight,
                             textAlign = TextAlign.End
                         )
@@ -383,7 +423,7 @@ private fun TableColumn(
                         modifier = GlanceModifier.width(56.dp),
                         style = TextStyle(
                             color = textColor,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = textWeight,
                             textAlign = TextAlign.End
                         )
@@ -391,7 +431,43 @@ private fun TableColumn(
                 }
             }
         }
+
+        if (state.sunriseFormatted.isNotEmpty()) {
+            Spacer(modifier = GlanceModifier.defaultWeight())
+            Text(
+                text = "☀ ${state.sunriseFormatted}",
+                modifier = GlanceModifier.fillMaxWidth().padding(horizontal = 4.dp),
+                style = TextStyle(
+                    color = mutedColor,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = if (state.isRtl) TextAlign.Start else TextAlign.End
+                )
+            )
+        }
     }
+}
+
+private fun buildProgressBarBitmap(progressFraction: Float): Bitmap {
+    val width = 320
+    val height = 12
+    val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+    val radius = height / 2f
+
+    val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#284649")
+        style = Paint.Style.FILL
+    }
+    canvas.drawRoundRect(RectF(0f, 0f, width.toFloat(), height.toFloat()), radius, radius, trackPaint)
+
+    val fillWidth = (width * progressFraction.coerceIn(0.08f, 1f))
+    val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#D9AE5C")
+        style = Paint.Style.FILL
+    }
+    canvas.drawRoundRect(RectF(0f, 0f, fillWidth, height.toFloat()), radius, radius, fillPaint)
+    return bmp
 }
 
 private fun buildChronometerRemoteViews(context: Context, targetEpochMillis: Long, isRtl: Boolean): RemoteViews {

@@ -107,7 +107,8 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold
                     )
                     val table = uiState.activeTimetable
-                    if (table != null) {
+                    val scheduleSource = uiState.schedule?.source
+                    if (scheduleSource == ScheduleSource.TABLE && table != null) {
                         val monthName = HijriNames.getMonthName(table.hijriMonth, languageCode)
                         val lastDateStr = runCatching {
                             val ld = java.time.LocalDate.parse(table.lastDate)
@@ -121,6 +122,19 @@ fun HomeScreen(
                         )
                         Text(
                             text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PrayerReminderColors.Muted
+                        )
+                    } else if (uiState.schedule?.hijri != null) {
+                        val h = uiState.schedule!!.hijri!!
+                        val monthName = HijriNames.getMonthName(h.month, languageCode)
+                        val autoLabel = when (languageCode) {
+                            "ar" -> "$monthName ${h.year} · جدول بهتكل المدمج"
+                            "ur" -> "$monthName ${h.year} · بھٹکل کا بلٹ ان نظام الاوقات"
+                            else -> "$monthName ${h.year} · Built-in Bhatkal schedule"
+                        }
+                        Text(
+                            text = autoLabel,
                             style = MaterialTheme.typography.bodyMedium,
                             color = PrayerReminderColors.Muted
                         )

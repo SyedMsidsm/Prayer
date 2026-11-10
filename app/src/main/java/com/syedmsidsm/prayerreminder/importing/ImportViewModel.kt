@@ -9,7 +9,6 @@ import com.syedmsidsm.prayerreminder.domain.TimetableParser
 import com.syedmsidsm.prayerreminder.domain.TimetableValidator
 import com.syedmsidsm.prayerreminder.domain.ValidationFlag
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
-import com.syedmsidsm.prayerreminder.domain.model.TimetableDay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +28,7 @@ sealed interface ImportUiState {
             get() = flags.filter { !resolvedFlagIds.contains(Pair(it.dayIndex, it.field)) }
 
         val canSave: Boolean
-            get() = unresolvedFlags.isEmpty()
+            get() = timetable.days.isNotEmpty()
     }
     data class Saved(val timetable: Timetable) : ImportUiState
     data class Error(val message: String) : ImportUiState
@@ -59,13 +58,7 @@ class ImportViewModel(
                 val parseResult = timetableParser.parse(tokens)
                 if (parseResult != null) {
                     val flags = timetableValidator.validate(parseResult.timetable)
-                    Log.d("ImportViewModel", "Parsed timetable for ${parseResult.timetable.place} with ${parseResult.timetable.days.size} days, ${flags.size} flags")
-                    for ((idx, flag) in flags.withIndex()) {
-                        Log.w("ImportFlags", "Flag #$idx: Day=${flag.dayIndex} (${flag.date}) Field=${flag.field} Current='${flag.currentValue}' Sugg='${flag.suggestion}' Reason=${flag.reason}")
-                    }
-                    for ((idx, day) in parseResult.timetable.days.withIndex()) {
-                        Log.d("ImportDays", "Day #$idx (${day.date}, ${day.weekday}, H:${day.hijriDay}): ${day.times}")
-                    }
+                    Log.d("ImportViewModel", "Parsed timetable for ${parseResult.timetable.place} (${parseResult.timetable.hijriMonthName} ${parseResult.timetable.hijriYear}) with ${parseResult.timetable.days.size} days, ${flags.size} flags")
                     _uiState.value = ImportUiState.Review(
                         timetable = parseResult.timetable,
                         flags = flags
@@ -102,6 +95,41 @@ class ImportViewModel(
     fun resolveFlagWithSuggestion(flag: ValidationFlag) {
         val suggestion = flag.suggestion ?: return
         resolveFlagWithValue(flag, suggestion)
+    }
+
+    fun autoFixAllFlags() {
+        val current = _uiState.value as? ImportUiState.Review ?: return
+        val days = current.timetable.days.toMutableList()
+        val newResolved = current.resolvedFlagIds.toMutableSet()
+
+        for (flag in current.unresolvedFlags) {
+            val suggestion = flag.suggestion
+            val targetDay = days.getOrNull(flag.dayIndex)
+            if (suggestion != null && targetDay != null) {
+                val updatedTimes = targetDay.times.toMutableMap()
+                if (TimetableValidator.PRAYER_FIELDS.contains(flag.field)) {
+                    val formattedTime = timetableParser.cleanAndFormatTime(suggestion, flag.field) ?: suggestion
+                    updatedTimes[flag.field] = formattedTime
+                }
+                val updatedDay = when (flag.field) {
+                    "weekday" -> targetDay.copy(weekday = suggestion)
+                    "hijriDay" -> targetDay.copy(hijriDay = suggestion.toIntOrNull() ?: targetDay.hijriDay)
+                    "date" -> targetDay.copy(date = suggestion)
+                    else -> targetDay.copy(times = updatedTimes)
+                }
+                days[flag.dayIndex] = updatedDay
+            }
+            newResolved.add(Pair(flag.dayIndex, flag.field))
+        }
+
+        val updatedTable = current.timetable.copy(days = days)
+        val newFlags = timetableValidator.validate(updatedTable)
+        _uiState.value = current.copy(
+            timetable = updatedTable,
+            flags = newFlags,
+            resolvedFlagIds = newResolved,
+            activeFlagForFix = null
+        )
     }
 
     fun resolveFlagWithValue(flag: ValidationFlag, newValue: String) {
@@ -159,7 +187,6 @@ class ImportViewModel(
         if (!current.canSave) return
 
         viewModelScope.launch {
-            // Check if month already exists
             val existing = timetableRepository.timetables.value.firstOrNull {
                 it.hijriYear == current.timetable.hijriYear && it.hijriMonth == current.timetable.hijriMonth
             }

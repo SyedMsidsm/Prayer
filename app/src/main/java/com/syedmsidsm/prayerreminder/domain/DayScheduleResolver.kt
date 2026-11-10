@@ -10,18 +10,25 @@ import com.syedmsidsm.prayerreminder.domain.model.TimetableDay
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.chrono.HijrahDate
+import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import kotlin.math.abs
 
-class DayScheduleResolver {
+class DayScheduleResolver(
+    private val calculator: PrayerTimeCalculator = PrayerTimeCalculator()
+) {
 
     /**
-     * Resolves the schedule for a given date D against available timetables.
+     * Resolves the schedule for a given date D against available timetables,
+     * falling back to the calibrated offline astronomical calculator so the app
+     * always has accurate times for any date.
      */
     fun resolve(
         date: LocalDate,
         timetables: List<Timetable>,
-        jamaatRules: Map<String, JamaatRule> = emptyMap()
+        jamaatRules: Map<String, JamaatRule> = emptyMap(),
+        useCalculatedFallback: Boolean = true
     ): DaySchedule {
         val isFriday = date.dayOfWeek == DayOfWeek.FRIDAY
         val dateIso = date.toString()
@@ -62,7 +69,7 @@ class DayScheduleResolver {
                         val (jamaatTimes, warnings) = computeJamaatTimes(azanTimes, isFriday, jamaatRules)
                         return DaySchedule(
                             date = date,
-                            hijri = null, // Hijri date unknown on estimated days
+                            hijri = null,
                             azan = azanTimes,
                             jamaat = jamaatTimes,
                             isFriday = isFriday,
@@ -107,7 +114,23 @@ class DayScheduleResolver {
             }
         }
 
-        // 4. No schedule available
+        // 4. Calibrated Offline Astronomical Calculator (always available for any date)
+        if (useCalculatedFallback) {
+            val calibration = calculator.calibrateFrom(timetables)
+            val azanTimes = calculator.compute(date, calibration)
+            val (jamaatTimes, warnings) = computeJamaatTimes(azanTimes, isFriday, jamaatRules)
+            return DaySchedule(
+                date = date,
+                hijri = estimateHijriDate(date, timetables),
+                azan = azanTimes,
+                jamaat = jamaatTimes,
+                isFriday = isFriday,
+                source = ScheduleSource.CALCULATED,
+                fixedTimeBeforeAzanWarnings = warnings
+            )
+        }
+
+        // 5. No schedule available (only when fallback is explicitly disabled)
         return DaySchedule(
             date = date,
             hijri = null,
@@ -118,14 +141,53 @@ class DayScheduleResolver {
         )
     }
 
+    /**
+     * Estimates the Hijri date for [date] by anchoring to the closest imported timetable
+     * if within 30 days, or falling back to the Umm al-Qura calendar (adjusted -1 day for India/Bhatkal).
+     */
+    fun estimateHijriDate(date: LocalDate, timetables: List<Timetable> = emptyList()): HijriDate {
+        for (table in timetables) {
+            val firstDate = runCatching { LocalDate.parse(table.firstDate) }.getOrNull()
+            if (firstDate != null) {
+                val diff = ChronoUnit.DAYS.between(firstDate, date).toInt()
+                if (diff in -30..-1) {
+                    val prevMonth = if (table.hijriMonth == 1) 12 else table.hijriMonth - 1
+                    val prevYear = if (table.hijriMonth == 1) table.hijriYear - 1 else table.hijriYear
+                    val dayInPrev = (30 + diff).coerceIn(1, 30)
+                    return HijriDate(
+                        day = dayInPrev,
+                        month = prevMonth,
+                        monthName = HijriNames.getMonthName(prevMonth, "en"),
+                        year = prevYear
+                    )
+                }
+            }
+        }
+        return runCatching {
+            // India moon sighting typically lags Umm al-Qura by 1 day
+            val hijrah = HijrahDate.from(date.minusDays(1))
+            val day = hijrah.get(ChronoField.DAY_OF_MONTH)
+            val month = hijrah.get(ChronoField.MONTH_OF_YEAR)
+            val year = hijrah.get(ChronoField.YEAR)
+            HijriDate(
+                day = day,
+                month = month,
+                monthName = HijriNames.getMonthName(month, "en"),
+                year = year
+            )
+        }.getOrElse {
+            HijriDate(1, 6, "Jumada al-Akhirah", 1448)
+        }
+    }
+
     private fun parseAzanTimes(times: Map<String, String>): Map<Prayer, LocalTime> {
         val result = mutableMapOf<Prayer, LocalTime>()
-        times["fajr"]?.let { result[Prayer.FAJR] = LocalTime.parse(it) }
-        times["sunrise"]?.let { result[Prayer.SUNRISE] = LocalTime.parse(it) }
-        times["dhuhr"]?.let { result[Prayer.DHUHR] = LocalTime.parse(it) }
-        times["asr"]?.let { result[Prayer.ASR] = LocalTime.parse(it) }
-        times["maghrib"]?.let { result[Prayer.MAGHRIB] = LocalTime.parse(it) }
-        times["isha"]?.let { result[Prayer.ISHA] = LocalTime.parse(it) }
+        times["fajr"]?.let { runCatching { LocalTime.parse(it) }.getOrNull()?.let { t -> result[Prayer.FAJR] = t } }
+        times["sunrise"]?.let { runCatching { LocalTime.parse(it) }.getOrNull()?.let { t -> result[Prayer.SUNRISE] = t } }
+        times["dhuhr"]?.let { runCatching { LocalTime.parse(it) }.getOrNull()?.let { t -> result[Prayer.DHUHR] = t } }
+        times["asr"]?.let { runCatching { LocalTime.parse(it) }.getOrNull()?.let { t -> result[Prayer.ASR] = t } }
+        times["maghrib"]?.let { runCatching { LocalTime.parse(it) }.getOrNull()?.let { t -> result[Prayer.MAGHRIB] = t } }
+        times["isha"]?.let { runCatching { LocalTime.parse(it) }.getOrNull()?.let { t -> result[Prayer.ISHA] = t } }
         return result
     }
 

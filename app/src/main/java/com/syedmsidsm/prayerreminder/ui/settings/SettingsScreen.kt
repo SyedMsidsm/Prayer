@@ -87,6 +87,84 @@ fun SettingsScreen(
     } else {
         "en"
     }
+    var showWidgetPickerDialog by remember { mutableStateOf(false) }
+
+    if (showWidgetPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showWidgetPickerDialog = false },
+            containerColor = PrayerReminderColors.Surface,
+            title = {
+                Text(
+                    text = stringResource(R.string.add_widget),
+                    color = PrayerReminderColors.Ink,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    listOf(
+                        Triple(
+                            "Wide Card (4×2)",
+                            "Next prayer countdown + full 5-prayer table",
+                            com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
+                        ),
+                        Triple(
+                            "Circular Ring (2×2)",
+                            "Compact gold progress ring with live countdown",
+                            com.syedmsidsm.prayerreminder.widget.SmallPrayerWidgetReceiver::class.java
+                        ),
+                        Triple(
+                            "Slim Strip (4×1)",
+                            "Horizontal 5-prayer strip with Hijri date",
+                            com.syedmsidsm.prayerreminder.widget.StripPrayerWidgetReceiver::class.java
+                        )
+                    ).forEach { (title, subtitle, receiverClass) ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showWidgetPickerDialog = false
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                        val mgr = android.appwidget.AppWidgetManager.getInstance(context)
+                                        if (mgr.isRequestPinAppWidgetSupported) {
+                                            mgr.requestPinAppWidget(
+                                                android.content.ComponentName(context, receiverClass),
+                                                null,
+                                                null
+                                            )
+                                        }
+                                    } else {
+                                        onAddWidget()
+                                    }
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Ivory)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = PrayerReminderColors.Ink,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrayerReminderColors.InkSubtle
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showWidgetPickerDialog = false }) {
+                    Text(stringResource(R.string.cancel), color = PrayerReminderColors.Forest)
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -206,18 +284,29 @@ fun SettingsScreen(
                         )
                     }
 
-                    if (activeTimetable != null) {
-                        val lastDate = runCatching { LocalDate.parse(activeTimetable.lastDate) }.getOrNull()
+                    val today = LocalDate.now()
+                    val currentTable = timetables.firstOrNull { table ->
+                        val first = runCatching { LocalDate.parse(table.firstDate) }.getOrNull()
+                        val last = runCatching { LocalDate.parse(table.lastDate) }.getOrNull()
+                        first != null && last != null && !today.isBefore(first) && !today.isAfter(last)
+                    } ?: activeTimetable
+
+                    if (currentTable != null) {
+                        val lastDate = runCatching { LocalDate.parse(currentTable.lastDate) }.getOrNull()
                         val daysLeft = if (lastDate != null) {
-                            val today = LocalDate.now()
                             ChronoUnit.DAYS.between(today, lastDate).toInt().coerceAtLeast(0)
                         } else {
                             0
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+                        val statusLine = if (daysLeft > 0) {
+                            "${currentTable.hijriMonthName} ${currentTable.hijriYear} · ${stringResource(R.string.days_left, daysLeft)}"
+                        } else {
+                            "Built-in Bhatkal schedule active · ${currentTable.hijriMonthName} ${currentTable.hijriYear} ready"
+                        }
                         Text(
-                            text = "${activeTimetable.hijriMonthName} ${activeTimetable.hijriYear} · ${stringResource(R.string.days_left, daysLeft)}",
+                            text = statusLine,
                             style = MaterialTheme.typography.bodyMedium,
                             color = PrayerReminderColors.Muted
                         )
@@ -232,14 +321,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.import_new),
                         onClick = onImportNewTimetable
                     )
-
-                    if (activeTimetable != null) {
-                        SettingsNavigationRow(
-                            icon = Icons.Default.Share,
-                            title = stringResource(R.string.send_family),
-                            onClick = { onSendCurrentToFamily(activeTimetable) }
-                        )
-                    }
 
                     SettingsNavigationRow(
                         icon = Icons.Default.DateRange,
@@ -297,7 +378,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Widgets,
                         title = stringResource(R.string.widget),
                         subtitle = stringResource(R.string.add_widget),
-                        onClick = onAddWidget
+                        onClick = { showWidgetPickerDialog = true }
                     )
 
                     HorizontalDivider(

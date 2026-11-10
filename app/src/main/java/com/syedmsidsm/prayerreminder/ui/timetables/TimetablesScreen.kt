@@ -242,13 +242,6 @@ private fun TimetableCard(
                 }
 
                 Row {
-                    IconButton(onClick = onSend) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.send_family),
-                            tint = PrayerReminderColors.Ground
-                        )
-                    }
                     IconButton(onClick = onDelete) {
                         Icon(
                             imageVector = Icons.Default.Delete,

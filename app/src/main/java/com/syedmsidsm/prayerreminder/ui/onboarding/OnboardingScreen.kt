@@ -1,7 +1,6 @@
 package com.syedmsidsm.prayerreminder.ui.onboarding
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -30,15 +29,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AccessAlarm
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,7 +44,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,42 +51,41 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import com.syedmsidsm.prayerreminder.R
-import com.syedmsidsm.prayerreminder.domain.model.JamaatRule
-import com.syedmsidsm.prayerreminder.reliability.OemSettingsLauncher
 import com.syedmsidsm.prayerreminder.reliability.ReliabilityChecker
 import com.syedmsidsm.prayerreminder.ui.settings.SettingsViewModel
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
     viewModel: SettingsViewModel,
     onPickImage: () -> Unit,
-    onImportFile: () -> Unit,
+    onImportFile: () -> Unit = {},
     onFinished: () -> Unit
 ) {
     val context = LocalContext.current
-    var currentStep by remember { mutableIntStateOf(1) }
-    val totalSteps = 11
+    var currentStep by rememberSaveable { mutableIntStateOf(1) }
+    val totalSteps = 3
 
     val timetables by viewModel.timetables.collectAsState()
     val activeTimetable = timetables.firstOrNull()
@@ -102,21 +97,39 @@ fun OnboardingScreen(
         "en"
     }
 
+    var refreshTrigger by remember { mutableIntStateOf(0) }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = { currentStep = 7 }
+        onResult = {
+            refreshTrigger++
+            onFinished()
+        }
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Step $currentStep of $totalSteps",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = PrayerReminderColors.Muted,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        for (step in 1..totalSteps) {
+                            val isActive = step == currentStep
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .height(8.dp)
+                                    .width(if (isActive) 28.dp else 8.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(
+                                        if (isActive) PrayerReminderColors.Gold
+                                        else PrayerReminderColors.Line
+                                    )
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     if (currentStep > 1) {
@@ -127,19 +140,17 @@ fun OnboardingScreen(
                                 tint = PrayerReminderColors.Ink
                             )
                         }
+                    } else {
+                        Spacer(modifier = Modifier.width(48.dp))
                     }
                 },
                 actions = {
-                    if (currentStep in listOf(3, 6, 7, 8, 9, 10)) {
-                        TextButton(onClick = {
-                            if (currentStep < totalSteps) currentStep++ else onFinished()
-                        }) {
-                            Text(
-                                text = stringResource(R.string.skip),
-                                color = PrayerReminderColors.Muted,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                    TextButton(onClick = onFinished) {
+                        Text(
+                            text = stringResource(R.string.skip),
+                            color = PrayerReminderColors.Muted,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = PrayerReminderColors.Ivory)
@@ -152,11 +163,11 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (currentStep) {
-                1 -> StepLanguage(
+                1 -> StepWelcomeAndLanguage(
                     currentLang = currentLangTag,
                     onSelectLanguage = { lang ->
                         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang))
@@ -165,51 +176,24 @@ fun OnboardingScreen(
                     },
                     onContinue = { currentStep = 2 }
                 )
-                2 -> StepWelcome(onContinue = { currentStep = 3 })
-                3 -> StepTimetable(
-                    activeTimetable = activeTimetable,
+                2 -> StepPrayerTimesSource(
+                    activeTimetablePlace = activeTimetable?.place ?: "Bhatkal",
                     onPickImage = onPickImage,
-                    onImportFile = onImportFile,
-                    onContinue = { currentStep = 4 }
+                    onContinue = { currentStep = 3 }
                 )
-                4 -> StepJamaat(
-                    viewModel = viewModel,
-                    onContinue = { currentStep = 5 }
-                )
-                5 -> StepVoiceReminders(
-                    viewModel = viewModel,
-                    onContinue = { currentStep = 6 }
-                )
-                6 -> StepNotifications(
-                    context = context,
-                    onRequestPermission = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                3 -> StepTurnOnReminders(
+                    refreshKey = refreshTrigger,
+                    onAllowAllAndFinish = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            !ReliabilityChecker.isNotificationsAllowed(context)
+                        ) {
                             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         } else {
-                            currentStep = 7
+                            onFinished()
                         }
                     },
-                    onContinue = { currentStep = 7 }
-                )
-                7 -> StepExactAlarms(
-                    context = context,
-                    onContinue = { currentStep = 8 }
-                )
-                8 -> StepBattery(
-                    context = context,
-                    onContinue = { currentStep = 9 }
-                )
-                9 -> StepPhoneSpecific(
-                    context = context,
-                    onContinue = { currentStep = 10 }
-                )
-                10 -> StepTestReminder(
-                    viewModel = viewModel,
-                    onContinue = { currentStep = 11 }
-                )
-                11 -> StepWidget(
-                    context = context,
-                    onDone = onFinished
+                    onSkip = onFinished,
+                    onRefresh = { refreshTrigger++ }
                 )
             }
         }
@@ -217,673 +201,470 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun StepLanguage(
+private fun StepWelcomeAndLanguage(
     currentLang: String,
     onSelectLanguage: (String) -> Unit,
     onContinue: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Box(
+        modifier = Modifier
+            .size(96.dp)
+            .clip(CircleShape)
+            .background(PrayerReminderColors.Ground),
+        contentAlignment = Alignment.Center
+    ) {
         Image(
-            painter = painterResource(R.drawable.splash_icon_static),
+            painter = painterResource(id = R.drawable.splash_icon_static),
             contentDescription = null,
-            modifier = Modifier.size(90.dp)
+            modifier = Modifier.size(68.dp)
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.language),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            val options = listOf(Pair("English", "en"), Pair("العربية", "ar"), Pair("اردو", "ur"))
-            for ((label, code) in options) {
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp)
-                        .clickable { onSelectLanguage(code) },
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (currentLang == code) PrayerReminderColors.Ground else PrayerReminderColors.Surface,
-                    border = BorderStroke(1.dp, if (currentLang == code) PrayerReminderColors.Ground else PrayerReminderColors.Line)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = label,
-                            color = if (currentLang == code) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(36.dp))
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
     }
-}
 
-@Composable
-private fun StepWelcome(onContinue: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(24.dp))
-        Image(
-            painter = painterResource(R.drawable.splash_icon_static),
-            contentDescription = null,
-            modifier = Modifier.size(110.dp)
-        )
-        Spacer(modifier = Modifier.height(28.dp))
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = stringResource(R.string.onb_welcome),
-            style = MaterialTheme.typography.bodyLarge,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 24.sp,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-        Spacer(modifier = Modifier.height(40.dp))
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
-    }
-}
+    Spacer(modifier = Modifier.height(24.dp))
 
-@Composable
-private fun StepTimetable(
-    activeTimetable: com.syedmsidsm.prayerreminder.domain.model.Timetable?,
-    onPickImage: () -> Unit,
-    onImportFile: () -> Unit,
-    onContinue: () -> Unit
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.timetable),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_timetable),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+    Text(
+        text = "Assalamu Alaikum",
+        style = MaterialTheme.typography.headlineLarge,
+        fontWeight = FontWeight.Bold,
+        color = PrayerReminderColors.Ink,
+        textAlign = TextAlign.Center
+    )
 
-        if (activeTimetable != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.OkBg)
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = "Never miss an azan or a jamaat in Bhatkal.",
+        style = MaterialTheme.typography.bodyLarge,
+        color = PrayerReminderColors.Muted,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Text(
+        text = stringResource(R.string.language),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = PrayerReminderColors.Ink
+    )
+
+    Spacer(modifier = Modifier.height(14.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        val langs = listOf(
+            Pair("en", "English"),
+            Pair("ar", "العربية"),
+            Pair("ur", "اردو")
+        )
+        for ((code, label) in langs) {
+            val isSelected = currentLang == code
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clickable { onSelectLanguage(code) },
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Surface,
+                border = BorderStroke(
+                    width = if (isSelected) 2.dp else 1.dp,
+                    color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
+                )
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = PrayerReminderColors.OkText,
-                        modifier = Modifier.size(24.dp)
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "${activeTimetable.place} · ${activeTimetable.hijriMonthName} ${activeTimetable.hijriYear}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PrayerReminderColors.OkText
-                        )
-                        Text(
-                            text = "${activeTimetable.days.size} days loaded",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PrayerReminderColors.OkText
-                        )
-                    }
                 }
             }
-            Spacer(modifier = Modifier.height(20.dp))
         }
+    }
 
-        Button(
-            onClick = onPickImage,
-            colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(50.dp)
-        ) {
-            Text(stringResource(R.string.onb_choose_image), fontWeight = FontWeight.Bold, color = PrayerReminderColors.Ivory)
-        }
+    Spacer(modifier = Modifier.height(40.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = onImportFile,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(50.dp),
-            border = BorderStroke(1.dp, PrayerReminderColors.Line)
-        ) {
-            Text(stringResource(R.string.onb_family_file), color = PrayerReminderColors.Ink, fontWeight = FontWeight.Medium)
-        }
-
-        Spacer(modifier = Modifier.height(28.dp))
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
+    Button(
+        onClick = onContinue,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrayerReminderColors.Ground,
+            contentColor = PrayerReminderColors.Ivory
+        )
+    ) {
+        Text(
+            text = stringResource(R.string.continue_btn),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
 @Composable
-private fun StepJamaat(
-    viewModel: SettingsViewModel,
+private fun StepPrayerTimesSource(
+    activeTimetablePlace: String,
+    onPickImage: () -> Unit,
     onContinue: () -> Unit
 ) {
-    var minutes by remember { mutableIntStateOf(15) }
+    var selectedMode by remember { mutableStateOf("builtin") }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.jamaat_times),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_jamaat),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
+    Text(
+        text = "Your prayer times",
+        style = MaterialTheme.typography.headlineLarge,
+        fontWeight = FontWeight.Bold,
+        color = PrayerReminderColors.Ink,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = "Pick how you want to get daily azan & jamaat times.",
+        style = MaterialTheme.typography.bodyLarge,
+        color = PrayerReminderColors.Muted,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Card A: Built-in Bhatkal schedule (Default Selected)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { selectedMode = "builtin" },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
+        border = BorderStroke(
+            width = if (selectedMode == "builtin") 2.5.dp else 1.dp,
+            color = if (selectedMode == "builtin") PrayerReminderColors.Gold else PrayerReminderColors.Line
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(PrayerReminderColors.Ground),
+                contentAlignment = Alignment.Center
             ) {
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    tint = PrayerReminderColors.Gold,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "$minutes minutes after azan",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "$activeTimetablePlace times (built-in)",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = PrayerReminderColors.Ink
                 )
-                Spacer(modifier = Modifier.height(14.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(PrayerReminderColors.Ivory)
-                            .clickable { if (minutes > 1) minutes-- },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(imageVector = Icons.Default.Remove, contentDescription = null, tint = PrayerReminderColors.Ink)
-                    }
-                    Spacer(modifier = Modifier.width(32.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(PrayerReminderColors.Ivory)
-                            .clickable { if (minutes < 60) minutes++ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = PrayerReminderColors.Ink)
-                    }
-                }
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Today: Asr azan 3:59 PM → jamaat 4:14 PM",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PrayerReminderColors.GoldText,
-                    fontWeight = FontWeight.Medium
+                    text = "Ready now. Updates automatically every day of the year and works 100% offline.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrayerReminderColors.Muted
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(36.dp))
-        PrimaryButton(
-            text = stringResource(R.string.continue_btn),
-            onClick = {
-                val keys = listOf("FAJR", "DHUHR", "ASR", "MAGHRIB", "ISHA", "JUMUAH")
-                for (k in keys) viewModel.setJamaatRule(k, JamaatRule.AfterAzan(minutes))
-                onContinue()
-            }
-        )
-    }
-}
-
-@Composable
-private fun StepVoiceReminders(
-    viewModel: SettingsViewModel,
-    onContinue: () -> Unit
-) {
-    val voiceLang by viewModel.voiceLanguage.collectAsState()
-    val isPlaying by viewModel.audioPlayer.isPlaying.collectAsState()
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.voice_enabled),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_voice),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            val langs = listOf(Pair("اردو", "ur"), Pair("العربية", "ar"), Pair("English", "en"))
-            for ((label, code) in langs) {
-                Surface(
+            if (selectedMode == "builtin") {
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(46.dp)
-                        .clickable { viewModel.setVoiceLanguage(code) },
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (voiceLang == code) PrayerReminderColors.Ground else PrayerReminderColors.Surface,
-                    border = BorderStroke(1.dp, if (voiceLang == code) PrayerReminderColors.Ground else PrayerReminderColors.Line)
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(PrayerReminderColors.Gold),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = label,
-                            color = if (voiceLang == code) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = PrayerReminderColors.Ground,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedButton(
-            onClick = { if (isPlaying) viewModel.stopSample() else viewModel.playSample("before_azan", 10) },
-            shape = RoundedCornerShape(10.dp),
-            modifier = Modifier.fillMaxWidth().height(46.dp),
-            border = BorderStroke(1.dp, PrayerReminderColors.Line)
-        ) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = null,
-                tint = PrayerReminderColors.GoldText,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(stringResource(R.string.play_sample), color = PrayerReminderColors.Ink, fontWeight = FontWeight.SemiBold)
-        }
-
-        Spacer(modifier = Modifier.height(36.dp))
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
     }
-}
 
-@Composable
-private fun StepNotifications(
-    context: Context,
-    onRequestPermission: () -> Unit,
-    onContinue: () -> Unit
-) {
-    val isAllowed = ReliabilityChecker.isNotificationsAllowed(context)
+    Spacer(modifier = Modifier.height(14.dp))
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Icon(
-            imageVector = Icons.Default.Notifications,
-            contentDescription = null,
-            tint = PrayerReminderColors.GoldText,
-            modifier = Modifier.size(56.dp)
+    // Card B: Scan masjid timetable
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                selectedMode = "scan"
+                onPickImage()
+            },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
+        border = BorderStroke(
+            width = if (selectedMode == "scan") 2.5.dp else 1.dp,
+            color = if (selectedMode == "scan") PrayerReminderColors.Gold else PrayerReminderColors.Line
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = "Notifications",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_notifications),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(36.dp))
-
-        if (isAllowed) {
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = PrayerReminderColors.OkBg,
-                modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(PrayerReminderColors.Ivory),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "✓ Notifications allowed",
-                    color = PrayerReminderColors.OkText,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(14.dp)
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    tint = PrayerReminderColors.Ink,
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(20.dp))
-            PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
-        } else {
-            PrimaryButton(text = "Allow notifications", onClick = onRequestPermission)
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Scan my masjid's timetable",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PrayerReminderColors.Ink
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Pick a photo of your monthly timetable sheet — we read and verify it on your phone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrayerReminderColors.Muted
+                )
+            }
         }
+    }
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Button(
+        onClick = onContinue,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrayerReminderColors.Ground,
+            contentColor = PrayerReminderColors.Ivory
+        )
+    ) {
+        Text(
+            text = stringResource(R.string.continue_btn),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
 @Composable
-private fun StepExactAlarms(
-    context: Context,
-    onContinue: () -> Unit
+private fun StepTurnOnReminders(
+    refreshKey: Int,
+    onAllowAllAndFinish: () -> Unit,
+    onSkip: () -> Unit,
+    onRefresh: () -> Unit
 ) {
-    val canSchedule = ReliabilityChecker.canScheduleExactAlarms(context)
+    val context = LocalContext.current
+    val notifAllowed: Boolean = remember(refreshKey) { ReliabilityChecker.isNotificationsAllowed(context) }
+    val exactAllowed = remember(refreshKey) { ReliabilityChecker.canScheduleExactAlarms(context) }
+    val batteryUnrestricted = remember(refreshKey) { ReliabilityChecker.isIgnoringBatteryOptimizations(context) }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(12.dp))
+
+    Box(
+        modifier = Modifier
+            .size(84.dp)
+            .clip(CircleShape)
+            .background(PrayerReminderColors.Gold.copy(alpha = 0.22f)),
+        contentAlignment = Alignment.Center
+    ) {
         Icon(
             imageVector = Icons.Default.Notifications,
             contentDescription = null,
             tint = PrayerReminderColors.GoldText,
-            modifier = Modifier.size(56.dp)
+            modifier = Modifier.size(44.dp)
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = "Exact Timing",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_alarms),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(36.dp))
+    }
 
-        if (!canSchedule && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Button(
-                onClick = {
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(
+        text = "Turn on reminders",
+        style = MaterialTheme.typography.headlineLarge,
+        fontWeight = FontWeight.Bold,
+        color = PrayerReminderColors.Ink,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = "We'll speak 10 min before azan and 5 min before jamaat.",
+        style = MaterialTheme.typography.bodyLarge,
+        color = PrayerReminderColors.Muted,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    PermissionItemCard(
+        icon = Icons.Default.Notifications,
+        title = "Notifications",
+        isGranted = notifAllowed,
+        onClick = onAllowAllAndFinish
+    )
+
+    Spacer(modifier = Modifier.height(10.dp))
+
+    PermissionItemCard(
+        icon = Icons.Default.AccessAlarm,
+        title = "Exact alarms",
+        isGranted = exactAllowed,
+        onClick = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                runCatching {
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                         data = Uri.parse("package:${context.packageName}")
                     }
                     context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
-            ) {
-                Text("Allow exact alarms", color = PrayerReminderColors.Ivory, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
-    }
-}
-
-@Composable
-private fun StepBattery(
-    context: Context,
-    onContinue: () -> Unit
-) {
-    val isIgnoring = ReliabilityChecker.isIgnoringBatteryOptimizations(context)
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Battery Optimization",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_battery),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(36.dp))
-
-        if (!isIgnoring) {
-            Button(
-                onClick = {
-                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                        data = Uri.parse("package:${context.packageName}")
-                    }
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
-            ) {
-                Text("Turn off battery optimization", color = PrayerReminderColors.Ivory, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
-    }
-}
-
-@Composable
-private fun StepPhoneSpecific(
-    context: Context,
-    onContinue: () -> Unit
-) {
-    val guidance = remember { OemSettingsLauncher.getGuidance() }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "${guidance.brandName} Settings",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_phone_specific),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                for (step in guidance.steps) {
-                    Text(
-                        text = step,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = PrayerReminderColors.Ink,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
                 }
             }
+            onRefresh()
         }
+    )
 
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(
-            onClick = { OemSettingsLauncher.openSettings(context) },
-            colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(48.dp)
-        ) {
-            Text("Open phone settings", color = PrayerReminderColors.Ivory, fontWeight = FontWeight.Bold)
+    Spacer(modifier = Modifier.height(10.dp))
+
+    PermissionItemCard(
+        icon = Icons.Default.BatteryChargingFull,
+        title = "Run in background",
+        isGranted = batteryUnrestricted,
+        onClick = {
+            runCatching {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                }
+                context.startActivity(intent)
+            }
+            onRefresh()
         }
+    )
 
-        Spacer(modifier = Modifier.height(20.dp))
-        PrimaryButton(text = stringResource(R.string.reliability_i_done_it), onClick = onContinue)
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Button(
+        onClick = onAllowAllAndFinish,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrayerReminderColors.Ground,
+            contentColor = PrayerReminderColors.Ivory
+        )
+    ) {
+        Text(
+            text = "Allow all",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    TextButton(onClick = onSkip) {
+        Text(
+            text = "Not now",
+            style = MaterialTheme.typography.titleMedium,
+            color = PrayerReminderColors.Ink,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
 @Composable
-private fun StepTestReminder(
-    viewModel: SettingsViewModel,
-    onContinue: () -> Unit
+private fun PermissionItemCard(
+    icon: ImageVector,
+    title: String,
+    isGranted: Boolean,
+    onClick: () -> Unit
 ) {
-    var countdown by remember { mutableIntStateOf(0) }
-    var waiting by remember { mutableStateOf(false) }
-
-    LaunchedEffect(waiting) {
-        if (waiting) {
-            countdown = 60
-            while (countdown > 0) {
-                delay(1000)
-                countdown--
-            }
-            waiting = false
-        }
-    }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Test Reminder",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_test),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(28.dp))
-
-        if (waiting) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        color = PrayerReminderColors.Surface,
+        border = BorderStroke(1.dp, PrayerReminderColors.Line)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = PrayerReminderColors.Ink,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(14.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = PrayerReminderColors.Ink,
+                modifier = Modifier.weight(1f)
+            )
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = PrayerReminderColors.WarnBg,
-                modifier = Modifier.fillMaxWidth()
+                color = if (isGranted) PrayerReminderColors.OkBg else PrayerReminderColors.Ivory
             ) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Test arrives in $countdown s", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = PrayerReminderColors.WarnText)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(stringResource(R.string.test_wait), style = MaterialTheme.typography.bodySmall, color = PrayerReminderColors.WarnText)
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isGranted) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = PrayerReminderColors.OkText,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                    Text(
+                        text = if (isGranted) "Allowed" else "Allow",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isGranted) PrayerReminderColors.OkText else PrayerReminderColors.Ink
+                    )
                 }
             }
-        } else {
-            Button(
-                onClick = {
-                    viewModel.scheduleTestReminder()
-                    waiting = true
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Gold),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
-            ) {
-                Text(stringResource(R.string.send_test), color = PrayerReminderColors.Ink, fontWeight = FontWeight.Bold)
-            }
         }
-
-        Spacer(modifier = Modifier.height(28.dp))
-        PrimaryButton(text = stringResource(R.string.continue_btn), onClick = onContinue)
-    }
-}
-
-@Composable
-private fun StepWidget(
-    context: Context,
-    onDone: () -> Unit
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(20.dp))
-        Icon(
-            imageVector = Icons.Default.Widgets,
-            contentDescription = null,
-            tint = PrayerReminderColors.GoldText,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.widget),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = PrayerReminderColors.Ink
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onb_widget),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PrayerReminderColors.Muted,
-            lineHeight = 22.sp
-        )
-        Spacer(modifier = Modifier.height(36.dp))
-
-        val appWidgetManager = remember { android.appwidget.AppWidgetManager.getInstance(context) }
-        val isPinSupported = remember {
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
-                    appWidgetManager.isRequestPinAppWidgetSupported
-        }
-
-        if (isPinSupported) {
-            Button(
-                onClick = {
-                    val provider = android.content.ComponentName(
-                        context,
-                        com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
-                    )
-                    appWidgetManager.requestPinAppWidget(provider, null, null)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Gold),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.add_widget),
-                    color = PrayerReminderColors.Ink,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        PrimaryButton(text = stringResource(R.string.done), onClick = onDone)
-    }
-}
-
-@Composable
-private fun PrimaryButton(text: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth().height(50.dp)
-    ) {
-        Text(text = text, color = PrayerReminderColors.Ivory, fontWeight = FontWeight.Bold, fontSize = 16.sp)
     }
 }
