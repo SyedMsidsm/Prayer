@@ -152,7 +152,13 @@ class MainActivity : AppCompatActivity() {
                         )
                     },
                     onManualEntry = { currentScreen = Screen.MANUAL_ENTRY },
-                    onSendToFamily = { /* Phase 3 */ },
+                    onSendToFamily = { table ->
+                        val shareIntent = com.syedmsidsm.prayerreminder.importing.FamilyShare.createShareIntent(
+                            this@MainActivity,
+                            table
+                        )
+                        startActivity(shareIntent)
+                    },
                     onDeleteTimetable = { table ->
                         homeViewModel.viewModelScope.launch {
                             (application as PrayerReminderApp).container.timetableRepository.deleteTimetable(
@@ -183,7 +189,13 @@ class MainActivity : AppCompatActivity() {
                 if (savedTable != null) {
                     ImportSavedScreen(
                         timetable = savedTable,
-                        onSendToFamily = { /* Phase 3 */ },
+                        onSendToFamily = {
+                            val shareIntent = com.syedmsidsm.prayerreminder.importing.FamilyShare.createShareIntent(
+                                this@MainActivity,
+                                savedTable
+                            )
+                            startActivity(shareIntent)
+                        },
                         onDone = {
                             homeViewModel.viewModelScope.launch { homeViewModel.loadData() }
                             currentScreen = Screen.HOME
