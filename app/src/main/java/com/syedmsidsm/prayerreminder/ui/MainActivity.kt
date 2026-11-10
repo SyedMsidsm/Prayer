@@ -4,22 +4,32 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.syedmsidsm.prayerreminder.R
-import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.syedmsidsm.prayerreminder.PrayerReminderApp
+import com.syedmsidsm.prayerreminder.ui.home.HomeScreen
+import com.syedmsidsm.prayerreminder.ui.home.HomeViewModel
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderTheme
 
 class MainActivity : AppCompatActivity() {
+
+    private val homeViewModel: HomeViewModel by viewModels {
+        val container = (application as PrayerReminderApp).container
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return HomeViewModel(
+                    container.timetableRepository,
+                    container.settingsRepository,
+                    container.dayScheduleResolver,
+                    container.nextPrayerResolver
+                ) as T
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
@@ -33,7 +43,8 @@ class MainActivity : AppCompatActivity() {
         val animationsEnabled = animatorDurationScale > 0f
 
         splash.setKeepOnScreenCondition {
-            if (!animationsEnabled) false else SystemClock.uptimeMillis() - start < 900
+            val dataReady = homeViewModel.isReady.value
+            if (!animationsEnabled) !dataReady else !dataReady || (SystemClock.uptimeMillis() - start < 900)
         }
 
         splash.setOnExitAnimationListener { provider ->
@@ -54,24 +65,8 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             PrayerReminderTheme {
-                MainContent()
+                HomeScreen(viewModel = homeViewModel)
             }
         }
-    }
-}
-
-@Composable
-fun MainContent() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PrayerReminderColors.Ivory),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            color = PrayerReminderColors.Ink
-        )
     }
 }
