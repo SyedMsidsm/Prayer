@@ -36,7 +36,8 @@ data class HomeUiState(
     val voiceSummary: String = "",
     val voiceEnabled: Boolean = true,
     val reminderStates: Map<Prayer, Boolean> = emptyMap(),
-    val isSimulatedDemoDate: Boolean = false
+    val isSimulatedDemoDate: Boolean = false,
+    val missedCount7d: Int = 0
 )
 
 class HomeViewModel(

@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return SettingsViewModel(
+                    context = applicationContext,
                     settingsRepository = container.settingsRepository,
                     timetableRepository = container.timetableRepository,
                     dayScheduleResolver = container.dayScheduleResolver,

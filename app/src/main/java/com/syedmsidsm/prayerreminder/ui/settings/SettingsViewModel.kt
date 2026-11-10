@@ -1,5 +1,6 @@
 package com.syedmsidsm.prayerreminder.ui.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syedmsidsm.prayerreminder.audio.AudioSamplePlayer
@@ -9,6 +10,13 @@ import com.syedmsidsm.prayerreminder.domain.DayScheduleResolver
 import com.syedmsidsm.prayerreminder.domain.model.DaySchedule
 import com.syedmsidsm.prayerreminder.domain.model.JamaatRule
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
+import com.syedmsidsm.prayerreminder.reminders.AlarmScheduler
+import com.syedmsidsm.prayerreminder.reminders.AppRefresher
+import com.syedmsidsm.prayerreminder.reminders.FiredEventLog
+import com.syedmsidsm.prayerreminder.reminders.MissedReminderDetector
+import com.syedmsidsm.prayerreminder.reminders.ReminderKind
+import com.syedmsidsm.prayerreminder.reminders.ReminderPlanner
+import com.syedmsidsm.prayerreminder.reminders.ScheduledReminderEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +28,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class SettingsViewModel(
+    private val context: Context? = null,
     private val settingsRepository: SettingsRepository,
     private val timetableRepository: TimetableRepository,
     private val dayScheduleResolver: DayScheduleResolver,
@@ -99,6 +108,12 @@ class SettingsViewModel(
         emptyMap()
     )
 
+    val lastTestResult: StateFlow<String> = settingsRepository.lastTestResult.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ""
+    )
+
     val timetables: StateFlow<List<Timetable>> = timetableRepository.timetables
 
     val todaySchedule: StateFlow<DaySchedule?> = combine(
@@ -115,79 +130,106 @@ class SettingsViewModel(
     fun setAppLanguage(languageCode: String) {
         viewModelScope.launch {
             settingsRepository.setAppLanguage(languageCode)
+            context?.let { AppRefresher.refreshAll(it, "language_changed") }
         }
     }
 
     fun setJamaatRule(prayerKey: String, rule: JamaatRule) {
         viewModelScope.launch {
             settingsRepository.setJamaatRule(prayerKey, rule)
+            context?.let { AppRefresher.refreshAll(it, "jamaat_changed") }
         }
     }
 
     fun resetAllJamaatTo15Minutes() {
         viewModelScope.launch {
             settingsRepository.resetAllJamaatTo15Minutes()
+            context?.let { AppRefresher.refreshAll(it, "jamaat_reset") }
         }
     }
 
     fun setVoiceEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setVoiceEnabled(enabled)
+            context?.let { AppRefresher.refreshAll(it, "voice_enabled_changed") }
         }
     }
 
     fun setVoiceLanguage(lang: String) {
         viewModelScope.launch {
             settingsRepository.setVoiceLanguage(lang)
+            context?.let { AppRefresher.refreshAll(it, "voice_language_changed") }
         }
     }
 
     fun setVoiceGender(gender: String) {
         viewModelScope.launch {
             settingsRepository.setVoiceGender(gender)
+            context?.let { AppRefresher.refreshAll(it, "voice_gender_changed") }
         }
     }
 
     fun setVoiceChime(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setVoiceChime(enabled)
+            context?.let { AppRefresher.refreshAll(it, "voice_chime_changed") }
         }
     }
 
     fun setVoiceOnSilent(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setVoiceOnSilent(enabled)
+            context?.let { AppRefresher.refreshAll(it, "voice_silent_changed") }
         }
     }
 
     fun setRemBeforeAzanMin(minutes: Int) {
         viewModelScope.launch {
             settingsRepository.setRemBeforeAzanMin(minutes)
+            context?.let { AppRefresher.refreshAll(it, "before_azan_min_changed") }
         }
     }
 
     fun setRemJumuahBeforeAzanMin(minutes: Int) {
         viewModelScope.launch {
             settingsRepository.setRemJumuahBeforeAzanMin(minutes)
+            context?.let { AppRefresher.refreshAll(it, "jumuah_min_changed") }
         }
     }
 
     fun setRemAtAzan(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setRemAtAzan(enabled)
+            context?.let { AppRefresher.refreshAll(it, "at_azan_changed") }
         }
     }
 
     fun setRemBeforeJamaatMin(minutes: Int) {
         viewModelScope.launch {
             settingsRepository.setRemBeforeJamaatMin(minutes)
+            context?.let { AppRefresher.refreshAll(it, "before_jamaat_min_changed") }
         }
     }
 
     fun setReminderMatrixEntry(prayerKey: String, kind: String, enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setReminderMatrixEntry(prayerKey, kind, enabled)
+            context?.let { AppRefresher.refreshAll(it, "matrix_changed") }
         }
+    }
+
+    fun scheduleTestReminder() {
+        val ctx = context ?: return
+        val fireAtEpochSeconds = (System.currentTimeMillis() / 1000) + 60
+        val event = ScheduledReminderEvent(
+            code = ReminderPlanner.TEST_REMINDER_CODE,
+            fireAtEpochSeconds = fireAtEpochSeconds,
+            kind = ReminderKind.TEST
+        )
+        val firedLog = FiredEventLog(ctx)
+        val missedDetector = MissedReminderDetector(ctx, firedLog)
+        val scheduler = AlarmScheduler(ctx, missedDetector)
+        scheduler.scheduleEvent(event)
     }
 
     fun playSample(kind: String, minutes: Int = 10) {

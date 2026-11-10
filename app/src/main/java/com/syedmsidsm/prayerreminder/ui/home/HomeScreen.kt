@@ -137,7 +137,7 @@ fun HomeScreen(
             }
         }
 
-        // 2. Warning Banners (if estimated or no table)
+        // 2. Warning Banners (if estimated or no table or missed reminders)
         val schedule = uiState.schedule
         if (schedule != null && schedule.source.isEstimated) {
             Spacer(modifier = Modifier.height(12.dp))
@@ -150,6 +150,15 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(12.dp))
             BannerCard(
                 text = stringResource(R.string.banner_no_timetable),
+                bg = PrayerReminderColors.WarnBg,
+                textColor = PrayerReminderColors.WarnText
+            )
+        }
+
+        if (uiState.missedCount7d > 0) {
+            Spacer(modifier = Modifier.height(12.dp))
+            BannerCard(
+                text = stringResource(R.string.banner_missed),
                 bg = PrayerReminderColors.WarnBg,
                 textColor = PrayerReminderColors.WarnText
             )
