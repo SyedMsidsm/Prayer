@@ -1,0 +1,151 @@
+<resources>
+    <string name="app_name">تذكير الصلاة</string>
+    <string name="prayer_fajr">الفجر</string>
+    <string name="prayer_sunrise">الشروق</string>
+    <string name="prayer_dhuhr">الظهر</string>
+    <string name="prayer_asr">العصر</string>
+    <string name="prayer_maghrib">المغرب</string>
+    <string name="prayer_isha">العشاء</string>
+    <string name="prayer_jumuah">الجمعة</string>
+    <string name="am_marker">ص</string>
+    <string name="pm_marker">م</string>
+
+    <string name="azan">الأذان</string>
+    <string name="jamaat">الإقامة</string>
+    <string name="next_prayer">الصلاة القادمة</string>
+    <string name="now_prayer">الآن</string>
+    <string name="next_tag">التالية</string>
+    <string name="today">اليوم</string>
+    <string name="tomorrow">غدًا</string>
+    <string name="azan_in">الأذان بعد %1$s</string>
+    <string name="jamaat_in">الإقامة بعد %1$s</string>
+    <string name="duration_join">%1$s و%2$s</string>
+    <plurals name="hours"><item quantity="zero">%d ساعة</item><item quantity="one">ساعة</item><item quantity="two">ساعتين</item><item quantity="few">%d ساعات</item><item quantity="many">%d ساعة</item><item quantity="other">%d ساعة</item></plurals>
+    <plurals name="minutes"><item quantity="zero">%d دقيقة</item><item quantity="one">دقيقة</item><item quantity="two">دقيقتين</item><item quantity="few">%d دقائق</item><item quantity="many">%d دقيقة</item><item quantity="other">%d دقيقة</item></plurals>
+    <string name="min_short">%d د</string>
+    <string name="hijri_suffix">هـ</string>
+    <string name="timetable_line">جدول %1$s · حتى %2$s</string>
+    <string name="timetable_ended_line">انتهى جدول %1$s في %2$s</string>
+    <string name="voice_line">الصوت: قبل الأذان بـ%1$s · قبل الإقامة بـ%2$s</string>
+    <string name="voice_off_line">الصوت متوقف</string>
+    <string name="estimated_suffix">(تقديري)</string>
+    <string name="times_for_place">الأوقات لمدينة %1$s</string>
+
+    <string name="banner_estimated">أوقات تقديرية — استورد الجدول الجديد</string>
+    <string name="banner_no_timetable">لا يوجد جدول لليوم. استورد الجدول الجديد.</string>
+    <string name="banner_missed">لم تصل بعض التنبيهات. اضغط للإصلاح.</string>
+    <string name="banner_notifications_off">الإشعارات متوقفة. اضغط للإصلاح.</string>
+
+    <string name="notif_before_azan">أذان %1$s بعد %2$s</string>
+    <string name="notif_at_azan">أذان %1$s — %2$s</string>
+    <string name="notif_before_jamaat">تبدأ صلاة %1$s بعد %2$s</string>
+    <string name="notif_azan_jamaat_text">الأذان %1$s · الإقامة %2$s</string>
+    <string name="notif_jamaat_text">الإقامة %1$s</string>
+    <string name="notif_new_timetable_title">مطلوب جدول جديد</string>
+    <string name="notif_new_timetable_text">ينتهي %1$s بعد %2$s. شارك جدول الشهر الجديد مع التطبيق.</string>
+    <string name="notif_test">تنبيه تجريبي — إذا رأيته وسمعته فالتذكيرات تعمل.</string>
+    <string name="notif_playing">جارٍ تشغيل التذكير</string>
+    <string name="channel_voice">التذكيرات (صوت)</string>
+    <string name="channel_sound">التذكيرات (نغمة)</string>
+    <string name="channel_general">عام</string>
+
+    <string name="import_title">استيراد الجدول</string>
+    <string name="import_reading">جارٍ قراءة الجدول…</string>
+    <string name="import_offline_note">على هاتفك، بدون إنترنت</string>
+    <string name="import_check_title">راجع الجدول</string>
+    <string name="import_flags">%1$d قيمة تبدو خاطئة. اضغط على المربع الأصفر لإصلاحها.</string>
+    <string name="import_all_good">كل الأوقات (%1$d) تبدو صحيحة</string>
+    <string name="import_ampm_note">يُضاف ص/م تلقائيًا: الفجر والشروق صباحًا، والظهر وقت الظهيرة، والباقي بعد الظهر والمساء.</string>
+    <string name="import_save">حفظ الجدول</string>
+    <string name="import_keep">إبقاء %1$s</string>
+    <string name="import_use">استخدام %1$s</string>
+    <string name="import_neighbours">اليوم السابق %1$s واليوم التالي %2$s.</string>
+    <string name="import_failed">لم نجد جدولًا في هذه الصورة.</string>
+    <string name="import_try_another">جرّب صورة أخرى</string>
+    <string name="import_manual">إدخال يدوي</string>
+    <string name="import_replace">استبدال جدول %1$s الحالي؟</string>
+    <string name="saved_title">تم حفظ الجدول</string>
+    <string name="send_family">إرسال إلى العائلة</string>
+    <string name="send_family_desc">يضغطون على الملف فيُحمَّل، دون الحاجة إلى المراجعة.</string>
+    <string name="family_import_title">استيراد الجدول؟</string>
+    <string name="family_checked">راجعه المرسل</string>
+    <string name="family_invalid">هذا الملف ليس جدولًا صالحًا للتطبيق.</string>
+    <string name="import_btn">استيراد</string>
+    <string name="cancel">إلغاء</string>
+    <string name="done">تم</string>
+
+    <string name="settings">الإعدادات</string>
+    <string name="language">اللغة</string>
+    <string name="timetable">جدول الأوقات</string>
+    <string name="timetables">الجداول</string>
+    <string name="import_new">استيراد جدول جديد</string>
+    <string name="import_file">استيراد ملف</string>
+    <string name="all_timetables">كل الجداول</string>
+    <string name="days_left">بقي %1$d يومًا</string>
+    <string name="tt_now">الحالي</string>
+    <string name="tt_next">القادم</string>
+    <string name="tt_earlier">السابقة</string>
+    <string name="tt_active">نشط</string>
+    <string name="tt_not_imported">لم يُستورد بعد · مطلوب قبل %1$s</string>
+
+    <string name="jamaat_times">أوقات الإقامة</string>
+    <string name="jamaat_intro">حدّد متى تبدأ كل صلاة بعد أذانها. تبدأ معظم المساجد بعد الأذان بـ15 دقيقة.</string>
+    <string name="jamaat_after">بعد الأذان</string>
+    <string name="jamaat_fixed">وقت ثابت</string>
+    <string name="jamaat_today">اليوم: الأذان %1$s ← الإقامة %2$s</string>
+    <string name="jamaat_fixed_note">ثابت: نفس الوقت كل يوم مهما كان وقت الأذان.</string>
+    <string name="jamaat_fixed_before_azan">الوقت الثابت قبل الأذان اليوم — سيُستخدم 15 دقيقة بعد الأذان.</string>
+    <string name="jamaat_reset">إعادة الكل إلى 15 دقيقة</string>
+    <string name="jamaat_after_value">بعد الأذان بـ%1$d دقيقة</string>
+
+    <string name="reminders_voice">التذكيرات والصوت</string>
+    <string name="voice_language">لغة الصوت</string>
+    <string name="voice">الصوت</string>
+    <string name="voice_male">رجل</string>
+    <string name="voice_female">امرأة</string>
+    <string name="before_azan">قبل الأذان</string>
+    <string name="at_azan">عند الأذان</string>
+    <string name="before_jamaat">قبل الإقامة</string>
+    <string name="jumuah_before_azan">الجمعة: قبل الأذان</string>
+    <string name="off">إيقاف</string>
+    <string name="which_reminders">التذكيرات لكل صلاة</string>
+    <string name="speak_on_silent">التحدث والهاتف صامت</string>
+    <string name="speak_on_silent_desc">عند الإيقاف: في الوضع الصامت أو الاهتزاز تصلك اهتزازة فقط.</string>
+    <string name="chime">نغمة قبل الصوت</string>
+    <string name="voice_enabled">التذكيرات الصوتية</string>
+    <string name="play_sample">تشغيل عينة</string>
+
+    <string name="reliability">فحص موثوقية التنبيهات</string>
+    <string name="send_test">إرسال تنبيه تجريبي</string>
+    <string name="test_wait">اقفل هاتفك الآن. سيصل التنبيه خلال دقيقة.</string>
+    <string name="test_passed">نجح الاختبار الساعة %1$s</string>
+    <string name="add_widget">إضافة الأداة إلى الشاشة الرئيسية</string>
+    <string name="widget">الأداة</string>
+    <string name="about">حول التطبيق</string>
+    <string name="privacy_line">بلا إنترنت، بلا موقع، بلا حسابات. كل شيء يبقى على هاتفك.</string>
+    <string name="widget_small_label">الصلاة القادمة</string>
+    <string name="widget_wide_label">أوقات الصلاة</string>
+    <string name="widget_import">استورد الجدول الجديد</string>
+    <string name="estimated_short">تقديري</string>
+
+    <string name="onb_welcome">أوقات الأذان والإقامة في مسجدك، مع تذكيرات وأداة.</string>
+    <string name="onb_timetable">شارك صورة جدول الأذان الشهري مع التطبيق (من واتساب أو المعرض)، وسيقرؤها لك.</string>
+    <string name="onb_choose_image">اختر صورة الجدول</string>
+    <string name="onb_family_file">وصلني ملف جدول من العائلة</string>
+    <string name="onb_jamaat">كم دقيقة بعد الأذان تبدأ الصلاة في مسجدك؟</string>
+    <string name="onb_voice">صوت يخبرك عند اقتراب الأذان والصلاة.</string>
+    <string name="onb_notifications">اسمح بالإشعارات لتصلك تذكيرات الصلاة.</string>
+    <string name="onb_alarms">اسمح بهذا لتصل التذكيرات في موعدها تمامًا. قد ترى أيقونة منبه صغيرة في شريط الحالة — إنها من التطبيق.</string>
+    <string name="onb_battery">اسمح للتطبيق بالعمل في الخلفية حتى لا يوقف هاتفك التذكيرات.</string>
+    <string name="onb_phone_specific">يحتاج هاتفك إلى إعداد إضافي واحد:</string>
+    <string name="onb_test">أرسل تنبيهًا تجريبيًا ثم اقفل هاتفك. خلال دقيقة يجب أن تراه وتسمع الصوت.</string>
+    <string name="onb_widget">شاهد الأذان والإقامة القادمين على شاشتك الرئيسية.</string>
+    <string name="continue_btn">متابعة</string>
+    <string name="skip">تخطٍّ</string>
+
+    <string-array name="hijri_months">
+        <item>محرم</item><item>صفر</item><item>ربيع الأول</item><item>ربيع الآخر</item>
+        <item>جمادى الأولى</item><item>جمادى الآخرة</item><item>رجب</item><item>شعبان</item>
+        <item>رمضان</item><item>شوال</item><item>ذو القعدة</item><item>ذو الحجة</item>
+    </string-array>
+</resources>

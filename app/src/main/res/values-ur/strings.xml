@@ -1,0 +1,151 @@
+<resources>
+    <string name="app_name">نماز کی یاد دہانی</string>
+    <string name="prayer_fajr">فجر</string>
+    <string name="prayer_sunrise">طلوعِ آفتاب</string>
+    <string name="prayer_dhuhr">ظہر</string>
+    <string name="prayer_asr">عصر</string>
+    <string name="prayer_maghrib">مغرب</string>
+    <string name="prayer_isha">عشاء</string>
+    <string name="prayer_jumuah">جمعہ</string>
+    <string name="am_marker">AM</string>
+    <string name="pm_marker">PM</string>
+
+    <string name="azan">اذان</string>
+    <string name="jamaat">جماعت</string>
+    <string name="next_prayer">اگلی نماز</string>
+    <string name="now_prayer">ابھی</string>
+    <string name="next_tag">اگلی</string>
+    <string name="today">آج</string>
+    <string name="tomorrow">کل</string>
+    <string name="azan_in">اذان %1$s میں</string>
+    <string name="jamaat_in">جماعت %1$s میں</string>
+    <string name="duration_join">%1$s %2$s</string>
+    <plurals name="hours"><item quantity="one">%d گھنٹہ</item><item quantity="other">%d گھنٹے</item></plurals>
+    <plurals name="minutes"><item quantity="one">%d منٹ</item><item quantity="other">%d منٹ</item></plurals>
+    <string name="min_short">%d منٹ</string>
+    <string name="hijri_suffix">ہجری</string>
+    <string name="timetable_line">نظام الاوقات: %1$s · %2$s تک</string>
+    <string name="timetable_ended_line">%1$s کا نظام الاوقات %2$s کو ختم ہوا</string>
+    <string name="voice_line">آواز: اذان سے %1$s پہلے · جماعت سے %2$s پہلے</string>
+    <string name="voice_off_line">آواز بند</string>
+    <string name="estimated_suffix">(اندازاً)</string>
+    <string name="times_for_place">اوقات %1$s کے ہیں</string>
+
+    <string name="banner_estimated">اندازاً اوقات — نیا نظام الاوقات شامل کریں</string>
+    <string name="banner_no_timetable">آج کا نظام الاوقات نہیں ہے۔ نیا نظام الاوقات شامل کریں۔</string>
+    <string name="banner_missed">کچھ یاد دہانیاں نہیں پہنچیں۔ ٹھیک کرنے کے لیے ٹیپ کریں۔</string>
+    <string name="banner_notifications_off">نوٹیفکیشن بند ہیں۔ ٹھیک کرنے کے لیے ٹیپ کریں۔</string>
+
+    <string name="notif_before_azan">%1$s کی اذان %2$s میں</string>
+    <string name="notif_at_azan">%1$s کی اذان — %2$s</string>
+    <string name="notif_before_jamaat">%1$s کی نماز %2$s میں شروع ہوگی</string>
+    <string name="notif_azan_jamaat_text">اذان %1$s · جماعت %2$s</string>
+    <string name="notif_jamaat_text">جماعت %1$s</string>
+    <string name="notif_new_timetable_title">نیا نظام الاوقات چاہیے</string>
+    <string name="notif_new_timetable_text">%1$s %2$s میں ختم ہو رہا ہے۔ نئے مہینے کا نظام الاوقات ایپ میں شیئر کریں۔</string>
+    <string name="notif_test">آزمائشی یاد دہانی — اگر یہ نظر آئے اور سنائی دے تو یاد دہانیاں کام کر رہی ہیں۔</string>
+    <string name="notif_playing">یاد دہانی چل رہی ہے</string>
+    <string name="channel_voice">یاد دہانیاں (آواز)</string>
+    <string name="channel_sound">یاد دہانیاں (ٹون)</string>
+    <string name="channel_general">عمومی</string>
+
+    <string name="import_title">نظام الاوقات شامل کریں</string>
+    <string name="import_reading">نظام الاوقات پڑھا جا رہا ہے…</string>
+    <string name="import_offline_note">آپ کے فون پر، انٹرنیٹ کی ضرورت نہیں</string>
+    <string name="import_check_title">نظام الاوقات جانچیں</string>
+    <string name="import_flags">%1$d قدر غلط لگ رہی ہے۔ ٹھیک کرنے کے لیے پیلے خانے پر ٹیپ کریں۔</string>
+    <string name="import_all_good">تمام %1$d اوقات درست لگ رہے ہیں</string>
+    <string name="import_ampm_note">AM/PM خود لگ جاتا ہے: فجر اور طلوع صبح، ظہر دوپہر، باقی سہ پہر اور شام۔</string>
+    <string name="import_save">محفوظ کریں</string>
+    <string name="import_keep">%1$s رکھیں</string>
+    <string name="import_use">%1$s استعمال کریں</string>
+    <string name="import_neighbours">پچھلے دن %1$s اور اگلے دن %2$s ہے۔</string>
+    <string name="import_failed">اس تصویر میں نظام الاوقات نہیں ملا۔</string>
+    <string name="import_try_another">دوسری تصویر آزمائیں</string>
+    <string name="import_manual">خود درج کریں</string>
+    <string name="import_replace">موجودہ %1$s بدل دیں؟</string>
+    <string name="saved_title">نظام الاوقات محفوظ ہو گیا</string>
+    <string name="send_family">گھر والوں کو بھیجیں</string>
+    <string name="send_family_desc">وہ فائل پر ٹیپ کریں اور یہ شامل ہو جائے گا، جانچنے کی ضرورت نہیں۔</string>
+    <string name="family_import_title">نظام الاوقات شامل کریں؟</string>
+    <string name="family_checked">بھیجنے والے نے جانچ لیا ہے</string>
+    <string name="family_invalid">یہ فائل درست نظام الاوقات نہیں ہے۔</string>
+    <string name="import_btn">شامل کریں</string>
+    <string name="cancel">منسوخ</string>
+    <string name="done">ہو گیا</string>
+
+    <string name="settings">ترتیبات</string>
+    <string name="language">زبان</string>
+    <string name="timetable">نظام الاوقات</string>
+    <string name="timetables">نظام الاوقات کی فہرست</string>
+    <string name="import_new">نیا نظام الاوقات شامل کریں</string>
+    <string name="import_file">فائل سے شامل کریں</string>
+    <string name="all_timetables">تمام نظام الاوقات</string>
+    <string name="days_left">%1$d دن باقی</string>
+    <string name="tt_now">موجودہ</string>
+    <string name="tt_next">اگلا</string>
+    <string name="tt_earlier">پچھلے</string>
+    <string name="tt_active">فعال</string>
+    <string name="tt_not_imported">ابھی شامل نہیں · %1$s تک چاہیے</string>
+
+    <string name="jamaat_times">جماعت کے اوقات</string>
+    <string name="jamaat_intro">ہر نماز اذان کے کتنی دیر بعد شروع ہوتی ہے، یہ طے کریں۔ اکثر مساجد میں اذان کے 15 منٹ بعد جماعت ہوتی ہے۔</string>
+    <string name="jamaat_after">اذان کے بعد</string>
+    <string name="jamaat_fixed">مقررہ وقت</string>
+    <string name="jamaat_today">آج: اذان %1$s ← جماعت %2$s</string>
+    <string name="jamaat_fixed_note">مقررہ: ہر دن ایک ہی وقت، اذان چاہے جب ہو۔</string>
+    <string name="jamaat_fixed_before_azan">آج مقررہ وقت اذان سے پہلے ہے — اذان کے 15 منٹ بعد استعمال ہوگا۔</string>
+    <string name="jamaat_reset">سب کو 15 منٹ پر واپس کریں</string>
+    <string name="jamaat_after_value">اذان کے %1$d منٹ بعد</string>
+
+    <string name="reminders_voice">یاد دہانیاں اور آواز</string>
+    <string name="voice_language">آواز کی زبان</string>
+    <string name="voice">آواز</string>
+    <string name="voice_male">مرد</string>
+    <string name="voice_female">خاتون</string>
+    <string name="before_azan">اذان سے پہلے</string>
+    <string name="at_azan">اذان کے وقت</string>
+    <string name="before_jamaat">جماعت سے پہلے</string>
+    <string name="jumuah_before_azan">جمعہ: اذان سے پہلے</string>
+    <string name="off">بند</string>
+    <string name="which_reminders">ہر نماز کے لیے کون سی یاد دہانیاں</string>
+    <string name="speak_on_silent">فون سائلنٹ ہو تب بھی بولے</string>
+    <string name="speak_on_silent_desc">بند ہو تو سائلنٹ یا وائبریٹ پر صرف وائبریشن ہوگی۔</string>
+    <string name="chime">آواز سے پہلے ٹون</string>
+    <string name="voice_enabled">آواز والی یاد دہانیاں</string>
+    <string name="play_sample">سن کر دیکھیں</string>
+
+    <string name="reliability">یاد دہانی کی جانچ</string>
+    <string name="send_test">آزمائشی نوٹیفکیشن بھیجیں</string>
+    <string name="test_wait">اب اپنا فون لاک کریں۔ آزمائش ایک منٹ میں آئے گی۔</string>
+    <string name="test_passed">جانچ کامیاب، وقت: %1$s</string>
+    <string name="add_widget">ہوم اسکرین پر وجٹ لگائیں</string>
+    <string name="widget">وجٹ</string>
+    <string name="about">ایپ کے بارے میں</string>
+    <string name="privacy_line">نہ انٹرنیٹ، نہ مقام، نہ اکاؤنٹ۔ سب کچھ آپ کے فون میں رہتا ہے۔</string>
+    <string name="widget_small_label">اگلی نماز</string>
+    <string name="widget_wide_label">نماز کے اوقات</string>
+    <string name="widget_import">نیا نظام الاوقات شامل کریں</string>
+    <string name="estimated_short">اندازاً</string>
+
+    <string name="onb_welcome">آپ کی مسجد کے اذان اور جماعت کے اوقات، یاد دہانیوں اور وجٹ کے ساتھ۔</string>
+    <string name="onb_timetable">ماہانہ اذان کے نظام الاوقات کی تصویر ایپ میں شیئر کریں (واٹس ایپ یا گیلری سے)، ایپ خود پڑھ لے گی۔</string>
+    <string name="onb_choose_image">نظام الاوقات کی تصویر منتخب کریں</string>
+    <string name="onb_family_file">مجھے گھر والوں سے فائل ملی ہے</string>
+    <string name="onb_jamaat">آپ کی مسجد میں اذان کے کتنے منٹ بعد جماعت ہوتی ہے؟</string>
+    <string name="onb_voice">ایک آواز بتاتی ہے جب اذان اور نماز قریب ہوں۔</string>
+    <string name="onb_notifications">نوٹیفکیشن کی اجازت دیں تاکہ آپ کو نماز کی یاد دہانیاں ملیں۔</string>
+    <string name="onb_alarms">اس کی اجازت دیں تاکہ یاد دہانیاں بالکل وقت پر آئیں۔ اسٹیٹس بار میں الارم کا چھوٹا نشان نظر آ سکتا ہے — وہ اسی ایپ کا ہے۔</string>
+    <string name="onb_battery">ایپ کو پس منظر میں چلنے دیں تاکہ فون یاد دہانیاں بند نہ کرے۔</string>
+    <string name="onb_phone_specific">آپ کے فون میں ایک اور ترتیب ضروری ہے:</string>
+    <string name="onb_test">آزمائشی یاد دہانی بھیجیں اور فون لاک کریں۔ ایک منٹ میں یہ نظر آنی اور آواز سنائی دینی چاہیے۔</string>
+    <string name="onb_widget">اگلی اذان اور جماعت اپنی ہوم اسکرین پر دیکھیں۔</string>
+    <string name="continue_btn">جاری رکھیں</string>
+    <string name="skip">چھوڑیں</string>
+
+    <string-array name="hijri_months">
+        <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>
+        <item>جمادی الاول</item><item>جمادی الثانی</item><item>رجب</item><item>شعبان</item>
+        <item>رمضان</item><item>شوال</item><item>ذوالقعدہ</item><item>ذوالحجہ</item>
+    </string-array>
+</resources>

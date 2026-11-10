@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="100" android:viewportHeight="100">
+    <group android:name="mark" android:translateX="7.3" android:rotation="-18" android:pivotX="42.7" android:pivotY="50">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M65.33,24.2 A30,30 0 1,0 65.33,75.8 A26,26 0 1,1 65.33,24.2 Z"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M49.95,66.02 a2.8,2.8 0 1,0 5.60,0 a2.8,2.8 0 1,0 -5.60,0"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M43.18,59.25 a2.8,2.8 0 1,0 5.60,0 a2.8,2.8 0 1,0 -5.60,0"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M39.60,50 a3.9,3.9 0 1,0 7.80,0 a3.9,3.9 0 1,0 -7.80,0"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M43.18,40.75 a2.8,2.8 0 1,0 5.60,0 a2.8,2.8 0 1,0 -5.60,0"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M49.95,33.98 a2.8,2.8 0 1,0 5.60,0 a2.8,2.8 0 1,0 -5.60,0"/>
+    </group>
+</vector>
