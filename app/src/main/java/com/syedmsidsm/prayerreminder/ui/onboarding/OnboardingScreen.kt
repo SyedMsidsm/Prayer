@@ -89,6 +89,7 @@ fun OnboardingScreen(
 
     val timetables by viewModel.timetables.collectAsState()
     val activeTimetable = timetables.firstOrNull()
+    val themeMode by viewModel.themeMode.collectAsState()
 
     val currentAppLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangTag = if (!currentAppLocales.isEmpty) {
@@ -169,11 +170,13 @@ fun OnboardingScreen(
             when (currentStep) {
                 1 -> StepWelcomeAndLanguage(
                     currentLang = currentLangTag,
+                    themeMode = themeMode,
                     onSelectLanguage = { lang ->
                         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang))
                         viewModel.setAppLanguage(lang)
                         viewModel.setVoiceLanguage(lang)
                     },
+                    onSelectTheme = { mode -> viewModel.setThemeMode(mode) },
                     onContinue = { currentStep = 2 }
                 )
                 2 -> StepPrayerTimesSource(
@@ -203,14 +206,16 @@ fun OnboardingScreen(
 @Composable
 private fun StepWelcomeAndLanguage(
     currentLang: String,
+    themeMode: String,
     onSelectLanguage: (String) -> Unit,
+    onSelectTheme: (String) -> Unit,
     onContinue: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(16.dp))
 
     Box(
         modifier = Modifier
-            .size(96.dp)
+            .size(92.dp)
             .clip(CircleShape)
             .background(PrayerReminderColors.Ground),
         contentAlignment = Alignment.Center
@@ -218,11 +223,11 @@ private fun StepWelcomeAndLanguage(
         Image(
             painter = painterResource(id = R.drawable.splash_icon_static),
             contentDescription = null,
-            modifier = Modifier.size(68.dp)
+            modifier = Modifier.size(64.dp)
         )
     }
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(20.dp))
 
     Text(
         text = "Assalamu Alaikum",
@@ -232,7 +237,7 @@ private fun StepWelcomeAndLanguage(
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     Text(
         text = "Never miss an azan or a jamaat in Bhatkal.",
@@ -241,7 +246,7 @@ private fun StepWelcomeAndLanguage(
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(26.dp))
 
     Text(
         text = stringResource(R.string.language),
@@ -250,7 +255,7 @@ private fun StepWelcomeAndLanguage(
         color = PrayerReminderColors.Ink
     )
 
-    Spacer(modifier = Modifier.height(14.dp))
+    Spacer(modifier = Modifier.height(12.dp))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -263,13 +268,15 @@ private fun StepWelcomeAndLanguage(
         )
         for ((code, label) in langs) {
             val isSelected = currentLang == code
+            val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
+            val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(52.dp)
+                    .height(50.dp)
                     .clickable { onSelectLanguage(code) },
                 shape = RoundedCornerShape(14.dp),
-                color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Surface,
+                color = if (isSelected) selectedBg else PrayerReminderColors.Surface,
                 border = BorderStroke(
                     width = if (isSelected) 2.dp else 1.dp,
                     color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
@@ -280,14 +287,67 @@ private fun StepWelcomeAndLanguage(
                         text = label,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink
+                        color = if (isSelected) selectedText else PrayerReminderColors.Ink
                     )
                 }
             }
         }
     }
 
-    Spacer(modifier = Modifier.height(40.dp))
+    Spacer(modifier = Modifier.height(22.dp))
+
+    val themeTitle = when (currentLang) {
+        "ar" -> "المظهر"
+        "ur" -> "تھیم"
+        else -> "Appearance"
+    }
+    Text(
+        text = themeTitle,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = PrayerReminderColors.Ink
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        val themes = listOf(
+            Pair("light", if (currentLang == "ar") "☀️ فاتح" else if (currentLang == "ur") "☀️ لائٹ" else "☀️ Light"),
+            Pair("dark", if (currentLang == "ar") "🌙 داكن" else if (currentLang == "ur") "🌙 ڈارک" else "🌙 Dark"),
+            Pair("system", if (currentLang == "ar") "تلقائي" else if (currentLang == "ur") "سسٹم" else "System")
+        )
+        for ((mode, label) in themes) {
+            val isSelected = themeMode == mode
+            val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
+            val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .clickable { onSelectTheme(mode) },
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSelected) selectedBg else PrayerReminderColors.Surface,
+                border = BorderStroke(
+                    width = if (isSelected) 2.dp else 1.dp,
+                    color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
+                )
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) selectedText else PrayerReminderColors.Ink
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(32.dp))
 
     Button(
         onClick = onContinue,
@@ -296,8 +356,8 @@ private fun StepWelcomeAndLanguage(
             .height(54.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = PrayerReminderColors.Ground,
-            contentColor = PrayerReminderColors.Ivory
+            containerColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground,
+            contentColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
         )
     ) {
         Text(
@@ -468,8 +528,8 @@ private fun StepPrayerTimesSource(
             .height(54.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = PrayerReminderColors.Ground,
-            contentColor = PrayerReminderColors.Ivory
+            containerColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground,
+            contentColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
         )
     ) {
         Text(
@@ -582,8 +642,8 @@ private fun StepTurnOnReminders(
             .height(54.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = PrayerReminderColors.Ground,
-            contentColor = PrayerReminderColors.Ivory
+            containerColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground,
+            contentColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
         )
     ) {
         Text(

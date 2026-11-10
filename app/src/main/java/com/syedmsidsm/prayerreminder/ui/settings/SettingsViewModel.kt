@@ -43,6 +43,18 @@ class SettingsViewModel(
         ""
     )
 
+    val themeMode: StateFlow<String> = settingsRepository.themeMode.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "system"
+    )
+
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch {
+            settingsRepository.setThemeMode(mode)
+        }
+    }
+
     val jamaatRules: StateFlow<Map<String, JamaatRule>> = settingsRepository.jamaatRules.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),

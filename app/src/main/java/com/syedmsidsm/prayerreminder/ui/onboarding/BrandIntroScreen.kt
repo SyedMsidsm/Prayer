@@ -150,7 +150,7 @@ fun BrandIntroScreen(
             // 1.3s: "PrayerReminder"
             Text(
                 text = buildAnnotatedString {
-                    withStyle(SpanStyle(color = PrayerReminderColors.Ivory)) {
+                    withStyle(SpanStyle(color = PrayerReminderColors.CardTextLight)) {
                         append("Prayer")
                     }
                     withStyle(SpanStyle(color = PrayerReminderColors.Gold)) {
@@ -168,7 +168,7 @@ fun BrandIntroScreen(
             Text(
                 text = "تذكير الصلاة",
                 fontSize = 22.sp,
-                color = PrayerReminderColors.Ivory,
+                color = PrayerReminderColors.CardTextLight,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.alpha(arabicAlpha.value)
             )
@@ -179,7 +179,7 @@ fun BrandIntroScreen(
             Text(
                 text = "نماز کی یاد دہانی",
                 fontSize = 20.sp,
-                color = PrayerReminderColors.Ivory,
+                color = PrayerReminderColors.CardTextLight,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.alpha(urduAlpha.value)
             )

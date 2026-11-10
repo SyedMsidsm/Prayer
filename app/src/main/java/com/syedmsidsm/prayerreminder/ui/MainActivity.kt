@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
@@ -109,15 +111,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-        super.onCreate(savedInstanceState)
+        val splash = installSplashScreen()
+        val start = SystemClock.uptimeMillis()
+
         // Eagerly initialize ViewModels so state is ready immediately on cold start or widget click
         homeViewModel
         settingsViewModel
+
+        val animatorDurationScale = Settings.Global.getFloat(
+            contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1.0f
+        )
+        val animationsEnabled = animatorDurationScale > 0f
+
+        splash.setKeepOnScreenCondition {
+            val dataReady = homeViewModel.isReady.value && settingsViewModel.isOnboardingDone.value != null
+            val elapsed = SystemClock.uptimeMillis() - start
+            if (!animationsEnabled) {
+                !dataReady && elapsed < 500
+            } else {
+                (!dataReady || elapsed < 650) && elapsed < 1100
+            }
+        }
+
+        splash.setOnExitAnimationListener { provider ->
+            runCatching {
+                provider.iconView.animate()
+                    .scaleX(0.85f)
+                    .scaleY(0.85f)
+                    .alpha(0f)
+                    .setDuration(250)
+                    .start()
+            }
+            provider.view.animate()
+                .alpha(0f)
+                .setDuration(320)
+                .withEndAction { provider.remove() }
+                .start()
+        }
+
+        super.onCreate(savedInstanceState)
         currentIntentFlow.value = intent
 
         setContent {
-            PrayerReminderTheme {
+            val themeMode by settingsViewModel.themeMode.collectAsState()
+            PrayerReminderTheme(themeMode = themeMode) {
                 MainAppNavigation()
             }
         }
@@ -139,13 +178,13 @@ class MainActivity : AppCompatActivity() {
         val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
         var currentScreen by rememberSaveable {
             mutableStateOf(
-                if (settingsViewModel.isOnboardingDone.value == false) Screen.ONBOARDING else Screen.HOME
+                if (settingsViewModel.isOnboardingDone.value == false) Screen.BRAND_INTRO else Screen.HOME
             )
         }
 
         LaunchedEffect(isOnboardingDone) {
             if (isOnboardingDone == false && currentScreen == Screen.HOME) {
-                currentScreen = Screen.ONBOARDING
+                currentScreen = Screen.BRAND_INTRO
             }
         }
 
@@ -238,7 +277,11 @@ class MainActivity : AppCompatActivity() {
             Screen.HOME -> {
                 HomeScreen(
                     viewModel = homeViewModel,
-                    onSettingsClick = { currentScreen = Screen.SETTINGS }
+                    onSettingsClick = { currentScreen = Screen.SETTINGS },
+                    onToggleTheme = {
+                        val nextMode = if ( com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors.isDark) "light" else "dark"
+                        settingsViewModel.setThemeMode(nextMode)
+                    }
                 )
             }
             Screen.SETTINGS -> {

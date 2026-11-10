@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -85,6 +86,7 @@ fun SettingsScreen(
     val voiceOn by viewModel.voiceEnabled.collectAsState()
     val beforeAzanMin by viewModel.remBeforeAzanMin.collectAsState()
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsState()
 
     val currentAppLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangTag = if (!currentAppLocales.isEmpty) {
@@ -259,6 +261,72 @@ fun SettingsScreen(
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ur"))
                                 viewModel.setAppLanguage("ur")
                             }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.DarkMode,
+                            contentDescription = null,
+                            tint = PrayerReminderColors.GoldText,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        val themeTitle = when (currentLangTag) {
+                            "ar" -> "المظهر (فاتح / داكن)"
+                            "ur" -> "تھیم (لائٹ / ڈارک)"
+                            else -> "Appearance (Light / Dark)"
+                        }
+                        Text(
+                            text = themeTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PrayerReminderColors.Ink,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val lightLabel = when (currentLangTag) {
+                            "ar" -> "☀️ فاتح"
+                            "ur" -> "☀️ لائٹ"
+                            else -> "☀️ Light"
+                        }
+                        val darkLabel = when (currentLangTag) {
+                            "ar" -> "🌙 داكن"
+                            "ur" -> "🌙 ڈارک"
+                            else -> "🌙 Dark"
+                        }
+                        val systemLabel = when (currentLangTag) {
+                            "ar" -> "تلقائي"
+                            "ur" -> "سسٹم"
+                            else -> "System"
+                        }
+                        LanguageChoiceChip(
+                            label = lightLabel,
+                            isSelected = themeMode == "light",
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.setThemeMode("light") }
+                        )
+                        LanguageChoiceChip(
+                            label = darkLabel,
+                            isSelected = themeMode == "dark",
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.setThemeMode("dark") }
+                        )
+                        LanguageChoiceChip(
+                            label = systemLabel,
+                            isSelected = themeMode == "system",
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.setThemeMode("system") }
                         )
                     }
                 }
@@ -453,12 +521,14 @@ private fun LanguageChoiceChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
+    val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
     Surface(
         modifier = modifier
             .height(44.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+        color = if (isSelected) selectedBg else PrayerReminderColors.Ivory,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, PrayerReminderColors.Line)
     ) {
         Box(
@@ -467,7 +537,7 @@ private fun LanguageChoiceChip(
         ) {
             Text(
                 text = label,
-                color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                color = if (isSelected) selectedText else PrayerReminderColors.Ink,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 14.sp
             )
