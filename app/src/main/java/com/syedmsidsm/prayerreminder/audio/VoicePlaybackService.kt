@@ -224,22 +224,6 @@ class VoicePlaybackService : Service() {
             else -> "ur"
         }
 
-        if (gender.lowercase() == "female") {
-            val femaleAsset = "audio/samples/female_${lang}_before_azan_asr_10.mp3"
-            return if (assetExists(femaleAsset)) {
-                femaleAsset
-            } else {
-                val fullLang = when (lang) {
-                    "ar" -> "arabic"
-                    "en" -> "english"
-                    else -> "urdu"
-                }
-                val sampleLang = "audio/samples/female-voice-$fullLang.mp3"
-                if (assetExists(sampleLang)) sampleLang else null
-            }
-        }
-
-        // Male preview pack
         val prayerName = if (kind == "jumuah_before_azan") "jumuah" else prayer.lowercase()
         val min = when (kind) {
             "before_azan" -> if (minutes > 0) minutes else 10
@@ -256,6 +240,22 @@ class VoicePlaybackService : Service() {
             else -> "before_azan_asr_10.mp3"
         }
 
+        if (gender.lowercase() == "female") {
+            val femalePackPath = "audio/voice-pack-female/$lang/$filename"
+            if (assetExists(femalePackPath)) {
+                return femalePackPath
+            }
+            val femaleDefaultPackPath = "audio/voice-pack-female/$lang/before_azan_asr_10.mp3"
+            if (assetExists(femaleDefaultPackPath)) {
+                return femaleDefaultPackPath
+            }
+            val femaleAsset = "audio/samples/female_${lang}_before_azan_asr_10.mp3"
+            if (assetExists(femaleAsset)) {
+                return femaleAsset
+            }
+        }
+
+        // Male preview pack
         val assetPath = "audio/voice-pack-preview/$lang/$filename"
         return if (assetExists(assetPath)) assetPath else "audio/voice-pack-preview/$lang/before_azan_asr_10.mp3"
     }

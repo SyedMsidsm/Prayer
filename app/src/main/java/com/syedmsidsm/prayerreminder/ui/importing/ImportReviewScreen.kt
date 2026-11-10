@@ -387,8 +387,8 @@ private fun ImportReviewContent(
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = PrayerReminderColors.Ground,
-                contentColor = PrayerReminderColors.Ivory,
+                containerColor = PrayerReminderColors.PrimaryBtnBg,
+                contentColor = PrayerReminderColors.PrimaryBtnText,
                 disabledContainerColor = PrayerReminderColors.Line,
                 disabledContentColor = PrayerReminderColors.Muted
             )
@@ -436,7 +436,7 @@ private fun ImportReviewContent(
 private fun TableHeaderCell(text: String, width: androidx.compose.ui.unit.Dp) {
     Text(
         text = text,
-        color = PrayerReminderColors.Ivory,
+        color = PrayerReminderColors.CardTextLight,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,

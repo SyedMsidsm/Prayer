@@ -163,7 +163,7 @@ fun ReliabilityScreen(
                             text = stringResource(R.string.send_test),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = PrayerReminderColors.Ivory
+                            color = PrayerReminderColors.CardTextLight
                         )
                     }
 
@@ -209,7 +209,7 @@ fun ReliabilityScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.send_test),
-                                color = PrayerReminderColors.Ink,
+                                color = PrayerReminderColors.Ground,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -348,13 +348,13 @@ fun ReliabilityScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     Button(
                         onClick = { OemSettingsLauncher.openSettings(context) },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.PrimaryBtnBg),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth().height(44.dp)
                     ) {
                         Text(
                             text = "Open phone settings",
-                            color = PrayerReminderColors.Ivory,
+                            color = PrayerReminderColors.PrimaryBtnText,
                             fontWeight = FontWeight.SemiBold
                         )
                     }

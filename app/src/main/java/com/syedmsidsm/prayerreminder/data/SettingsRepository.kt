@@ -77,7 +77,7 @@ class SettingsRepository(
     }
 
     val voiceLanguage: Flow<String> = dataStore.data.map { prefs ->
-        prefs[KEY_VOICE_LANGUAGE] ?: "ur"
+        prefs[KEY_VOICE_LANGUAGE] ?: prefs[KEY_APP_LANGUAGE]?.ifEmpty { null } ?: "ur"
     }
 
     suspend fun setVoiceLanguage(lang: String) {

@@ -54,4 +54,10 @@ object PrayerReminderColors {
 
     val Line: Color
         get() = if (isDark) Color(0xFF213B40) else Color(0xFFEDE8DC)
+
+    val PrimaryBtnBg: Color
+        get() = if (isDark) Color(0xFFD9AE5C) else Color(0xFF0F2A2E)
+
+    val PrimaryBtnText: Color
+        get() = if (isDark) Color(0xFF091518) else Color(0xFFF7F4EC)
 }

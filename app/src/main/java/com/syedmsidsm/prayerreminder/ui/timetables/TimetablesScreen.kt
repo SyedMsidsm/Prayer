@@ -145,8 +145,8 @@ fun TimetablesScreen(
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = PrayerReminderColors.Ground,
-                contentColor = PrayerReminderColors.Ivory
+                containerColor = PrayerReminderColors.PrimaryBtnBg,
+                contentColor = PrayerReminderColors.PrimaryBtnText
             )
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = null)

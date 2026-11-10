@@ -177,7 +177,10 @@ fun OnboardingScreen(
                         viewModel.setVoiceLanguage(lang)
                     },
                     onSelectTheme = { mode -> viewModel.setThemeMode(mode) },
-                    onContinue = { currentStep = 2 }
+                    onContinue = {
+                        viewModel.setAppLanguage(currentLangTag)
+                        currentStep = 2
+                    }
                 )
                 2 -> StepPrayerTimesSource(
                     activeTimetablePlace = activeTimetable?.place ?: "Bhatkal",

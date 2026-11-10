@@ -242,6 +242,7 @@ fun SettingsScreen(
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
                                 viewModel.setAppLanguage("en")
+                                viewModel.setVoiceLanguage("en")
                             }
                         )
                         LanguageChoiceChip(
@@ -251,6 +252,7 @@ fun SettingsScreen(
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ar"))
                                 viewModel.setAppLanguage("ar")
+                                viewModel.setVoiceLanguage("ar")
                             }
                         )
                         LanguageChoiceChip(
@@ -260,6 +262,7 @@ fun SettingsScreen(
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ur"))
                                 viewModel.setAppLanguage("ur")
+                                viewModel.setVoiceLanguage("ur")
                             }
                         )
                     }
