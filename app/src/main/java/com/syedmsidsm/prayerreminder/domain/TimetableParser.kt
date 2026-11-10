@@ -31,6 +31,14 @@ class TimetableParser {
     companion object {
         private val PRAYER_HEADERS = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
         private val WEEKDAYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        private val HEADER_ALIASES = mapOf(
+            "fajr" to listOf("fajr", "fajar", "faj"),
+            "sunrise" to listOf("sunrise", "sunr", "tulu", "ishraq", "tloo"),
+            "dhuhr" to listOf("dhuhr", "zuhr", "zohar", "duhr", "dhur", "zohr"),
+            "asr" to listOf("asr", "asar", "asrr"),
+            "maghrib" to listOf("maghrib", "magrib", "mgrb", "magh"),
+            "isha" to listOf("isha", "ishaa", "esha", "ish")
+        )
     }
 
     fun parse(tokens: List<OcrToken>): ParsedTimetableResult? {
@@ -62,15 +70,19 @@ class TimetableParser {
         val headerTokens = mutableMapOf<String, OcrToken>()
         for (token in tokens) {
             val clean = token.text.lowercase().trim()
-            for (ph in PRAYER_HEADERS) {
-                if (levenshteinDistance(clean, ph) <= 2 && !headerTokens.containsKey(ph)) {
-                    headerTokens[ph] = token
+            for ((standardHeader, aliases) in HEADER_ALIASES) {
+                if (!headerTokens.containsKey(standardHeader)) {
+                    val matches = aliases.any { alias -> levenshteinDistance(clean, alias) <= 1 }
+                        || levenshteinDistance(clean, standardHeader) <= 2
+                    if (matches) {
+                        headerTokens[standardHeader] = token
+                    }
                 }
             }
-            if (levenshteinDistance(clean, "day") <= 1 && !headerTokens.containsKey("day")) {
+            if (!headerTokens.containsKey("day") && (levenshteinDistance(clean, "day") <= 1 || clean == "days")) {
                 headerTokens["day"] = token
             }
-            if (levenshteinDistance(clean, "date") <= 1 && !headerTokens.containsKey("date")) {
+            if (!headerTokens.containsKey("date") && (levenshteinDistance(clean, "date") <= 1 || clean == "dates")) {
                 headerTokens["date"] = token
             }
         }
@@ -261,12 +273,25 @@ class TimetableParser {
             .replace('o', '0')
             .replace('l', '1')
             .replace('I', '1')
+            .replace('i', '1')
             .replace('S', '5')
             .replace('s', '5')
             .replace('B', '8')
+            .replace(Regex("""(?i)[ap]m"""), "")
+            .trim()
 
-        // Fix separator (dot, comma, semicolon to colon)
-        val match = Regex("""^(\d{1,2})[:.;,](\d{2})$""").find(text) ?: return null
+        // Fix separator (dot, comma, semicolon, colon with optional spaces, or no separator 3-4 digits)
+        val match = Regex("""(\d{1,2})\s*[:.;,]\s*(\d{2})""").find(text)
+            ?: Regex("""^(\d{3,4})$""").find(text.replace(" ", ""))?.let { m ->
+                val digits = m.groupValues[1]
+                if (digits.length == 3) {
+                    Regex("""^(\d{1})(\d{2})$""").find(digits)
+                } else {
+                    Regex("""^(\d{2})(\d{2})$""").find(digits)
+                }
+            }
+            ?: return null
+
         var hour = match.groupValues[1].toIntOrNull() ?: return null
         val min = match.groupValues[2].toIntOrNull() ?: return null
 

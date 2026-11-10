@@ -13,18 +13,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,11 +57,145 @@ import java.time.LocalDate
 @Composable
 fun ImportReviewScreen(
     viewModel: ImportViewModel,
-    onCancel: () -> Unit = {}
+    onCancel: () -> Unit = {},
+    onPickAnotherImage: () -> Unit = {},
+    onManualEntry: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
-    val reviewState = state as? ImportUiState.Review ?: return
 
+    when (val currentState = state) {
+        is ImportUiState.Idle -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(PrayerReminderColors.Ivory),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PrayerReminderColors.Ground)
+            }
+        }
+        is ImportUiState.Reading -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(PrayerReminderColors.Ivory)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(56.dp),
+                    color = PrayerReminderColors.Ground,
+                    strokeWidth = 4.dp
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = stringResource(R.string.import_reading),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PrayerReminderColors.Ink,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.import_offline_note),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrayerReminderColors.Muted,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                OutlinedButton(
+                    onClick = onCancel,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.cancel), color = PrayerReminderColors.Ink)
+                }
+            }
+        }
+        is ImportUiState.Error -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(PrayerReminderColors.Ivory)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = PrayerReminderColors.FlagOutline,
+                    modifier = Modifier.size(64.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.import_failed),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PrayerReminderColors.Ink,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = currentState.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrayerReminderColors.Muted,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = onPickAnotherImage,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground)
+                ) {
+                    Text(
+                        stringResource(R.string.import_try_another),
+                        fontWeight = FontWeight.Bold,
+                        color = PrayerReminderColors.Ivory
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onManualEntry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.import_manual),
+                        color = PrayerReminderColors.Ink,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                TextButton(onClick = onCancel) {
+                    Text(stringResource(R.string.cancel), color = PrayerReminderColors.Muted)
+                }
+            }
+        }
+        is ImportUiState.Review -> {
+            ImportReviewContent(
+                reviewState = currentState,
+                viewModel = viewModel,
+                onCancel = onCancel
+            )
+        }
+        is ImportUiState.Saved -> {
+            // Transition handled by parent container
+        }
+    }
+}
+
+@Composable
+private fun ImportReviewContent(
+    reviewState: ImportUiState.Review,
+    viewModel: ImportViewModel,
+    onCancel: () -> Unit
+) {
     val timetable = reviewState.timetable
     val unresolvedFlags = reviewState.unresolvedFlags
     val horizontalScrollState = rememberScrollState()

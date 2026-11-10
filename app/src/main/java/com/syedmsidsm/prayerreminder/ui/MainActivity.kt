@@ -327,11 +327,20 @@ class MainActivity : AppCompatActivity() {
                 ImportReviewScreen(
                     viewModel = importViewModel,
                     onCancel = {
+                        importViewModel.resetState()
                         currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
                             Screen.ONBOARDING
                         } else {
                             Screen.TIMETABLES
                         }
+                    },
+                    onPickAnotherImage = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onManualEntry = {
+                        currentScreen = Screen.MANUAL_ENTRY
                     }
                 )
             }

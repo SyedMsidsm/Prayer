@@ -1,6 +1,7 @@
 package com.syedmsidsm.prayerreminder.importing
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syedmsidsm.prayerreminder.data.TimetableRepository
@@ -44,22 +45,31 @@ class ImportViewModel(
     private val _uiState = MutableStateFlow<ImportUiState>(ImportUiState.Idle)
     val uiState: StateFlow<ImportUiState> = _uiState.asStateFlow()
 
+    fun resetState() {
+        _uiState.value = ImportUiState.Idle
+    }
+
     fun processImage(uri: Uri) {
         viewModelScope.launch {
+            Log.d("ImportViewModel", "processImage started for URI: $uri")
             _uiState.value = ImportUiState.Reading(uri)
             try {
                 val tokens = ocrEngine.recognizeFromUri(uri)
+                Log.d("ImportViewModel", "Recognized ${tokens.size} OCR tokens. Parsing timetable...")
                 val parseResult = timetableParser.parse(tokens)
                 if (parseResult != null) {
                     val flags = timetableValidator.validate(parseResult.timetable)
+                    Log.d("ImportViewModel", "Parsed timetable for ${parseResult.timetable.place} with ${parseResult.timetable.days.size} days, ${flags.size} flags")
                     _uiState.value = ImportUiState.Review(
                         timetable = parseResult.timetable,
                         flags = flags
                     )
                 } else {
-                    _uiState.value = ImportUiState.Error("Could not find a prayer timetable in this image.")
+                    Log.w("ImportViewModel", "TimetableParser.parse returned null for ${tokens.size} tokens")
+                    _uiState.value = ImportUiState.Error("Could not find a prayer timetable in this image. Please check the image and try again.")
                 }
             } catch (e: Exception) {
+                Log.e("ImportViewModel", "Error reading image", e)
                 _uiState.value = ImportUiState.Error("Error reading image: ${e.localizedMessage ?: "Unknown error"}")
             }
         }

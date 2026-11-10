@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -48,23 +49,36 @@ class OcrEngine(private val context: Context) {
                         }
                     }
                 }
+                Log.d("OcrEngine", "Recognized ${tokens.size} OCR tokens from image")
                 cont.resume(tokens)
             }
             .addOnFailureListener { e ->
+                Log.e("OcrEngine", "ML Kit recognition failed", e)
                 cont.resumeWithException(e)
             }
     }
 
     private fun loadAndPreprocessBitmap(uri: Uri): Bitmap {
-        var bmp: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
-                decoder.isMutableRequired = true
+        var bmp: Bitmap = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                    decoder.isMutableRequired = true
+                }
+            } else {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                } ?: throw IllegalArgumentException("Could not open stream for URI: $uri")
             }
-        } else {
-            context.contentResolver.openInputStream(uri).use { stream ->
-                BitmapFactory.decodeStream(stream)
-            } ?: throw IllegalArgumentException("Could not decode bitmap from URI")
+        } catch (e: Exception) {
+            Log.w("OcrEngine", "ImageDecoder failed, attempting fallback to BitmapFactory", e)
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                val options = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.ARGB_8888
+                }
+                BitmapFactory.decodeStream(stream, null, options)
+            } ?: throw IllegalArgumentException("Could not decode bitmap from URI: ${e.message}")
         }
 
         // Spec 6.3: If shortest side is under 1000 px, upscale x2 (bilinear)
@@ -75,6 +89,7 @@ class OcrEngine(private val context: Context) {
             bmp = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, true)
         }
 
+        Log.d("OcrEngine", "Preprocessed bitmap ready (${bmp.width}x${bmp.height})")
         return bmp
     }
 }

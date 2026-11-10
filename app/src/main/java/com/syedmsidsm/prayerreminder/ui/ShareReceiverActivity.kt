@@ -7,9 +7,16 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +30,7 @@ import com.syedmsidsm.prayerreminder.importing.OcrEngine
 import com.syedmsidsm.prayerreminder.ui.importing.FamilyImportDialog
 import com.syedmsidsm.prayerreminder.ui.importing.ImportReviewScreen
 import com.syedmsidsm.prayerreminder.ui.importing.ImportSavedScreen
+import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderTheme
 import kotlinx.coroutines.launch
 import java.io.File
@@ -66,11 +74,16 @@ class ShareReceiverActivity : AppCompatActivity() {
                         onDismiss = { finish() }
                     )
                 } else {
-                    when (val state = importViewModel.uiState.value) {
+                    val importState by importViewModel.uiState.collectAsState()
+                    when (val state = importState) {
+                        is ImportUiState.Reading,
+                        is ImportUiState.Error,
                         is ImportUiState.Review -> {
                             ImportReviewScreen(
                                 viewModel = importViewModel,
-                                onCancel = { finish() }
+                                onCancel = { finish() },
+                                onPickAnotherImage = { finish() },
+                                onManualEntry = { finish() }
                             )
                         }
                         is ImportUiState.Saved -> {
@@ -84,7 +97,14 @@ class ShareReceiverActivity : AppCompatActivity() {
                             )
                         }
                         else -> {
-                            // Empty / Reading
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(PrayerReminderColors.Ivory),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = PrayerReminderColors.Ground)
+                            }
                         }
                     }
                 }
