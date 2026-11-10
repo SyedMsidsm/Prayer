@@ -10,6 +10,7 @@ import com.syedmsidsm.prayerreminder.domain.DayScheduleResolver
 import com.syedmsidsm.prayerreminder.domain.model.DaySchedule
 import com.syedmsidsm.prayerreminder.domain.model.JamaatRule
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
+import com.syedmsidsm.prayerreminder.notifications.NotificationHelper
 import com.syedmsidsm.prayerreminder.reminders.AlarmScheduler
 import com.syedmsidsm.prayerreminder.reminders.AppRefresher
 import com.syedmsidsm.prayerreminder.reminders.FiredEventLog
@@ -136,7 +137,10 @@ class SettingsViewModel(
     fun setAppLanguage(languageCode: String) {
         viewModelScope.launch {
             settingsRepository.setAppLanguage(languageCode)
-            context?.let { AppRefresher.refreshAll(it, "language_changed") }
+            context?.let { ctx ->
+                NotificationHelper(ctx).updateChannelNamesForLanguage(languageCode)
+                AppRefresher.refreshAll(ctx, "language_changed")
+            }
         }
     }
 

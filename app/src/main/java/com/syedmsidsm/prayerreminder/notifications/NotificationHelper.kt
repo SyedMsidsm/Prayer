@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
@@ -20,6 +21,7 @@ import com.syedmsidsm.prayerreminder.ui.MainActivity
 import com.syedmsidsm.prayerreminder.ui.format.TimeFormatter
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.Locale
 
 class NotificationHelper(private val context: Context) {
 
@@ -71,6 +73,52 @@ class NotificationHelper(private val context: Context) {
             val generalChannel = NotificationChannel(
                 CHANNEL_GENERAL,
                 context.getString(R.string.channel_general),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "General timetable alerts"
+            }
+
+            notificationManager.createNotificationChannels(listOf(voiceChannel, soundChannel, generalChannel))
+        }
+    }
+
+    fun updateChannelNamesForLanguage(languageCode: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val config = Configuration(context.resources.configuration)
+            config.setLocale(Locale.forLanguageTag(languageCode))
+            val localizedContext = context.createConfigurationContext(config)
+
+            val voiceChannel = NotificationChannel(
+                CHANNEL_VOICE,
+                localizedContext.getString(R.string.channel_voice),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Spoken prayer reminders"
+                setSound(null, null)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250)
+            }
+
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val soundChannel = NotificationChannel(
+                CHANNEL_SOUND,
+                localizedContext.getString(R.string.channel_sound),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Standard chime prayer reminders"
+                setSound(
+                    soundUri,
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                        .build()
+                )
+                enableVibration(true)
+            }
+
+            val generalChannel = NotificationChannel(
+                CHANNEL_GENERAL,
+                localizedContext.getString(R.string.channel_general),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "General timetable alerts"
