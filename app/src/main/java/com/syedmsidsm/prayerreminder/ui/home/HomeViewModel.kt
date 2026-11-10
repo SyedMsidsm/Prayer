@@ -7,14 +7,16 @@ import com.syedmsidsm.prayerreminder.data.TimetableRepository
 import com.syedmsidsm.prayerreminder.domain.DayScheduleResolver
 import com.syedmsidsm.prayerreminder.domain.NextPrayerResolver
 import com.syedmsidsm.prayerreminder.domain.model.DaySchedule
+import com.syedmsidsm.prayerreminder.domain.model.JamaatRule
 import com.syedmsidsm.prayerreminder.domain.model.NextPrayer
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
-import com.syedmsidsm.prayerreminder.domain.model.ScheduleSource
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -53,34 +55,69 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             timetableRepository.initialize()
-            loadData()
-            startCountdownLoop()
+
+            combine(
+                timetableRepository.timetables,
+                settingsRepository.jamaatRules,
+                settingsRepository.voiceEnabled,
+                settingsRepository.remBeforeAzanMin,
+                settingsRepository.remBeforeJamaatMin
+            ) { tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin ->
+                FiveSettings(tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin)
+            }.collectLatest { (tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin) ->
+                updateStateWithRules(tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin)
+            }
         }
+
+        startCountdownLoop()
     }
 
-    suspend fun loadData() {
-        val tables = timetableRepository.timetables.value
+    private data class FiveSettings(
+        val tables: List<Timetable>,
+        val rules: Map<String, JamaatRule>,
+        val voiceOn: Boolean,
+        val beforeAzanMin: Int,
+        val beforeJamaatMin: Int
+    )
+
+    private suspend fun updateStateWithRules(
+        tables: List<Timetable>,
+        rules: Map<String, JamaatRule>,
+        voiceOn: Boolean,
+        beforeAzanMin: Int,
+        beforeJamaatMin: Int
+    ) {
         val now = ZonedDateTime.now(zoneId)
         val today = now.toLocalDate()
 
-        // Check if current real date falls within any timetable
         val hasScheduleForToday = tables.any { table ->
             table.days.any { it.date == today.toString() }
         }
 
-        // For the Phase 1 acceptance requirement ("Home shows 24 Mar 2026 correctly"),
-        // use 2026-03-24 if today is outside timetable coverage
-        val displayDate = if (hasScheduleForToday) today else LocalDate.of(2026, 3, 24)
+        // Use selectedDate if user picked one or default to 2026-03-24 for acceptance demo
+        val currentSelected = _uiState.value.selectedDate
+        val displayDate = if (_uiState.value.isReady) {
+            currentSelected
+        } else if (hasScheduleForToday) {
+            today
+        } else {
+            LocalDate.of(2026, 3, 24)
+        }
+
         val isDemo = displayDate != today
 
         val activeTable = timetableRepository.getTimetableFor(displayDate)
             ?: tables.firstOrNull()
 
-        val rules = settingsRepository.jamaatRules.first()
         val todaySchedule = dayScheduleResolver.resolve(displayDate, tables, rules)
         val tomorrowSchedule = dayScheduleResolver.resolve(displayDate.plusDays(1), tables, rules)
 
-        val simTime = if (isDemo) LocalTime.of(14, 35) else now.toLocalTime()
+        val simTime = if (isDemo) {
+            if (_uiState.value.isReady) _uiState.value.currentTime else LocalTime.of(14, 35)
+        } else {
+            now.toLocalTime()
+        }
+
         val next = nextPrayerResolver.resolve(simTime, todaySchedule, tomorrowSchedule)
 
         val remStates = mutableMapOf<Prayer, Boolean>()
@@ -90,11 +127,13 @@ class HomeViewModel(
             }
         }
 
-        val voiceOn = settingsRepository.voiceEnabled.first()
-        val beforeAzanMin = settingsRepository.remBeforeAzanMin.first()
-        val beforeJamaatMin = settingsRepository.remBeforeJamaatMin.first()
+        val voiceSummaryText = if (voiceOn) {
+            "${beforeAzanMin} min · ${beforeJamaatMin} min"
+        } else {
+            ""
+        }
 
-        _uiState.value = HomeUiState(
+        _uiState.value = _uiState.value.copy(
             isReady = true,
             place = activeTable?.place ?: "Bhatkal",
             activeTimetable = activeTable,
@@ -103,17 +142,26 @@ class HomeViewModel(
             nextPrayer = next,
             currentTime = simTime,
             voiceEnabled = voiceOn,
-            voiceSummary = if (voiceOn) "${beforeAzanMin} min · ${beforeJamaatMin} min" else "",
+            voiceSummary = voiceSummaryText,
             reminderStates = remStates,
             isSimulatedDemoDate = isDemo
         )
         isReady.value = true
     }
 
+    suspend fun loadData() {
+        val tables = timetableRepository.timetables.value
+        val rules = settingsRepository.jamaatRules.first()
+        val voiceOn = settingsRepository.voiceEnabled.first()
+        val beforeAzanMin = settingsRepository.remBeforeAzanMin.first()
+        val beforeJamaatMin = settingsRepository.remBeforeJamaatMin.first()
+        updateStateWithRules(tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin)
+    }
+
     private fun startCountdownLoop() {
         viewModelScope.launch {
             while (isActive) {
-                delay(1000) // update countdown
+                delay(1000)
                 val current = _uiState.value
                 val schedule = current.schedule ?: continue
                 val tables = timetableRepository.timetables.value

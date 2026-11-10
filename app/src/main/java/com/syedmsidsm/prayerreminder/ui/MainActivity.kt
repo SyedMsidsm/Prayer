@@ -21,6 +21,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.syedmsidsm.prayerreminder.PrayerReminderApp
+import com.syedmsidsm.prayerreminder.audio.AudioSamplePlayer
+import com.syedmsidsm.prayerreminder.importing.FamilyShare
 import com.syedmsidsm.prayerreminder.importing.ImportUiState
 import com.syedmsidsm.prayerreminder.importing.ImportViewModel
 import com.syedmsidsm.prayerreminder.importing.OcrEngine
@@ -29,12 +31,19 @@ import com.syedmsidsm.prayerreminder.ui.home.HomeViewModel
 import com.syedmsidsm.prayerreminder.ui.importing.ImportReviewScreen
 import com.syedmsidsm.prayerreminder.ui.importing.ImportSavedScreen
 import com.syedmsidsm.prayerreminder.ui.manualentry.ManualEntryScreen
+import com.syedmsidsm.prayerreminder.ui.settings.JamaatSettingsScreen
+import com.syedmsidsm.prayerreminder.ui.settings.RemindersVoiceSettingsScreen
+import com.syedmsidsm.prayerreminder.ui.settings.SettingsScreen
+import com.syedmsidsm.prayerreminder.ui.settings.SettingsViewModel
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderTheme
 import com.syedmsidsm.prayerreminder.ui.timetables.TimetablesScreen
 import kotlinx.coroutines.launch
 
 enum class Screen {
     HOME,
+    SETTINGS,
+    JAMAAT_SETTINGS,
+    REMINDERS_VOICE_SETTINGS,
     TIMETABLES,
     MANUAL_ENTRY,
     IMPORT_REVIEW,
@@ -53,6 +62,21 @@ class MainActivity : AppCompatActivity() {
                     container.settingsRepository,
                     container.dayScheduleResolver,
                     container.nextPrayerResolver
+                ) as T
+            }
+        }
+    }
+
+    private val settingsViewModel: SettingsViewModel by viewModels {
+        val container = (application as PrayerReminderApp).container
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return SettingsViewModel(
+                    settingsRepository = container.settingsRepository,
+                    timetableRepository = container.timetableRepository,
+                    dayScheduleResolver = container.dayScheduleResolver,
+                    audioPlayer = AudioSamplePlayer(applicationContext)
                 ) as T
             }
         }
@@ -136,16 +160,43 @@ class MainActivity : AppCompatActivity() {
             Screen.HOME -> {
                 HomeScreen(
                     viewModel = homeViewModel,
-                    onSettingsClick = { currentScreen = Screen.TIMETABLES }
+                    onSettingsClick = { currentScreen = Screen.SETTINGS }
+                )
+            }
+            Screen.SETTINGS -> {
+                SettingsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { currentScreen = Screen.HOME },
+                    onNavigateToJamaat = { currentScreen = Screen.JAMAAT_SETTINGS },
+                    onNavigateToRemindersVoice = { currentScreen = Screen.REMINDERS_VOICE_SETTINGS },
+                    onNavigateToTimetables = { currentScreen = Screen.TIMETABLES },
+                    onImportNewTimetable = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onSendCurrentToFamily = { table ->
+                        val shareIntent = FamilyShare.createShareIntent(this@MainActivity, table)
+                        startActivity(shareIntent)
+                    }
+                )
+            }
+            Screen.JAMAAT_SETTINGS -> {
+                JamaatSettingsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { currentScreen = Screen.SETTINGS }
+                )
+            }
+            Screen.REMINDERS_VOICE_SETTINGS -> {
+                RemindersVoiceSettingsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { currentScreen = Screen.SETTINGS }
                 )
             }
             Screen.TIMETABLES -> {
                 TimetablesScreen(
                     timetables = timetables,
-                    onBack = {
-                        homeViewModel.viewModelScope.launch { homeViewModel.loadData() }
-                        currentScreen = Screen.HOME
-                    },
+                    onBack = { currentScreen = Screen.SETTINGS },
                     onImportNew = {
                         photoPickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -153,10 +204,7 @@ class MainActivity : AppCompatActivity() {
                     },
                     onManualEntry = { currentScreen = Screen.MANUAL_ENTRY },
                     onSendToFamily = { table ->
-                        val shareIntent = com.syedmsidsm.prayerreminder.importing.FamilyShare.createShareIntent(
-                            this@MainActivity,
-                            table
-                        )
+                        val shareIntent = FamilyShare.createShareIntent(this@MainActivity, table)
                         startActivity(shareIntent)
                     },
                     onDeleteTimetable = { table ->
@@ -190,14 +238,10 @@ class MainActivity : AppCompatActivity() {
                     ImportSavedScreen(
                         timetable = savedTable,
                         onSendToFamily = {
-                            val shareIntent = com.syedmsidsm.prayerreminder.importing.FamilyShare.createShareIntent(
-                                this@MainActivity,
-                                savedTable
-                            )
+                            val shareIntent = FamilyShare.createShareIntent(this@MainActivity, savedTable)
                             startActivity(shareIntent)
                         },
                         onDone = {
-                            homeViewModel.viewModelScope.launch { homeViewModel.loadData() }
                             currentScreen = Screen.HOME
                         }
                     )

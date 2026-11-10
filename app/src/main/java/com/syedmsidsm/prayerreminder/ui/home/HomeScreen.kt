@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -188,6 +189,7 @@ fun HomeScreen(
         if (next != null) {
             NextPrayerCard(
                 next = next,
+                hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true,
                 amMarker = amMarker,
                 pmMarker = pmMarker,
                 voiceSummary = uiState.voiceSummary,
@@ -234,6 +236,7 @@ private fun BannerCard(text: String, bg: androidx.compose.ui.graphics.Color, tex
 @Composable
 private fun NextPrayerCard(
     next: com.syedmsidsm.prayerreminder.domain.model.NextPrayer,
+    hasWarning: Boolean = false,
     amMarker: String,
     pmMarker: String,
     voiceSummary: String,
@@ -311,12 +314,23 @@ private fun NextPrayerCard(
                             color = PrayerReminderColors.OnDarkMuted,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Text(
-                            text = TimeFormatter.format12Hour(next.jamaatTime, amMarker, pmMarker),
-                            color = PrayerReminderColors.Gold,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = TimeFormatter.format12Hour(next.jamaatTime, amMarker, pmMarker),
+                                color = PrayerReminderColors.Gold,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            if (hasWarning) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = stringResource(R.string.jamaat_fixed_before_azan),
+                                    tint = PrayerReminderColors.Gold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
                 }
             } else {
@@ -332,12 +346,23 @@ private fun NextPrayerCard(
                             color = PrayerReminderColors.OnDarkMuted,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Text(
-                            text = TimeFormatter.format12Hour(next.jamaatTime, amMarker, pmMarker),
-                            color = PrayerReminderColors.Ivory,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = TimeFormatter.format12Hour(next.jamaatTime, amMarker, pmMarker),
+                                color = PrayerReminderColors.Ivory,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (hasWarning) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = stringResource(R.string.jamaat_fixed_before_azan),
+                                    tint = PrayerReminderColors.Gold,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
@@ -486,6 +511,7 @@ private fun TodayPrayersList(
                     isFriday = schedule.isFriday,
                     azanTime = azan,
                     jamaatTime = jamaat,
+                    hasWarning = schedule.fixedTimeBeforeAzanWarnings.contains(prayer),
                     isNext = isNext,
                     isPast = isPast,
                     amMarker = amMarker,
@@ -504,6 +530,7 @@ private fun PrayerRow(
     isFriday: Boolean,
     azanTime: java.time.LocalTime,
     jamaatTime: java.time.LocalTime?,
+    hasWarning: Boolean = false,
     isNext: Boolean,
     isPast: Boolean,
     amMarker: String,
@@ -579,13 +606,26 @@ private fun PrayerRow(
             } else {
                 "—"
             }
-            Text(
-                text = jamaatText,
-                style = MaterialTheme.typography.bodyLarge,
-                color = textColor,
-                fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
-                modifier = Modifier.weight(1.3f)
-            )
+            Row(
+                modifier = Modifier.weight(1.3f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = jamaatText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = textColor,
+                    fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal
+                )
+                if (hasWarning) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = stringResource(R.string.jamaat_fixed_before_azan),
+                        tint = PrayerReminderColors.WarnText,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
 
             // Bell icon
             if (prayer.hasReminders) {
