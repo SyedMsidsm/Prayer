@@ -28,6 +28,13 @@ class TimetableRepository(
     private val _timetables = MutableStateFlow<List<Timetable>>(emptyList())
     val timetables: StateFlow<List<Timetable>> = _timetables.asStateFlow()
 
+    init {
+        loadAllFromDisk()
+        if (_timetables.value.isEmpty()) {
+            loadBuiltInDemo()
+        }
+    }
+
     suspend fun initialize() = withContext(ioDispatcher) {
         loadAllFromDisk()
         if (_timetables.value.isEmpty()) {

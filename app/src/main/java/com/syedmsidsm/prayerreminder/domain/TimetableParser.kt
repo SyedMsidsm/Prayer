@@ -3,7 +3,6 @@ package com.syedmsidsm.prayerreminder.domain
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
 import com.syedmsidsm.prayerreminder.domain.model.TimetableDay
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 data class OcrToken(
@@ -29,14 +28,19 @@ data class ParsedTimetableResult(
 class TimetableParser {
 
     companion object {
-        private val PRAYER_HEADERS = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
-        private val WEEKDAYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        private val HEADER_ALIASES = mapOf(
-            "fajr" to listOf("fajr", "fajar", "faj"),
-            "sunrise" to listOf("sunrise", "sunr", "tulu", "ishraq", "tloo"),
-            "dhuhr" to listOf("dhuhr", "zuhr", "zohar", "duhr", "dhur", "zohr"),
+        val PRAYER_HEADERS = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
+        val WEEKDAYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        val MONTHS = listOf("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+
+        val HEADER_ALIASES = mapOf(
+            "sno" to listOf("s.no", "sno", "no", "no.", "sr", "sr.", "sl", "sl.", "serial", "s.no."),
+            "date" to listOf("date", "dates", "tarikh", "tareekh", "dt"),
+            "day" to listOf("day", "days", "din", "roz", "vaar"),
+            "fajr" to listOf("fajr", "fajar", "faj", "subah", "subh"),
+            "sunrise" to listOf("sunrise", "sunr", "tulu", "ishraq", "tloo", "shuruq", "sun"),
+            "dhuhr" to listOf("dhuhr", "zuhr", "zohar", "duhr", "dhur", "zohr", "johur"),
             "asr" to listOf("asr", "asar", "asrr"),
-            "maghrib" to listOf("maghrib", "magrib", "mgrb", "magh"),
+            "maghrib" to listOf("maghrib", "magrib", "mgrb", "magh", "sunset", "gurub", "ghuroob"),
             "isha" to listOf("isha", "ishaa", "esha", "ish")
         )
     }
@@ -46,7 +50,7 @@ class TimetableParser {
 
         val notes = mutableListOf<String>()
 
-        // 1. Detect Place from Header (text before AZAN)
+        // 1. Detect Place & Banner if present
         var place = "Bhatkal"
         val fullText = tokens.joinToString(" ") { it.text }
         val azanMatch = Regex("""([A-Za-z]+)\s+AZAN""", RegexOption.IGNORE_CASE).find(fullText)
@@ -55,158 +59,288 @@ class TimetableParser {
             notes.add("Detected place: $place")
         }
 
-        // 2. Detect Year and Months from banner (e.g. "MAR - APR 2026")
         var startYear = 2026
-        var startMonth = 3 // March
-        val bannerMatch = Regex("""(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s*[-–]\s*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s*(\d{4})""", RegexOption.IGNORE_CASE).find(fullText)
+        var startMonth = 3 // March default
+        val bannerMatch = Regex(
+            """(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s*[-–]\s*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)?\s*(\d{4})?""",
+            RegexOption.IGNORE_CASE
+        ).find(fullText)
         if (bannerMatch != null) {
             val monthStr = bannerMatch.groupValues[1].uppercase()
-            startYear = bannerMatch.groupValues[2].toIntOrNull() ?: 2026
             startMonth = monthStringToNumber(monthStr)
+            bannerMatch.groupValues[2].toIntOrNull()?.let { startYear = it }
             notes.add("Detected banner: $monthStr $startYear")
         }
 
-        // 3. Find Header Tokens (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha, Day, Date)
-        val headerTokens = mutableMapOf<String, OcrToken>()
-        for (token in tokens) {
-            val clean = token.text.lowercase().trim()
-            for ((standardHeader, aliases) in HEADER_ALIASES) {
-                if (!headerTokens.containsKey(standardHeader)) {
-                    val matches = aliases.any { alias -> levenshteinDistance(clean, alias) <= 1 }
-                        || levenshteinDistance(clean, standardHeader) <= 2
-                    if (matches) {
-                        headerTokens[standardHeader] = token
+        // 2. Identify the Header Row
+        // Cluster tokens in the upper region into horizontal lines to find the table header row
+        val headerCandidates = clusterIntoLines(tokens)
+        var bestHeaderLine: List<OcrToken>? = null
+        var bestHeaderScore = 0
+
+        for (line in headerCandidates) {
+            var score = 0
+            val matchedKeys = mutableSetOf<String>()
+            for (token in line) {
+                val clean = normalizeText(token.text)
+                for ((key, aliases) in HEADER_ALIASES) {
+                    if (!matchedKeys.contains(key)) {
+                        val matches = aliases.any { alias ->
+                            clean == alias || (alias.length >= 4 && levenshteinDistance(clean, alias) <= 1)
+                        }
+                        if (matches) {
+                            matchedKeys.add(key)
+                            score++
+                        }
                     }
                 }
             }
-            if (!headerTokens.containsKey("day") && (levenshteinDistance(clean, "day") <= 1 || clean == "days")) {
-                headerTokens["day"] = token
-            }
-            if (!headerTokens.containsKey("date") && (levenshteinDistance(clean, "date") <= 1 || clean == "dates")) {
-                headerTokens["date"] = token
+            if (score > bestHeaderScore && score >= 3) {
+                bestHeaderScore = score
+                bestHeaderLine = line
             }
         }
 
-        // If at least 4 prayer headers found, use their Y coordinate to define the header baseline
-        val headerY = if (headerTokens.isNotEmpty()) {
-            headerTokens.values.map { it.centerY }.average().toInt()
+        val headerTokens = mutableMapOf<String, OcrToken>()
+        val headerBottom: Int
+
+        if (bestHeaderLine != null) {
+            headerBottom = bestHeaderLine.maxOf { it.bottom }
+            for (token in bestHeaderLine) {
+                val clean = normalizeText(token.text)
+                for ((key, aliases) in HEADER_ALIASES) {
+                    if (!headerTokens.containsKey(key)) {
+                        val matches = aliases.any { alias ->
+                            clean == alias || (alias.length >= 4 && levenshteinDistance(clean, alias) <= 1)
+                        }
+                        if (matches) {
+                            headerTokens[key] = token
+                        }
+                    }
+                }
+            }
+            notes.add("Detected header row with ${headerTokens.size} columns at Y=$headerBottom")
         } else {
-            tokens.minOf { it.centerY } + 50
+            // Fallback: search all tokens
+            for (token in tokens) {
+                val clean = normalizeText(token.text)
+                for ((key, aliases) in HEADER_ALIASES) {
+                    if (!headerTokens.containsKey(key)) {
+                        val matches = aliases.any { alias ->
+                            clean == alias || (alias.length >= 4 && levenshteinDistance(clean, alias) <= 1)
+                        }
+                        if (matches) {
+                            headerTokens[key] = token
+                        }
+                    }
+                }
+            }
+            val prayerHeaderTokens = PRAYER_HEADERS.mapNotNull { headerTokens[it] }
+            headerBottom = if (prayerHeaderTokens.isNotEmpty()) {
+                prayerHeaderTokens.maxOf { it.bottom }
+            } else {
+                tokens.minOf { it.top } + 40
+            }
         }
 
-        // 4. Determine Column Centers (X coordinates)
-        val columnCenters = mutableMapOf<String, Int>()
-        for ((name, token) in headerTokens) {
-            columnCenters[name] = token.centerX
+        // 3. Determine Column Centers for the 6 Prayers
+        val prayerCenters = mutableMapOf<String, Int>()
+        for (p in PRAYER_HEADERS) {
+            headerTokens[p]?.let { prayerCenters[p] = it.centerX }
         }
 
-        // Fallback for missing column centers based on found columns
-        val sortedPrayerColumns = PRAYER_HEADERS.mapNotNull { h -> columnCenters[h]?.let { x -> Pair(h, x) } }
+        // Interpolate any missing prayer column centers
+        val knownPrayerList = PRAYER_HEADERS.mapNotNull { h -> prayerCenters[h]?.let { x -> Pair(h, x) } }
             .sortedBy { it.second }
 
-        val medianGap = if (sortedPrayerColumns.size >= 2) {
-            (sortedPrayerColumns.last().second - sortedPrayerColumns.first().second) / (sortedPrayerColumns.size - 1)
-        } else {
-            100
-        }
+        val prayerGap = if (knownPrayerList.size >= 2) {
+            val totalSpan = knownPrayerList.last().second - knownPrayerList.first().second
+            val spanSteps = PRAYER_HEADERS.indexOf(knownPrayerList.last().first) - PRAYER_HEADERS.indexOf(knownPrayerList.first().first)
+            if (spanSteps > 0) totalSpan / spanSteps else 110
+        } else 110
 
-        // Estimate missing prayer columns if any
-        if (columnCenters["fajr"] != null && columnCenters["sunrise"] == null) {
-            columnCenters["sunrise"] = columnCenters["fajr"]!! + medianGap
-        }
-        if (columnCenters["isha"] != null && columnCenters["maghrib"] == null) {
-            columnCenters["maghrib"] = columnCenters["isha"]!! - medianGap
-        }
-
-        // Date and Day are typically to the left of Fajr
-        val fajrX = columnCenters["fajr"] ?: (sortedPrayerColumns.firstOrNull()?.second ?: 300)
-        if (columnCenters["day"] == null) {
-            columnCenters["day"] = fajrX - medianGap
-        }
-        if (columnCenters["date"] == null) {
-            columnCenters["date"] = (columnCenters["day"] ?: (fajrX - medianGap)) - (medianGap * 0.9).toInt()
-        }
-        val isDateX = (columnCenters["date"] ?: (fajrX - medianGap * 2)) - (medianGap * 0.9).toInt()
-
-        // 5. Group Tokens into Rows below Header
-        val bodyTokens = tokens.filter { it.centerY > headerY + 15 }
-        val medianTokenHeight = if (bodyTokens.isNotEmpty()) {
-            bodyTokens.map { it.height }.sorted()[bodyTokens.size / 2]
-        } else 20
-        val rowTolerance = (medianTokenHeight * 0.6).coerceAtLeast(10.0).toInt()
-
-        val rows = mutableListOf<MutableList<OcrToken>>()
-        val sortedByY = bodyTokens.sortedBy { it.centerY }
-
-        for (token in sortedByY) {
-            val matchingRow = rows.firstOrNull { row ->
-                val rowY = row.map { it.centerY }.average().toInt()
-                abs(token.centerY - rowY) <= rowTolerance
+        // Fill missing prayer centers based on order
+        for (i in PRAYER_HEADERS.indices) {
+            val prayer = PRAYER_HEADERS[i]
+            if (prayerCenters[prayer] == null) {
+                val prev = (i - 1 downTo 0).firstOrNull { prayerCenters[PRAYER_HEADERS[it]] != null }
+                val next = (i + 1 until PRAYER_HEADERS.size).firstOrNull { prayerCenters[PRAYER_HEADERS[it]] != null }
+                if (prev != null && next != null) {
+                    val pX = prayerCenters[PRAYER_HEADERS[prev]]!!
+                    val nX = prayerCenters[PRAYER_HEADERS[next]]!!
+                    prayerCenters[prayer] = pX + ((nX - pX) * (i - prev)) / (next - prev)
+                } else if (prev != null) {
+                    prayerCenters[prayer] = prayerCenters[PRAYER_HEADERS[prev]]!! + prayerGap * (i - prev)
+                } else if (next != null) {
+                    prayerCenters[prayer] = prayerCenters[PRAYER_HEADERS[next]]!! - prayerGap * (next - i)
+                } else {
+                    prayerCenters[prayer] = 400 + i * prayerGap
+                }
             }
-            if (matchingRow != null) {
-                matchingRow.add(token)
+        }
+
+        val fajrCenterX = prayerCenters["fajr"] ?: 400
+        val sunriseCenterX = prayerCenters["sunrise"] ?: (fajrCenterX + prayerGap)
+        val fajrLeftBoundary = fajrCenterX - (sunriseCenterX - fajrCenterX) / 2
+
+        // 4. Filter and Preprocess Body Tokens
+        // Body tokens strictly start below the header row
+        val rawBodyTokens = tokens.filter { it.centerY > headerBottom - 5 && it.bottom > headerBottom }
+        if (rawBodyTokens.isEmpty()) return null
+
+        // Merge horizontally adjacent tokens that form a time pattern (e.g. "05:" + "21" -> "05:21")
+        val bodyTokens = mergeAdjacentTimeFragments(rawBodyTokens)
+
+        // 5. Cluster Body Tokens into Table Rows
+        val sortedBody = bodyTokens.sortedBy { it.centerY }
+        val medianTokenHeight = sortedBody.map { it.height }.sorted().let { it[it.size / 2] }
+        val lineGapThreshold = maxOf(8, (medianTokenHeight * 0.45).toInt())
+
+        val rawRows = mutableListOf<MutableList<OcrToken>>()
+        for (tok in sortedBody) {
+            val lastRow = rawRows.lastOrNull()
+            if (lastRow != null && tok.centerY - lastRow.last().centerY <= lineGapThreshold) {
+                lastRow.add(tok)
             } else {
-                rows.add(mutableListOf(token))
+                rawRows.add(mutableListOf(tok))
             }
         }
 
-        // Sort each row by X, and sort rows top to bottom
-        val sortedRows = rows.map { it.sortedBy { tok -> tok.centerX } }
-            .sortedBy { it.map { tok -> tok.centerY }.average() }
-
-        // Filter out non-table rows (e.g. footer lines) by ensuring at least 2 numbers/time patterns
-        val tableRows = sortedRows.filter { row ->
-            row.count { Regex("""\d""").containsMatchIn(it.text) } >= 2
+        // Filter valid table rows (must have at least one time pattern or digits)
+        val tableRows = rawRows.filter { row ->
+            row.any { hasTimePattern(it.text) } || row.count { Regex("""\d""").containsMatchIn(it.text) } >= 2
         }
 
-        // 6. Parse cells for each row
+        if (tableRows.isEmpty()) return null
+
+        // 6. Parse Each Table Row into TimetableDay
         val parsedDays = mutableListOf<TimetableDay>()
-        var currentDate = LocalDate.of(startYear, startMonth, 20) // default start if not read
-        var hijriCounter = 1
+        var currentDate = LocalDate.of(startYear, startMonth, 20)
+        var currentMonth = startMonth
+        var currentYear = startYear
+        var prevDayOfMonth: Int? = null
 
         for (i in tableRows.indices) {
-            val row = tableRows[i]
-            val rowTokens = row.toMutableList()
+            val rowTokens = tableRows[i].sortedBy { it.centerX }
 
-            // Assign tokens to closest columns
-            val cellValues = mutableMapOf<String, String>()
-            for (token in rowTokens) {
-                val bestColumn = columnCenters.entries.minByOrNull { abs(it.value - token.centerX) }
-                if (bestColumn != null && abs(bestColumn.value - token.centerX) < medianGap * 0.8) {
-                    val existing = cellValues[bestColumn.key]
-                    cellValues[bestColumn.key] = if (existing == null) token.text else "$existing ${token.text}"
+            // Split into metadata tokens (left of Fajr) and prayer tokens (at or right of Fajr)
+            val metaTokens = rowTokens.filter { it.centerX < fajrLeftBoundary }
+            val prayerTokens = rowTokens.filter { it.centerX >= fajrLeftBoundary }
+
+            // --- A. Parse Metadata (S.No, Date, Weekday) ---
+            var parsedWeekday = ""
+            var parsedMonth = currentMonth
+            var hijriDay = i + 1
+            var dayOfMonth: Int? = null
+
+            val remainingMeta = metaTokens.toMutableList()
+
+            // 1) Find Weekday
+            val weekdayMatch = remainingMeta.firstOrNull { tok ->
+                val clean = normalizeText(tok.text)
+                WEEKDAYS.any { w -> clean == w.lowercase() || levenshteinDistance(clean, w.lowercase()) <= 1 }
+            }
+            if (weekdayMatch != null) {
+                val clean = normalizeText(weekdayMatch.text)
+                parsedWeekday = WEEKDAYS.minByOrNull { levenshteinDistance(clean, it.lowercase()) } ?: weekdayMatch.text
+                remainingMeta.remove(weekdayMatch)
+            }
+
+            // 2) Find Month Name (e.g. "Mar", "Apr")
+            val monthMatch = remainingMeta.firstOrNull { tok ->
+                val clean = tok.text.trim().uppercase()
+                MONTHS.any { m -> clean.contains(m) }
+            }
+            if (monthMatch != null) {
+                for (m in MONTHS) {
+                    if (monthMatch.text.uppercase().contains(m)) {
+                        parsedMonth = monthStringToNumber(m)
+                        break
+                    }
+                }
+                remainingMeta.remove(monthMatch)
+            }
+
+            // 3) Find Numbers in remaining metadata tokens
+            val numbersInMeta = remainingMeta.flatMap { tok ->
+                Regex("""\d+""").findAll(tok.text).mapNotNull { it.value.toIntOrNull() }.toList()
+            }
+
+            if (numbersInMeta.size >= 2) {
+                // First is S.No / Hijri day, second is Gregorian date
+                hijriDay = numbersInMeta[0]
+                dayOfMonth = numbersInMeta[1]
+            } else if (numbersInMeta.size == 1) {
+                val num = numbersInMeta[0]
+                if (num in 1..31) {
+                    dayOfMonth = num
+                } else {
+                    hijriDay = num
                 }
             }
 
-            // Assign Is. Date (furthest left column)
-            val leftmostToken = rowTokens.minByOrNull { it.centerX }
-            val rawIsDate = if (leftmostToken != null && leftmostToken.centerX < (columnCenters["date"] ?: fajrX)) {
-                leftmostToken.text
-            } else ""
+            // --- B. Date Rollover and Continuity ---
+            if (parsedMonth != currentMonth) {
+                currentMonth = parsedMonth
+            } else if (dayOfMonth != null && prevDayOfMonth != null && dayOfMonth < prevDayOfMonth!!) {
+                // Month rollover without explicit month label (e.g. 31 -> 1)
+                currentMonth = if (currentMonth == 12) 1 else currentMonth + 1
+                if (currentMonth == 1) currentYear++
+            }
 
-            val hijriDay = parseHijriDay(rawIsDate, hijriCounter)
-            hijriCounter = hijriDay + 1
-
-            // Parse Gregorian Date Number
-            val rawDateStr = cellValues["date"] ?: ""
-            val dayOfMonth = parseDateNumber(rawDateStr)
             if (i == 0 && dayOfMonth != null) {
-                currentDate = LocalDate.of(startYear, startMonth, dayOfMonth)
+                currentDate = LocalDate.of(currentYear, currentMonth, dayOfMonth)
+            } else if (dayOfMonth != null) {
+                currentDate = LocalDate.of(currentYear, currentMonth, dayOfMonth)
             } else if (i > 0) {
                 currentDate = currentDate.plusDays(1)
             }
+            prevDayOfMonth = currentDate.dayOfMonth
 
-            // Parse Weekday
-            val rawDay = cellValues["day"] ?: ""
-            val parsedWeekday = parseWeekday(rawDay, currentDate.dayOfWeek.name.take(3))
+            // Validate / fallback weekday against currentDate
+            val expectedWeekday = currentDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+            if (parsedWeekday.isBlank()) {
+                parsedWeekday = expectedWeekday
+            }
 
-            // Parse and format Prayer times (adding AM/PM to convert to 24h)
+            // --- C. Parse Prayer Times ---
             val timesMap = mutableMapOf<String, String>()
-            for (prayer in PRAYER_HEADERS) {
-                val rawTime = cellValues[prayer] ?: ""
-                val cleanedTime = cleanAndFormatTime(rawTime, prayer)
-                if (cleanedTime != null) {
-                    timesMap[prayer] = cleanedTime
+
+            // Find all valid candidate times in prayer tokens
+            val rowTimeStrings = mutableListOf<String>()
+            for (tok in prayerTokens) {
+                val t = extractTimeCandidate(tok.text)
+                if (t != null) {
+                    rowTimeStrings.add(t)
+                }
+            }
+
+            // If exactly 6 times found, they are strictly Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha
+            if (rowTimeStrings.size == 6) {
+                for (pIndex in 0..5) {
+                    val pName = PRAYER_HEADERS[pIndex]
+                    val cleaned = cleanAndFormatTime(rowTimeStrings[pIndex], pName)
+                    if (cleaned != null) {
+                        timesMap[pName] = cleaned
+                    }
+                }
+            } else {
+                // Map prayer tokens to the closest prayer column center
+                val prayerBoundaries = mutableListOf<Int>()
+                for (pIndex in 0 until PRAYER_HEADERS.size - 1) {
+                    val c1 = prayerCenters[PRAYER_HEADERS[pIndex]]!!
+                    val c2 = prayerCenters[PRAYER_HEADERS[pIndex + 1]]!!
+                    prayerBoundaries.add((c1 + c2) / 2)
+                }
+
+                for (tok in prayerTokens) {
+                    val timeStr = extractTimeCandidate(tok.text) ?: continue
+                    val colIndex = prayerBoundaries.indexOfFirst { tok.centerX < it }
+                        .let { if (it == -1) PRAYER_HEADERS.size - 1 else it }
+                    val pName = PRAYER_HEADERS[colIndex]
+                    if (!timesMap.containsKey(pName)) {
+                        cleanAndFormatTime(timeStr, pName)?.let { timesMap[pName] = it }
+                    }
                 }
             }
 
@@ -226,7 +360,7 @@ class TimetableParser {
             schemaVersion = 1,
             kind = "prayerreminder.timetable",
             place = place,
-            hijriMonth = 10, // Shawwal
+            hijriMonth = 10,
             hijriMonthName = "Shawwal",
             hijriYear = 1447,
             firstDate = parsedDays.first().date,
@@ -246,29 +380,69 @@ class TimetableParser {
         )
     }
 
-    private fun parseHijriDay(raw: String, fallback: Int): Int {
-        val digits = Regex("""\d+""").find(raw)?.value?.toIntOrNull()
-        return digits ?: fallback
-    }
+    /**
+     * Clusters tokens into horizontal lines based on vertical proximity.
+     */
+    private fun clusterIntoLines(tokens: List<OcrToken>): List<List<OcrToken>> {
+        val sorted = tokens.sortedBy { it.centerY }
+        val lines = mutableListOf<MutableList<OcrToken>>()
 
-    private fun parseDateNumber(raw: String): Int? {
-        val digits = Regex("""\d+""").find(raw)?.value?.toIntOrNull()
-        return if (digits in 1..31) digits else null
-    }
-
-    private fun parseWeekday(raw: String, fallback: String): String {
-        val clean = raw.trim().lowercase()
-        for (w in WEEKDAYS) {
-            if (levenshteinDistance(clean, w.lowercase()) <= 1) return w
+        for (token in sorted) {
+            val lastLine = lines.lastOrNull()
+            if (lastLine != null && abs(token.centerY - lastLine.map { it.centerY }.average()) <= 12) {
+                lastLine.add(token)
+            } else {
+                lines.add(mutableListOf(token))
+            }
         }
-        return fallback.lowercase().replaceFirstChar { it.uppercase() }
+        return lines.map { it.sortedBy { tok -> tok.centerX } }
     }
 
     /**
-     * Cleans OCR raw time string, repairs common digit misrecognitions, and adds AM/PM to make 24h format.
+     * Merges adjacent tokens if they are horizontally close and form a time pattern
+     * like "05:" followed by "21", or "16" followed by ":01".
      */
-    fun cleanAndFormatTime(raw: String, prayer: String): String? {
-        var text = raw.trim()
+    private fun mergeAdjacentTimeFragments(tokens: List<OcrToken>): List<OcrToken> {
+        val sorted = tokens.sortedWith(compareBy({ it.centerY / 15 }, { it.left }))
+        val merged = mutableListOf<OcrToken>()
+
+        var i = 0
+        while (i < sorted.size) {
+            val curr = sorted[i]
+            if (i + 1 < sorted.size) {
+                val next = sorted[i + 1]
+                val sameLine = abs(curr.centerY - next.centerY) <= 10
+                val horizontalGap = next.left - curr.right
+                val combinedText = "${curr.text}${next.text}".replace(" ", "")
+
+                if (sameLine && horizontalGap in -5..15 && hasTimePattern(combinedText)) {
+                    merged.add(
+                        OcrToken(
+                            text = combinedText,
+                            left = curr.left,
+                            top = minOf(curr.top, next.top),
+                            right = next.right,
+                            bottom = maxOf(curr.bottom, next.bottom)
+                        )
+                    )
+                    i += 2
+                    continue
+                }
+            }
+            merged.add(curr)
+            i++
+        }
+        return merged
+    }
+
+    private fun hasTimePattern(text: String): Boolean {
+        val clean = text.replace('O', '0').replace('o', '0')
+        return Regex("""\d{1,2}[:.;,]\d{2}""").containsMatchIn(clean) ||
+            Regex("""^\d{3,4}$""").matches(clean)
+    }
+
+    private fun extractTimeCandidate(raw: String): String? {
+        val clean = raw.trim()
             .replace('O', '0')
             .replace('o', '0')
             .replace('l', '1')
@@ -277,12 +451,25 @@ class TimetableParser {
             .replace('S', '5')
             .replace('s', '5')
             .replace('B', '8')
-            .replace(Regex("""(?i)[ap]m"""), "")
-            .trim()
 
-        // Fix separator (dot, comma, semicolon, colon with optional spaces, or no separator 3-4 digits)
-        val match = Regex("""(\d{1,2})\s*[:.;,]\s*(\d{2})""").find(text)
-            ?: Regex("""^(\d{3,4})$""").find(text.replace(" ", ""))?.let { m ->
+        val colonMatch = Regex("""(\d{1,2}\s*[:.;,]\s*\d{2})""").find(clean)
+        if (colonMatch != null) return colonMatch.groupValues[1]
+
+        val digitsMatch = Regex("""\b(\d{3,4})\b""").find(clean)
+        if (digitsMatch != null) return digitsMatch.groupValues[1]
+
+        return null
+    }
+
+    /**
+     * Cleans OCR raw time string, repairs common misrecognitions, and normalizes to 24h format.
+     */
+    fun cleanAndFormatTime(raw: String, prayer: String): String? {
+        val candidate = extractTimeCandidate(raw) ?: return null
+        var text = candidate.replace(" ", "")
+
+        val match = Regex("""(\d{1,2})[:.;,](\d{2})""").find(text)
+            ?: Regex("""^(\d{3,4})$""").find(text)?.let { m ->
                 val digits = m.groupValues[1]
                 if (digits.length == 3) {
                     Regex("""^(\d{1})(\d{2})$""").find(digits)
@@ -297,23 +484,35 @@ class TimetableParser {
 
         if (min !in 0..59) return null
 
-        // Add AM / PM based on prayer rule (Spec 6.3 step 7)
+        // Normalize to 24-hour format
         when (prayer.lowercase()) {
             "fajr", "sunrise" -> {
-                // AM: 5 -> 05
+                // AM: 5 -> 05; 12 -> 00
                 if (hour == 12) hour = 0
             }
             "dhuhr" -> {
-                // 11:xx = AM (11), 12:xx = PM (12), 1:xx = PM (13)
-                if (hour in 1..11) hour += 12
+                // Midday: 11:xx = 11, 12:xx = 12, 1:xx = 13, 2:xx = 14
+                if (hour in 1..2) hour += 12
             }
-            "asr", "maghrib", "isha" -> {
-                // PM: 3:59 -> 15:59, 6:46 -> 18:46, 7:50 -> 19:50
-                if (hour in 1..11) hour += 12
+            "asr" -> {
+                // Afternoon: 14:xx..17:xx keep as is; 2..5 -> 14..17
+                if (hour in 2..5) hour += 12
+            }
+            "maghrib" -> {
+                // Evening: 17:xx..20:xx keep as is; 5..8 -> 17..20
+                if (hour in 5..8) hour += 12
+            }
+            "isha" -> {
+                // Night: 18:xx..22:xx keep as is; 6..10 -> 18..22
+                if (hour in 6..10) hour += 12
             }
         }
 
         return "%02d:%02d".format(hour, min)
+    }
+
+    private fun normalizeText(s: String): String {
+        return s.lowercase().replace(Regex("[^a-z0-9.]"), "")
     }
 
     private fun monthStringToNumber(m: String): Int {

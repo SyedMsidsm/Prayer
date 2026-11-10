@@ -2,6 +2,7 @@ package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import com.syedmsidsm.prayerreminder.AppContainer
 import com.syedmsidsm.prayerreminder.PrayerReminderApp
 import com.syedmsidsm.prayerreminder.domain.DayScheduleResolver
 import com.syedmsidsm.prayerreminder.domain.NextPrayerResolver
@@ -11,6 +12,7 @@ import com.syedmsidsm.prayerreminder.domain.model.ScheduleSource
 import com.syedmsidsm.prayerreminder.ui.format.TimeFormatter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -50,12 +52,18 @@ object WidgetStateBuilder {
 
     fun build(context: Context): WidgetState {
         val app = context.applicationContext as? PrayerReminderApp
-        val container = app?.container
+        val container = app?.container ?: AppContainer(context.applicationContext)
 
         val locales = AppCompatDelegate.getApplicationLocales()
         val lang = if (!locales.isEmpty) locales.get(0)?.language ?: "en" else "en"
 
-        val timetables = container?.timetableRepository?.timetables?.value ?: emptyList()
+        var timetables = container.timetableRepository.timetables.value
+        if (timetables.isEmpty()) {
+            runBlocking {
+                container.timetableRepository.initialize()
+            }
+            timetables = container.timetableRepository.timetables.value
+        }
         val activeTimetable = timetables.firstOrNull()
 
         if (activeTimetable == null) {
@@ -81,12 +89,27 @@ object WidgetStateBuilder {
         val nowTime = now.toLocalTime()
 
         val rules = runBlocking {
-            container?.settingsRepository?.jamaatRules?.firstOrNull()
+            container.settingsRepository.jamaatRules.firstOrNull()
         } ?: emptyMap()
 
-        val dayResolver = container?.dayScheduleResolver ?: DayScheduleResolver()
-        val todaySchedule = dayResolver.resolve(today, timetables, rules)
-        val tomorrowSchedule = dayResolver.resolve(today.plusDays(1), timetables, rules)
+        val dayResolver = container.dayScheduleResolver
+        var todaySchedule = dayResolver.resolve(today, timetables, rules)
+        var isEstimated = todaySchedule.source.isEstimated
+
+        // If today is outside the active timetable, fall back gracefully to the timetable's days
+        // so the widget is NEVER blank or empty!
+        var effectiveDate = today
+        if (todaySchedule.source == ScheduleSource.NONE || todaySchedule.azan.isEmpty()) {
+            val days = activeTimetable.days
+            if (days.isNotEmpty()) {
+                val dayIdx = (today.dayOfMonth - 1).coerceIn(0, days.size - 1)
+                val targetDay = days[dayIdx]
+                val targetDate = runCatching { LocalDate.parse(targetDay.date) }.getOrNull() ?: today
+                effectiveDate = targetDate
+                todaySchedule = dayResolver.resolve(targetDate, listOf(activeTimetable), rules)
+                isEstimated = true
+            }
+        }
 
         if (todaySchedule.source == ScheduleSource.NONE || todaySchedule.azan.isEmpty()) {
             return WidgetState(
@@ -105,7 +128,21 @@ object WidgetStateBuilder {
             )
         }
 
-        val nextPrayerResolver = container?.nextPrayerResolver ?: NextPrayerResolver()
+        val tomorrowSchedule = if (effectiveDate != today) {
+            val days = activeTimetable.days
+            if (days.isNotEmpty()) {
+                val nextDayIdx = today.dayOfMonth.coerceIn(0, days.size - 1)
+                val nextDay = days[nextDayIdx]
+                val nextDate = runCatching { LocalDate.parse(nextDay.date) }.getOrNull() ?: effectiveDate.plusDays(1)
+                dayResolver.resolve(nextDate, listOf(activeTimetable), rules)
+            } else {
+                dayResolver.resolve(effectiveDate.plusDays(1), timetables, rules)
+            }
+        } else {
+            dayResolver.resolve(today.plusDays(1), timetables, rules)
+        }
+
+        val nextPrayerResolver = container.nextPrayerResolver
         val nextPrayer = nextPrayerResolver.resolve(nowTime, todaySchedule, tomorrowSchedule)
 
         if (nextPrayer == null) {
@@ -200,7 +237,6 @@ object WidgetStateBuilder {
             )
         }
 
-        val isEstimated = todaySchedule.source.isEstimated
         val rawPlace = getLocalizedPlace(activeTimetable.place, lang)
         val place = if (isEstimated) {
             when (lang) {

@@ -13,8 +13,12 @@ class PrayerReminderApp : Application() {
         super.onCreate()
         container = AppContainer(this)
 
+        // Preload timetables into memory
+        container.timetableRepository
+
         NotificationHelper(this).createNotificationChannels()
         DailyMaintenanceWorker.enqueue(this)
         AppRefresher.refreshAll(this, "startup")
+        com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(this)
     }
 }

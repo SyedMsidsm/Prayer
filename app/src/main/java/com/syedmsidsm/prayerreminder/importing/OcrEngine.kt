@@ -60,7 +60,19 @@ class OcrEngine(private val context: Context) {
 
     private fun loadAndPreprocessBitmap(uri: Uri): Bitmap {
         var bmp: Bitmap = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (uri.scheme == "file" && uri.path != null) {
+                val file = java.io.File(uri.path!!)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val source = ImageDecoder.createSource(file)
+                    ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                        decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                        decoder.isMutableRequired = true
+                    }
+                } else {
+                    BitmapFactory.decodeFile(file.absolutePath)
+                        ?: throw IllegalArgumentException("Could not decode file at ${file.absolutePath}")
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(context.contentResolver, uri)
                 ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
                     decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
@@ -73,12 +85,17 @@ class OcrEngine(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.w("OcrEngine", "ImageDecoder failed, attempting fallback to BitmapFactory", e)
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                val options = BitmapFactory.Options().apply {
-                    inPreferredConfig = Bitmap.Config.ARGB_8888
-                }
-                BitmapFactory.decodeStream(stream, null, options)
-            } ?: throw IllegalArgumentException("Could not decode bitmap from URI: ${e.message}")
+            if (uri.scheme == "file" && uri.path != null) {
+                BitmapFactory.decodeFile(uri.path)
+                    ?: throw IllegalArgumentException("BitmapFactory fallback could not decode file: $uri")
+            } else {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val options = BitmapFactory.Options().apply {
+                        inPreferredConfig = Bitmap.Config.ARGB_8888
+                    }
+                    BitmapFactory.decodeStream(stream, null, options)
+                } ?: throw IllegalArgumentException("Could not decode bitmap from URI: ${e.message}")
+            }
         }
 
         // Spec 6.3: If shortest side is under 1000 px, upscale x2 (bilinear)

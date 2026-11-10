@@ -60,6 +60,12 @@ class ImportViewModel(
                 if (parseResult != null) {
                     val flags = timetableValidator.validate(parseResult.timetable)
                     Log.d("ImportViewModel", "Parsed timetable for ${parseResult.timetable.place} with ${parseResult.timetable.days.size} days, ${flags.size} flags")
+                    for ((idx, flag) in flags.withIndex()) {
+                        Log.w("ImportFlags", "Flag #$idx: Day=${flag.dayIndex} (${flag.date}) Field=${flag.field} Current='${flag.currentValue}' Sugg='${flag.suggestion}' Reason=${flag.reason}")
+                    }
+                    for ((idx, day) in parseResult.timetable.days.withIndex()) {
+                        Log.d("ImportDays", "Day #$idx (${day.date}, ${day.weekday}, H:${day.hijriDay}): ${day.times}")
+                    }
                     _uiState.value = ImportUiState.Review(
                         timetable = parseResult.timetable,
                         flags = flags
