@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="150dp"
+    android:viewportWidth="300"
+    android:viewportHeight="150">
+    <!-- Left Minaret -->
+    <path
+        android:fillColor="#15000000"
+        android:pathData="M35,60 h6 v90 h-6 z M33,55 h10 v5 h-10 z M38,35 L41,55 h-6 Z" />
+    <!-- Center Dome and Main Body -->
+    <path
+        android:fillColor="#15000000"
+        android:pathData="M110,150 L110,105 C110,65 190,65 190,105 L190,150 Z" />
+    <path
+        android:fillColor="#15000000"
+        android:pathData="M148,45 L152,45 L152,65 L148,65 Z M150,38 L152,45 L148,45 Z" />
+    <!-- Right Minaret -->
+    <path
+        android:fillColor="#15000000"
+        android:pathData="M255,45 h8 v105 h-8 z M252,40 h14 v5 h-14 z M259,20 L263,40 h-8 Z" />
+</vector>

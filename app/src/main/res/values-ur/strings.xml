@@ -155,6 +155,30 @@
     <string name="intro_tagline">اذان اور جماعت کے اوقات · آواز والی یاد دہانی · وجٹ</string>
     <string name="intro_skip">چھوڑنے کے لیے ٹیپ کریں</string>
 
+    <string name="azan_sound">اذان کی آواز</string>
+    <string name="azan_sound_desc">اذان کے وقت کیا چلے منتخب کریں</string>
+    <string name="azan_type_both">دونوں (پہلے اعلان پھر اذان)</string>
+    <string name="azan_type_azan_only">صرف تلاوتِ اذان</string>
+    <string name="azan_type_speech_only">صرف پہلے سے مقررہ اعلان</string>
+    <string name="reciter">مؤذن</string>
+    <string name="reciter_ali_mala">شیخ علی بن احمد ملا</string>
+    <string name="reciter_ali_mala_country">سعودی عرب</string>
+    <string name="reciter_nurdin_hamza">شیخ نور الدین حمزہ مغربی</string>
+    <string name="reciter_nurdin_hamza_country">مراکش</string>
+    <string name="reciter_najee_qazaz">شیخ ناجی قزاز</string>
+    <string name="reciter_najee_qazaz_country">فلسطین</string>
+    <string name="azan_length">اذان کا دورانیہ</string>
+    <string name="azan_length_full">مکمل اذان</string>
+    <string name="azan_length_short">پہلی 4 تکبیریں</string>
+    <string name="dua_after_azan">اذان کے بعد کی دعا</string>
+    <string name="dua_after_azan_desc">اذان ختم ہونے پر دعا الوسیلہ و الفضیلہ چلائیں</string>
+    <string name="widget_theme">ویجیٹ کا انداز اور رنگ</string>
+    <string name="widget_theme_dark">گہرا سبز</string>
+    <string name="widget_theme_cream">ہلکا کریمی</string>
+    <string name="widget_theme_gold">سنہری</string>
+    <string name="widget_theme_system">سسٹم کے مطابق</string>
+    <string name="widget_slim_label">نماز کی افقی پٹی</string>
+
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>
         <item>جمادی الاول</item><item>جمادی الثانی</item><item>رجب</item><item>شعبان</item>

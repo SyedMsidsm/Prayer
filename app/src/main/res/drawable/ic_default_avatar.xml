@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Instagram-style circular background -->
+    <path
+        android:fillColor="#E4E6EB"
+        android:pathData="M24,24m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0" />
+    <!-- Stylized Head -->
+    <path
+        android:fillColor="#8A8D91"
+        android:pathData="M24,11a7,7 0,1 0,0 14a7,7 0,0 0,0 -14z" />
+    <!-- Stylized Shoulders / Body -->
+    <path
+        android:fillColor="#8A8D91"
+        android:pathData="M24,28c-6.6,0 -13,3.8 -13,10.5c0,1.2 0.3,2.5 0.8,3.5c3.2,3.7 7.9,6 12.2,6s9,-2.3 12.2,-6c0.5,-1 0.8,-2.3 0.8,-3.5C37,31.8 30.6,28 24,28z" />
+</vector>

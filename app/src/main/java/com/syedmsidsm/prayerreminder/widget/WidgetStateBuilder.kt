@@ -43,7 +43,8 @@ data class WidgetState(
     val secondaryTime: String,
     val countdownTargetEpochMillis: Long,
     val rows: List<WidgetPrayerRow>,
-    val appLanguage: String
+    val appLanguage: String,
+    val theme: String = "dark_teal"
 ) {
     val isRtl: Boolean get() = appLanguage == "ar" || appLanguage == "ur"
 }
@@ -56,6 +57,16 @@ object WidgetStateBuilder {
 
         val locales = AppCompatDelegate.getApplicationLocales()
         val lang = if (!locales.isEmpty) locales.get(0)?.language ?: "en" else "en"
+
+        val rawTheme = runBlocking {
+            container.settingsRepository.widgetTheme.firstOrNull()
+        } ?: "dark_teal"
+        val resolvedTheme = if (rawTheme == "system") {
+            val isNight = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            if (isNight) "dark_teal" else "light_cream"
+        } else {
+            rawTheme
+        }
 
         var timetables = container.timetableRepository.timetables.value
         if (timetables.isEmpty()) {
@@ -79,7 +90,8 @@ object WidgetStateBuilder {
                 secondaryTime = "",
                 countdownTargetEpochMillis = 0L,
                 rows = emptyList(),
-                appLanguage = lang
+                appLanguage = lang,
+                theme = resolvedTheme
             )
         }
 
@@ -124,7 +136,8 @@ object WidgetStateBuilder {
                 secondaryTime = "",
                 countdownTargetEpochMillis = 0L,
                 rows = emptyList(),
-                appLanguage = lang
+                appLanguage = lang,
+                theme = resolvedTheme
             )
         }
 
@@ -158,7 +171,8 @@ object WidgetStateBuilder {
                 secondaryTime = "",
                 countdownTargetEpochMillis = 0L,
                 rows = emptyList(),
-                appLanguage = lang
+                appLanguage = lang,
+                theme = resolvedTheme
             )
         }
 
@@ -264,7 +278,8 @@ object WidgetStateBuilder {
             secondaryTime = secondaryTime,
             countdownTargetEpochMillis = countdownTargetEpochMillis,
             rows = rows,
-            appLanguage = lang
+            appLanguage = lang,
+            theme = resolvedTheme
         )
     }
 

@@ -79,6 +79,36 @@ class SettingsViewModel(
         false
     )
 
+    val atAzanType: StateFlow<String> = settingsRepository.atAzanType.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "both"
+    )
+
+    val azanReciter: StateFlow<String> = settingsRepository.azanReciter.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "ali_mala"
+    )
+
+    val azanLength: StateFlow<String> = settingsRepository.azanLength.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "full"
+    )
+
+    val playDuaAfterAzan: StateFlow<Boolean> = settingsRepository.playDuaAfterAzan.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        true
+    )
+
+    val widgetTheme: StateFlow<String> = settingsRepository.widgetTheme.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "dark_teal"
+    )
+
     val remBeforeAzanMin: StateFlow<Int> = settingsRepository.remBeforeAzanMin.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -246,6 +276,51 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsRepository.setOnboardingDone(done)
         }
+    }
+
+    fun setAtAzanType(type: String) {
+        viewModelScope.launch {
+            settingsRepository.setAtAzanType(type)
+            context?.let { AppRefresher.refreshAll(it, "at_azan_type_changed") }
+        }
+    }
+
+    fun setAzanReciter(reciter: String) {
+        viewModelScope.launch {
+            settingsRepository.setAzanReciter(reciter)
+            context?.let { AppRefresher.refreshAll(it, "azan_reciter_changed") }
+        }
+    }
+
+    fun setAzanLength(length: String) {
+        viewModelScope.launch {
+            settingsRepository.setAzanLength(length)
+            context?.let { AppRefresher.refreshAll(it, "azan_length_changed") }
+        }
+    }
+
+    fun setPlayDuaAfterAzan(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setPlayDuaAfterAzan(enabled)
+            context?.let { AppRefresher.refreshAll(it, "play_dua_changed") }
+        }
+    }
+
+    fun setWidgetTheme(theme: String) {
+        viewModelScope.launch {
+            settingsRepository.setWidgetTheme(theme)
+            context?.let {
+                com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(it)
+            }
+        }
+    }
+
+    fun playAzanSample(reciterId: String) {
+        audioPlayer.playAzanSample(reciterId)
+    }
+
+    fun playDuaSample() {
+        audioPlayer.playDuaSample()
     }
 
     fun playSample(kind: String, minutes: Int = 10) {

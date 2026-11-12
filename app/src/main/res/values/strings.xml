@@ -155,6 +155,30 @@
     <string name="intro_tagline">Azan &amp; jamaat times · voice reminders · widget</string>
     <string name="intro_skip">Tap to skip</string>
 
+    <string name="azan_sound">Azan sound</string>
+    <string name="azan_sound_desc">Choose what plays at azan time</string>
+    <string name="azan_type_both">Both (Speech then Azan)</string>
+    <string name="azan_type_azan_only">Azan recitation only</string>
+    <string name="azan_type_speech_only">Default speech only</string>
+    <string name="reciter">Muezzin / Reciter</string>
+    <string name="reciter_ali_mala">Ali Ibn Ahmad Mala</string>
+    <string name="reciter_ali_mala_country">Saudi Arabia</string>
+    <string name="reciter_nurdin_hamza">NurDin Hamza Al Maghriby</string>
+    <string name="reciter_nurdin_hamza_country">Morocco</string>
+    <string name="reciter_najee_qazaz">Najee Qazaz</string>
+    <string name="reciter_najee_qazaz_country">Palestine</string>
+    <string name="azan_length">Azan length</string>
+    <string name="azan_length_full">Full Azan</string>
+    <string name="azan_length_short">First 4 lines (Takbeerat)</string>
+    <string name="dua_after_azan">Dua after Azan</string>
+    <string name="dua_after_azan_desc">Play the prophetic supplication after the azan finishes</string>
+    <string name="widget_theme">Widget style &amp; color</string>
+    <string name="widget_theme_dark">Dark Teal</string>
+    <string name="widget_theme_cream">Light Cream</string>
+    <string name="widget_theme_gold">Warm Gold</string>
+    <string name="widget_theme_system">Follow system</string>
+    <string name="widget_slim_label">Prayer horizontal bar</string>
+
     <string-array name="hijri_months">
         <item>Muharram</item><item>Safar</item><item>Rabi al-Awwal</item><item>Rabi al-Thani</item>
         <item>Jumada al-Ula</item><item>Jumada al-Akhirah</item><item>Rajab</item><item>Sha\'ban</item>

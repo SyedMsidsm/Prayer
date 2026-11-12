@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
@@ -91,6 +92,10 @@ fun OnboardingScreen(
     val context = LocalContext.current
     var currentStep by remember { mutableIntStateOf(1) }
     val totalSteps = 11
+
+    BackHandler(enabled = currentStep > 1) {
+        currentStep--
+    }
 
     val timetables by viewModel.timetables.collectAsState()
     val activeTimetable = timetables.firstOrNull()

@@ -14,6 +14,9 @@ object WidgetUpdater {
                 SmallPrayerWidget().updateAll(context)
             } catch (_: Exception) {}
             try {
+                SlimPrayerWidget().updateAll(context)
+            } catch (_: Exception) {}
+            try {
                 WidePrayerWidget().updateAll(context)
             } catch (_: Exception) {}
         }

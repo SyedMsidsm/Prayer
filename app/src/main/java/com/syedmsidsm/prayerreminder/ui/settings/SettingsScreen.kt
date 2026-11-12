@@ -1,7 +1,9 @@
 package com.syedmsidsm.prayerreminder.ui.settings
 
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,6 +82,7 @@ fun SettingsScreen(
     val voiceOn by viewModel.voiceEnabled.collectAsState()
     val beforeAzanMin by viewModel.remBeforeAzanMin.collectAsState()
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
+    val widgetTheme by viewModel.widgetTheme.collectAsState()
 
     val currentAppLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangTag = if (!currentAppLocales.isEmpty) {
@@ -305,6 +308,51 @@ fun SettingsScreen(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.widget_theme),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PrayerReminderColors.Ink
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            WidgetThemeChip(
+                                label = stringResource(R.string.widget_theme_dark),
+                                swatchColor = androidx.compose.ui.graphics.Color(0xFF0F2A2E),
+                                isSelected = widgetTheme == "dark_teal",
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setWidgetTheme("dark_teal") }
+                            )
+                            WidgetThemeChip(
+                                label = stringResource(R.string.widget_theme_cream),
+                                swatchColor = androidx.compose.ui.graphics.Color(0xFFF7F4EB),
+                                isSelected = widgetTheme == "light_cream",
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setWidgetTheme("light_cream") }
+                            )
+                            WidgetThemeChip(
+                                label = stringResource(R.string.widget_theme_gold),
+                                swatchColor = androidx.compose.ui.graphics.Color(0xFFD9AE5C),
+                                isSelected = widgetTheme == "warm_gold",
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setWidgetTheme("warm_gold") }
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(
+                        color = PrayerReminderColors.Line,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+
                     SettingsItemRow(
                         icon = Icons.Default.CheckCircle,
                         title = stringResource(R.string.reliability),
@@ -475,5 +523,51 @@ private fun SettingsItemRow(
             tint = PrayerReminderColors.Muted,
             modifier = Modifier.size(16.dp)
         )
+    }
+}
+
+@Composable
+private fun WidgetThemeChip(
+    label: String,
+    swatchColor: androidx.compose.ui.graphics.Color,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .height(46.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(10.dp),
+        color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+        border = if (isSelected) null else BorderStroke(1.dp, PrayerReminderColors.Line)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(14.dp)
+                    .clip(CircleShape)
+                    .background(swatchColor)
+                    .then(
+                        if (swatchColor == androidx.compose.ui.graphics.Color(0xFFF7F4EB)) {
+                            Modifier.border(1.dp, PrayerReminderColors.Line, CircleShape)
+                        } else Modifier
+                    )
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 11.sp,
+                maxLines = 1
+            )
+        }
     }
 }

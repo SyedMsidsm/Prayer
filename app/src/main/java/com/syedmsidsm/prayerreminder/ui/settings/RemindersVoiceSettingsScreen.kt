@@ -1,6 +1,7 @@
 package com.syedmsidsm.prayerreminder.ui.settings
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -44,6 +48,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,6 +77,12 @@ fun RemindersVoiceSettingsScreen(
 
     val reminderMatrix by viewModel.reminderMatrix.collectAsState()
     val isPlaying by viewModel.audioPlayer.isPlaying.collectAsState()
+    val currentTrack by viewModel.audioPlayer.currentTrack.collectAsState()
+
+    val atAzanType by viewModel.atAzanType.collectAsState()
+    val azanReciter by viewModel.azanReciter.collectAsState()
+    val azanLength by viewModel.azanLength.collectAsState()
+    val playDuaAfterAzan by viewModel.playDuaAfterAzan.collectAsState()
 
     Scaffold(
         topBar = {
@@ -328,6 +341,184 @@ fun RemindersVoiceSettingsScreen(
                                 isSelected = jumuahBeforeAzanMin == min,
                                 onClick = { viewModel.setRemJumuahBeforeAzanMin(min) }
                             )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Azan Audio & Reciter Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.azan_sound),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrayerReminderColors.Ink
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.azan_sound_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrayerReminderColors.Muted
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Mode options: Both, Azan only, Default speech only
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AzanModeOptionRow(
+                            label = stringResource(R.string.azan_type_both),
+                            isSelected = atAzanType == "both",
+                            onClick = { viewModel.setAtAzanType("both") }
+                        )
+                        AzanModeOptionRow(
+                            label = stringResource(R.string.azan_type_azan_only),
+                            isSelected = atAzanType == "azan_only",
+                            onClick = { viewModel.setAtAzanType("azan_only") }
+                        )
+                        AzanModeOptionRow(
+                            label = stringResource(R.string.azan_type_speech_only),
+                            isSelected = atAzanType == "speech_only",
+                            onClick = { viewModel.setAtAzanType("speech_only") }
+                        )
+                    }
+
+                    if (atAzanType != "speech_only") {
+                        Spacer(modifier = Modifier.height(18.dp))
+                        HorizontalDivider(color = PrayerReminderColors.Line)
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Reciter Section Header
+                        Text(
+                            text = stringResource(R.string.reciter),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PrayerReminderColors.Ink
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 3 Reciters
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            // Ali Ibn Ahmad Mala (Saudi Arabia)
+                            ReciterCard(
+                                name = stringResource(R.string.reciter_ali_mala),
+                                country = stringResource(R.string.reciter_ali_mala_country),
+                                avatarDrawableRes = R.drawable.reciter_ali_mala,
+                                flagDrawableRes = R.drawable.ic_flag_saudi,
+                                isSelected = azanReciter == "ali_mala",
+                                isPlaying = currentTrack == "azan_ali_mala",
+                                onSelect = { viewModel.setAzanReciter("ali_mala") },
+                                onPlaySample = { viewModel.playAzanSample("ali_mala") },
+                                onStopSample = { viewModel.stopSample() }
+                            )
+
+                            // NurDin Hamza Al Maghriby (Morocco)
+                            ReciterCard(
+                                name = stringResource(R.string.reciter_nurdin_hamza),
+                                country = stringResource(R.string.reciter_nurdin_hamza_country),
+                                avatarDrawableRes = R.drawable.reciter_nurdin_hamza,
+                                flagDrawableRes = R.drawable.ic_flag_morocco,
+                                isSelected = azanReciter == "nurdin_hamza",
+                                isPlaying = currentTrack == "azan_nurdin_hamza",
+                                onSelect = { viewModel.setAzanReciter("nurdin_hamza") },
+                                onPlaySample = { viewModel.playAzanSample("nurdin_hamza") },
+                                onStopSample = { viewModel.stopSample() }
+                            )
+
+                            // Najee Qazaz (Palestine)
+                            ReciterCard(
+                                name = stringResource(R.string.reciter_najee_qazaz),
+                                country = stringResource(R.string.reciter_najee_qazaz_country),
+                                avatarDrawableRes = R.drawable.ic_default_avatar,
+                                flagDrawableRes = R.drawable.ic_flag_palestine,
+                                isSelected = azanReciter == "najee_qazaz",
+                                isPlaying = currentTrack == "azan_najee_qazaz",
+                                onSelect = { viewModel.setAzanReciter("najee_qazaz") },
+                                onPlaySample = { viewModel.playAzanSample("najee_qazaz") },
+                                onStopSample = { viewModel.stopSample() }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+                        HorizontalDivider(color = PrayerReminderColors.Line)
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Azan Length
+                        Text(
+                            text = stringResource(R.string.azan_length),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PrayerReminderColors.Ink
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            VoiceOptionChip(
+                                label = stringResource(R.string.azan_length_full),
+                                isSelected = azanLength == "full",
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setAzanLength("full") }
+                            )
+                            VoiceOptionChip(
+                                label = stringResource(R.string.azan_length_short),
+                                isSelected = azanLength == "four_lines",
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setAzanLength("four_lines") }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+                        HorizontalDivider(color = PrayerReminderColors.Line)
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Dua after Azan
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.dua_after_azan),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrayerReminderColors.Ink
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.dua_after_azan_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrayerReminderColors.Muted
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                SamplePlayButton(
+                                    isPlaying = currentTrack == "dua_after_azan",
+                                    onPlay = { viewModel.playDuaSample() },
+                                    onStop = { viewModel.stopSample() }
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Switch(
+                                    checked = playDuaAfterAzan,
+                                    onCheckedChange = { viewModel.setPlayDuaAfterAzan(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = PrayerReminderColors.Ivory,
+                                        checkedTrackColor = PrayerReminderColors.Ground,
+                                        uncheckedThumbColor = PrayerReminderColors.Muted,
+                                        uncheckedTrackColor = PrayerReminderColors.Line
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -644,6 +835,140 @@ private fun ChoiceChip(
                 color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 13.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun AzanModeOptionRow(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(10.dp),
+        color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Surface,
+        border = BorderStroke(
+            width = if (isSelected) 1.5.dp else 1.dp,
+            color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Line
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = isSelected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = PrayerReminderColors.Ground,
+                    unselectedColor = PrayerReminderColors.Muted
+                )
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = PrayerReminderColors.Ink
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReciterCard(
+    name: String,
+    country: String,
+    avatarDrawableRes: Int,
+    flagDrawableRes: Int,
+    isSelected: Boolean,
+    isPlaying: Boolean,
+    onSelect: () -> Unit,
+    onPlaySample: () -> Unit,
+    onStopSample: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Surface,
+        border = BorderStroke(
+            width = if (isSelected) 1.5.dp else 1.dp,
+            color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Line
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Radio button selection indicator
+            RadioButton(
+                selected = isSelected,
+                onClick = onSelect,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = PrayerReminderColors.Ground,
+                    unselectedColor = PrayerReminderColors.Muted
+                )
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Circular photo / Instagram avatar
+            Image(
+                painter = painterResource(id = avatarDrawableRes),
+                contentDescription = name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Name and Country Flag + Lettering
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PrayerReminderColors.Ink
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = flagDrawableRes),
+                        contentDescription = country,
+                        modifier = Modifier
+                            .size(width = 20.dp, height = 14.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = country,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrayerReminderColors.Muted,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Play / Stop sample button
+            SamplePlayButton(
+                isPlaying = isPlaying,
+                onPlay = onPlaySample,
+                onStop = onStopSample
             )
         }
     }

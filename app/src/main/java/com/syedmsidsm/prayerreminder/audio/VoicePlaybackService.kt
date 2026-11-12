@@ -33,6 +33,10 @@ class VoicePlaybackService : Service() {
         const val EXTRA_MINUTES = "extra_minutes"
         const val EXTRA_CHIME = "extra_chime"
         const val EXTRA_OVERRIDE_SILENT = "extra_override_silent"
+        const val EXTRA_AT_AZAN_TYPE = "extra_at_azan_type"
+        const val EXTRA_AZAN_RECITER = "extra_azan_reciter"
+        const val EXTRA_AZAN_LENGTH = "extra_azan_length"
+        const val EXTRA_PLAY_DUA = "extra_play_dua"
 
         fun start(
             context: Context,
@@ -42,7 +46,11 @@ class VoicePlaybackService : Service() {
             prayer: String,
             minutes: Int,
             chime: Boolean,
-            overrideSilent: Boolean
+            overrideSilent: Boolean,
+            atAzanType: String = "both",
+            azanReciter: String = "ali_mala",
+            azanLength: String = "full",
+            playDua: Boolean = true
         ) {
             val intent = Intent(context, VoicePlaybackService::class.java).apply {
                 putExtra(EXTRA_LANGUAGE, language)
@@ -52,6 +60,10 @@ class VoicePlaybackService : Service() {
                 putExtra(EXTRA_MINUTES, minutes)
                 putExtra(EXTRA_CHIME, chime)
                 putExtra(EXTRA_OVERRIDE_SILENT, overrideSilent)
+                putExtra(EXTRA_AT_AZAN_TYPE, atAzanType)
+                putExtra(EXTRA_AZAN_RECITER, azanReciter)
+                putExtra(EXTRA_AZAN_LENGTH, azanLength)
+                putExtra(EXTRA_PLAY_DUA, playDua)
             }
             ContextCompat.startForegroundService(context, intent)
         }
@@ -82,6 +94,10 @@ class VoicePlaybackService : Service() {
         val minutes = intent.getIntExtra(EXTRA_MINUTES, 10)
         val chime = intent.getBooleanExtra(EXTRA_CHIME, true)
         val overrideSilent = intent.getBooleanExtra(EXTRA_OVERRIDE_SILENT, false)
+        val atAzanType = intent.getStringExtra(EXTRA_AT_AZAN_TYPE) ?: "both"
+        val azanReciter = intent.getStringExtra(EXTRA_AZAN_RECITER) ?: "ali_mala"
+        val azanLength = intent.getStringExtra(EXTRA_AZAN_LENGTH) ?: "full"
+        val playDua = intent.getBooleanExtra(EXTRA_PLAY_DUA, true)
 
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -106,15 +122,92 @@ class VoicePlaybackService : Service() {
             AudioAttributes.USAGE_NOTIFICATION_EVENT
         }
 
+        val timeoutMs = if (kind == "at_azan") 300000L else 20000L // 5 min for azan, 20s for short reminders
+
         serviceScope.launch {
-            withTimeoutOrNull(15000L) { // Max 15s safety timeout
-                playVoiceSequence(audioManager, audioUsage, language, gender, kind, prayer, minutes, chime)
+            withTimeoutOrNull(timeoutMs) {
+                if (kind == "at_azan") {
+                    playAtAzanSequence(
+                        audioManager = audioManager,
+                        usage = audioUsage,
+                        language = language,
+                        gender = gender,
+                        prayer = prayer,
+                        chime = chime,
+                        atAzanType = atAzanType,
+                        azanReciter = azanReciter,
+                        azanLength = azanLength,
+                        playDua = playDua
+                    )
+                } else {
+                    playVoiceSequence(audioManager, audioUsage, language, gender, kind, prayer, minutes, chime)
+                }
             }
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
 
         return START_NOT_STICKY
+    }
+
+    private suspend fun playAtAzanSequence(
+        audioManager: AudioManager,
+        usage: Int,
+        language: String,
+        gender: String,
+        prayer: String,
+        chime: Boolean,
+        atAzanType: String,
+        azanReciter: String,
+        azanLength: String,
+        playDua: Boolean
+    ) {
+        val audioAttributes = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .setUsage(usage)
+            .build()
+
+        requestAudioFocus(audioManager, audioAttributes)
+
+        try {
+            // 1. Announcement first (if speech_only or both)
+            if (atAzanType == "speech_only" || atAzanType == "both") {
+                if (chime) {
+                    playAssetFile("audio/samples/chime.mp3", audioAttributes)
+                    delay(250)
+                }
+                val clipPath = resolveClipPath(language, gender, "at_azan", prayer, 0)
+                if (clipPath != null) {
+                    playAssetFile(clipPath, audioAttributes)
+                }
+                if (atAzanType == "both") {
+                    delay(1000)
+                }
+            }
+
+            // 2. Azan audio (if azan_only or both)
+            if (atAzanType == "azan_only" || atAzanType == "both") {
+                val suffix = if (azanLength == "four_lines") "short" else "full"
+                val azanPath = "audio/azan/${azanReciter}_$suffix.mp3"
+                if (assetExists(azanPath)) {
+                    playAssetFile(azanPath, audioAttributes)
+                } else {
+                    val fallback = "audio/azan/${azanReciter}_full.mp3"
+                    if (assetExists(fallback)) playAssetFile(fallback, audioAttributes)
+                }
+
+                // 3. Optional Dua after Azan
+                if (playDua) {
+                    delay(1500)
+                    val duaPath = "audio/azan/dua_after_azan.mp3"
+                    if (assetExists(duaPath)) {
+                        playAssetFile(duaPath, audioAttributes)
+                    }
+                }
+            }
+        } finally {
+            abandonAudioFocus(audioManager)
+        }
     }
 
     private suspend fun playVoiceSequence(

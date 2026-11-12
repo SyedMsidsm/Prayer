@@ -155,6 +155,30 @@
     <string name="intro_tagline">أوقات الأذان والإقامة · تذكيرات صوتية · أداة الشاشة</string>
     <string name="intro_skip">اضغط للتخطي</string>
 
+    <string name="azan_sound">صوت الأذان</string>
+    <string name="azan_sound_desc">اختر ما يتم تشغيله عند وقت الأذان</string>
+    <string name="azan_type_both">كلاهما (التنبيه أولاً ثم الأذان)</string>
+    <string name="azan_type_azan_only">الأذان فقط</string>
+    <string name="azan_type_speech_only">التنبيه الافتراضي فقط</string>
+    <string name="reciter">المؤذن</string>
+    <string name="reciter_ali_mala">الشيخ علي بن أحمد ملا</string>
+    <string name="reciter_ali_mala_country">المملكة العربية السعودية</string>
+    <string name="reciter_nurdin_hamza">الشيخ نور الدين حمزة المغربي</string>
+    <string name="reciter_nurdin_hamza_country">المغرب</string>
+    <string name="reciter_najee_qazaz">الشيخ ناجي قزاز</string>
+    <string name="reciter_najee_qazaz_country">فلسطين</string>
+    <string name="azan_length">مدة الأذان</string>
+    <string name="azan_length_full">الأذان كاملاً</string>
+    <string name="azan_length_short">أول 4 تكبيرات</string>
+    <string name="dua_after_azan">دعاء ما بعد الأذان</string>
+    <string name="dua_after_azan_desc">تشغيل دعاء الوسيلة والفضيلة بعد انتهاء الأذان</string>
+    <string name="widget_theme">نمط ولون الويدجت</string>
+    <string name="widget_theme_dark">الزيتي الداكن</string>
+    <string name="widget_theme_cream">البيج الفاتح</string>
+    <string name="widget_theme_gold">الذهبي الدافئ</string>
+    <string name="widget_theme_system">تلقائي حسب النظام</string>
+    <string name="widget_slim_label">شريط الصلاة الأفقي</string>
+
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربيع الأول</item><item>ربيع الآخر</item>
         <item>جمادى الأولى</item><item>جمادى الآخرة</item><item>رجب</item><item>شعبان</item>

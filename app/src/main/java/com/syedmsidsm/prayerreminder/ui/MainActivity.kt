@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
@@ -210,6 +211,31 @@ class MainActivity : AppCompatActivity() {
         when {
             importState is ImportUiState.Saved && currentScreen == Screen.IMPORT_REVIEW -> {
                 currentScreen = Screen.IMPORT_SAVED
+            }
+        }
+
+        BackHandler(enabled = currentScreen != Screen.HOME) {
+            currentScreen = when (currentScreen) {
+                Screen.JAMAAT_SETTINGS,
+                Screen.REMINDERS_VOICE_SETTINGS,
+                Screen.TIMETABLES,
+                Screen.RELIABILITY -> Screen.SETTINGS
+
+                Screen.MANUAL_ENTRY -> Screen.TIMETABLES
+
+                Screen.IMPORT_REVIEW -> {
+                    importViewModel.resetState()
+                    if (settingsViewModel.isOnboardingDone.value == false) {
+                        Screen.ONBOARDING
+                    } else {
+                        Screen.TIMETABLES
+                    }
+                }
+
+                Screen.IMPORT_SAVED -> Screen.HOME
+                Screen.SETTINGS -> Screen.HOME
+                Screen.ONBOARDING, Screen.BRAND_INTRO -> Screen.HOME
+                Screen.HOME -> Screen.HOME
             }
         }
 

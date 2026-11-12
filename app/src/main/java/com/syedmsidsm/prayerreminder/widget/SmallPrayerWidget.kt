@@ -53,16 +53,13 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
     val horizontalAlign = if (state.isRtl) Alignment.End else Alignment.Start
     val textAlign = if (state.isRtl) TextAlign.End else TextAlign.Start
 
-    val goldColor = ColorProvider(Color(0xFFD9AE5C))
-    val ivoryColor = ColorProvider(Color(0xFFF7F4EC))
-    val mutedColor = ColorProvider(Color(0xFFC8D2CF))
-    val groundColor = Color(0xFF0F2A2E)
+    val colors = WidgetThemeConfig.getColors(state.theme)
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(24.dp)
-            .background(groundColor)
+            .background(colors.background)
             .clickable(actionStartActivity<MainActivity>())
             .padding(16.dp)
     ) {
@@ -75,7 +72,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.place,
                     style = TextStyle(
-                        color = goldColor,
+                        color = colors.textAccent,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = textAlign
@@ -90,7 +87,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = importMsg,
                     style = TextStyle(
-                        color = ivoryColor,
+                        color = colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = textAlign
@@ -106,14 +103,14 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.place,
                     style = TextStyle(
-                        color = mutedColor,
-                        fontSize = 14.sp,
+                        color = colors.textSecondary,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = textAlign
                     )
                 )
 
-                Spacer(modifier = GlanceModifier.height(8.dp))
+                Spacer(modifier = GlanceModifier.height(6.dp))
 
                 // Title (Prayer name or Prayer · Jamaat)
                 val title = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) {
@@ -128,7 +125,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = title,
                     style = TextStyle(
-                        color = goldColor,
+                        color = colors.textAccent,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = textAlign
@@ -139,8 +136,8 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.mainTime,
                     style = TextStyle(
-                        color = ivoryColor,
-                        fontSize = 34.sp,
+                        color = colors.textPrimary,
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = textAlign
                     )
@@ -150,8 +147,8 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.secondaryTime,
                     style = TextStyle(
-                        color = mutedColor,
-                        fontSize = 14.sp,
+                        color = colors.textSecondary,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = textAlign
                     )
@@ -159,30 +156,23 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
 
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // Countdown Row
-                val chronometerViews = buildChronometerRemoteViews(
-                    context,
-                    state.countdownTargetEpochMillis,
-                    state.isRtl
-                )
-                AndroidRemoteViews(remoteViews = chronometerViews)
+                // Countdown Capsule Row
+                Box(
+                    modifier = GlanceModifier
+                        .background(colors.capsuleBackground)
+                        .cornerRadius(12.dp)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val chronometerViews = WidgetThemeConfig.buildChronometer(
+                        context,
+                        state.countdownTargetEpochMillis,
+                        state.isRtl,
+                        colors.chronometerTextColorInt
+                    )
+                    AndroidRemoteViews(remoteViews = chronometerViews)
+                }
             }
         }
     }
-}
-
-private fun buildChronometerRemoteViews(context: Context, targetEpochMillis: Long, isRtl: Boolean): RemoteViews {
-    val layoutId = if (isRtl) R.layout.widget_chronometer_rtl else R.layout.widget_chronometer
-    val views = RemoteViews(context.packageName, layoutId)
-    val remainingMs = targetEpochMillis - System.currentTimeMillis()
-    if (remainingMs > 0) {
-        val base = SystemClock.elapsedRealtime() + remainingMs
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            views.setChronometerCountDown(R.id.widget_chronometer, true)
-        }
-        views.setChronometer(R.id.widget_chronometer, base, "%s", true)
-    } else {
-        views.setChronometer(R.id.widget_chronometer, SystemClock.elapsedRealtime(), "00:00", false)
-    }
-    return views
 }

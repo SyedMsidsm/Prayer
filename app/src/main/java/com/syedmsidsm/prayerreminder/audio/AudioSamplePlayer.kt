@@ -22,6 +22,9 @@ class AudioSamplePlayer(private val context: Context) {
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    private val _currentTrack = MutableStateFlow<String?>(null)
+    val currentTrack: StateFlow<String?> = _currentTrack.asStateFlow()
+
     fun stop() {
         playJob?.cancel()
         playJob = null
@@ -32,6 +35,7 @@ class AudioSamplePlayer(private val context: Context) {
         } catch (_: Exception) {}
         mediaPlayer = null
         _isPlaying.value = false
+        _currentTrack.value = null
     }
 
     fun playSample(
@@ -44,6 +48,7 @@ class AudioSamplePlayer(private val context: Context) {
         stop()
         playJob = scope.launch {
             _isPlaying.value = true
+            _currentTrack.value = "speech_$kind"
             try {
                 if (chime) {
                     playAssetFile("audio/samples/chime.mp3")
@@ -58,6 +63,48 @@ class AudioSamplePlayer(private val context: Context) {
                 e.printStackTrace()
             } finally {
                 _isPlaying.value = false
+                _currentTrack.value = null
+            }
+        }
+    }
+
+    fun playAzanSample(reciterId: String) {
+        stop()
+        playJob = scope.launch {
+            _isPlaying.value = true
+            _currentTrack.value = "azan_$reciterId"
+            try {
+                val clipPath = "audio/azan/${reciterId}_sample.mp3"
+                if (assetExists(clipPath)) {
+                    playAssetFile(clipPath)
+                } else {
+                    val fullPath = "audio/azan/${reciterId}_full.mp3"
+                    if (assetExists(fullPath)) playAssetFile(fullPath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isPlaying.value = false
+                _currentTrack.value = null
+            }
+        }
+    }
+
+    fun playDuaSample() {
+        stop()
+        playJob = scope.launch {
+            _isPlaying.value = true
+            _currentTrack.value = "dua_after_azan"
+            try {
+                val clipPath = "audio/azan/dua_after_azan.mp3"
+                if (assetExists(clipPath)) {
+                    playAssetFile(clipPath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isPlaying.value = false
+                _currentTrack.value = null
             }
         }
     }

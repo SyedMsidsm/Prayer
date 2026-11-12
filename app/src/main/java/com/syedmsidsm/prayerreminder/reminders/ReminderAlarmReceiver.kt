@@ -157,6 +157,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             val voiceGender = settingsRepo.voiceGender.first()
             val voiceChime = settingsRepo.voiceChime.first()
             val voiceOnSilent = settingsRepo.voiceOnSilent.first()
+            val atAzanType = settingsRepo.atAzanType.first()
+            val azanReciter = settingsRepo.azanReciter.first()
+            val azanLength = settingsRepo.azanLength.first()
+            val playDua = settingsRepo.playDuaAfterAzan.first()
 
             val voiceKindStr = when (kind) {
                 ReminderKind.BEFORE_AZAN -> if (isJumuah) "jumuah_before_azan" else "before_azan"
@@ -174,7 +178,11 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                     prayer = prayer.name.lowercase(),
                     minutes = minutesOffset,
                     chime = voiceChime,
-                    overrideSilent = voiceOnSilent
+                    overrideSilent = voiceOnSilent,
+                    atAzanType = atAzanType,
+                    azanReciter = azanReciter,
+                    azanLength = azanLength,
+                    playDua = playDua
                 )
             }
         }

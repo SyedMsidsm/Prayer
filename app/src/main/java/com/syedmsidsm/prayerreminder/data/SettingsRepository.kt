@@ -41,6 +41,52 @@ class SettingsRepository(
 
         val KEY_OEM_STEP_CONFIRMED = booleanPreferencesKey("oem_step_confirmed")
         val KEY_LAST_TEST_RESULT = stringPreferencesKey("last_test_result")
+
+        val KEY_AT_AZAN_TYPE = stringPreferencesKey("at_azan_type")
+        val KEY_AZAN_RECITER = stringPreferencesKey("azan_reciter")
+        val KEY_AZAN_LENGTH = stringPreferencesKey("azan_length")
+        val KEY_PLAY_DUA_AFTER_AZAN = booleanPreferencesKey("play_dua_after_azan")
+        val KEY_WIDGET_THEME = stringPreferencesKey("widget_theme")
+    }
+
+    val atAzanType: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_AT_AZAN_TYPE] ?: "both"
+    }
+
+    suspend fun setAtAzanType(type: String) {
+        dataStore.edit { it[KEY_AT_AZAN_TYPE] = type }
+    }
+
+    val azanReciter: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_AZAN_RECITER] ?: "ali_mala"
+    }
+
+    suspend fun setAzanReciter(reciter: String) {
+        dataStore.edit { it[KEY_AZAN_RECITER] = reciter }
+    }
+
+    val azanLength: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_AZAN_LENGTH] ?: "full"
+    }
+
+    suspend fun setAzanLength(length: String) {
+        dataStore.edit { it[KEY_AZAN_LENGTH] = length }
+    }
+
+    val playDuaAfterAzan: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_PLAY_DUA_AFTER_AZAN] ?: true
+    }
+
+    suspend fun setPlayDuaAfterAzan(enabled: Boolean) {
+        dataStore.edit { it[KEY_PLAY_DUA_AFTER_AZAN] = enabled }
+    }
+
+    val widgetTheme: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_WIDGET_THEME] ?: "dark_teal"
+    }
+
+    suspend fun setWidgetTheme(theme: String) {
+        dataStore.edit { it[KEY_WIDGET_THEME] = theme }
     }
 
     val appLanguage: Flow<String> = dataStore.data.map { prefs ->
