@@ -175,11 +175,12 @@ class VoicePlaybackService : Service() {
             AudioAttributes.USAGE_MEDIA
         }
 
-        val timeoutMs = if (kind == "at_azan") 300000L else 20000L // 5 min for azan, 20s for short reminders
+        val isSunrise = prayer.equals("sunrise", ignoreCase = true)
+        val timeoutMs = if (kind == "at_azan" && !isSunrise) 300000L else 20000L // 5 min for azan, 20s for short reminders
 
         serviceScope.launch {
             withTimeoutOrNull(timeoutMs) {
-                if (kind == "at_azan") {
+                if (kind == "at_azan" && !isSunrise) {
                     playAtAzanSequence(
                         audioManager = audioManager,
                         usage = audioUsage,
@@ -393,20 +394,33 @@ class VoicePlaybackService : Service() {
             else -> "ur"
         }
 
-        val prayerName = if (kind == "jumuah_before_azan") "jumuah" else prayer.lowercase()
+        val isSunrise = prayer.equals("sunrise", ignoreCase = true)
+        if (isSunrise) {
+            return "audio/samples/chime.mp3"
+        }
+
+        val prayerName = when {
+            kind == "jumuah_before_azan" || prayer.equals("jumuah", ignoreCase = true) -> "jumuah"
+            else -> prayer.lowercase()
+        }
+
         val min = when (kind) {
-            "before_azan" -> if (minutes > 0) minutes else 10
-            "jumuah_before_azan" -> if (minutes > 0) minutes else 30
-            "before_jamaat" -> if (minutes > 0) minutes else 5
+            "before_azan", "jumuah_before_azan" -> {
+                val supported = listOf(30, 20, 15, 10, 5)
+                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 10
+            }
+            "before_jamaat" -> {
+                val supported = listOf(15, 10, 5, 2)
+                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 5
+            }
             else -> null
         }
 
         val filename = when (kind) {
-            "before_azan" -> "before_azan_${prayerName}_${min}.mp3"
-            "jumuah_before_azan" -> "before_azan_jumuah_${min}.mp3"
+            "before_azan", "jumuah_before_azan" -> "before_azan_${prayerName}_${min}.mp3"
             "at_azan" -> "at_azan_${prayerName}.mp3"
             "before_jamaat" -> "before_jamaat_${prayerName}_${min}.mp3"
-            else -> "before_azan_asr_10.mp3"
+            else -> "before_azan_${prayerName}_10.mp3"
         }
 
         if (gender.lowercase() == "female") {
@@ -414,19 +428,25 @@ class VoicePlaybackService : Service() {
             if (assetExists(femalePackPath)) {
                 return femalePackPath
             }
-            val femaleDefaultPackPath = "audio/voice-pack-female/$lang/before_azan_asr_10.mp3"
-            if (assetExists(femaleDefaultPackPath)) {
-                return femaleDefaultPackPath
-            }
-            val femaleAsset = "audio/samples/female_${lang}_before_azan_asr_10.mp3"
-            if (assetExists(femaleAsset)) {
-                return femaleAsset
+            val femaleFallbackPrayer = "audio/voice-pack-female/$lang/at_azan_${prayerName}.mp3"
+            if (assetExists(femaleFallbackPrayer)) {
+                return femaleFallbackPrayer
             }
         }
 
         // Male preview pack
         val assetPath = "audio/voice-pack-preview/$lang/$filename"
-        return if (assetExists(assetPath)) assetPath else "audio/voice-pack-preview/$lang/before_azan_asr_10.mp3"
+        if (assetExists(assetPath)) {
+            return assetPath
+        }
+
+        // Safe prayer-specific fallback (never announce wrong prayer like Asr for Jumuah)
+        val prayerFallback = "audio/voice-pack-preview/$lang/at_azan_${prayerName}.mp3"
+        if (assetExists(prayerFallback)) {
+            return prayerFallback
+        }
+
+        return "audio/samples/chime.mp3"
     }
 
     private fun assetExists(path: String): Boolean {

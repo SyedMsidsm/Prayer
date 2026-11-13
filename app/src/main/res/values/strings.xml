@@ -112,7 +112,9 @@
     <string name="speak_on_silent">Speak when phone is on silent</string>
     <string name="speak_on_silent_desc">Off: on silent or vibrate you get a vibration only.</string>
     <string name="chime">Chime before the voice</string>
+    <string name="chime_desc">Play gentle bell tone before announcements</string>
     <string name="voice_enabled">Spoken reminders</string>
+    <string name="voice_enabled_desc">Spoken countdowns, Azan audio &amp; Jamaat reminders</string>
     <string name="play_sample">Play sample</string>
 
     <string name="reliability">Reminder reliability check</string>
@@ -225,6 +227,12 @@
     <string name="sunrise_notification">Sunrise notification with sound</string>
     <string name="sunrise_notification_desc">Sound notification when sunrise time arrives</string>
     <string name="notif_sunrise_body">Sunrise time has arrived</string>
+    <string name="notif_before_sunrise">Sunrise in %1$s</string>
+    <string name="notif_sunrise_time_is">Sunrise is at %1$s</string>
+    <string name="sunrise_reminders_title">Sunrise Reminders</string>
+    <string name="sunrise_reminders_desc">Alerts before and at sunrise time. (No post-sunrise reminders)</string>
+    <string name="time_left_until_sunrise">Time left until sunrise</string>
+    <string name="time_of_sunrise">Time of sunrise</string>
     <string name="manual_place">Place Name</string>
     <string name="manual_month">Hijri Month (1-12)</string>
     <string name="manual_year">Hijri Year</string>

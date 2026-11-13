@@ -2,7 +2,6 @@ package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -31,7 +30,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.ui.MainActivity
@@ -53,9 +51,7 @@ class StripPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun StripPrayerWidgetContent(state: WidgetState) {
-    val darkTextOnGold = ColorProvider(Color(0xFF1E1B18))
-    val whiteText = ColorProvider(Color.White)
-    val softMutedText = ColorProvider(Color(0xFFE2E8F0))
+    val colors = WidgetThemeConfig.getColors(state.theme)
     val launchAction = actionStartActivity<MainActivity>()
 
     Box(
@@ -64,17 +60,17 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
             .cornerRadius(22.dp)
             .clickable(launchAction)
     ) {
-        // 1. Layered Grand Mosque Background
+        // 1. Minimalist Theme Card Frame Background
         Image(
-            provider = ImageProvider(R.drawable.widget_mosque_sanctuary_bg),
+            provider = ImageProvider(colors.cardBackgroundRes),
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
         )
 
-        // 2. Subtle Golden Frame Overlay
+        // 2. Subtle Minimalist Mosque Silhouette Watermark
         Image(
-            provider = ImageProvider(R.drawable.widget_card_frame),
+            provider = ImageProvider(R.drawable.widget_mosque_silhouette),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -93,7 +89,7 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                 Text(
                     text = "📍 ${state.place}",
                     style = TextStyle(
-                        color = whiteText,
+                        color = colors.textPrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -102,7 +98,7 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                 Text(
                     text = state.hijriDate,
                     style = TextStyle(
-                        color = softMutedText,
+                        color = colors.textSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Normal
                     )
@@ -119,9 +115,9 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
             ) {
                 for (row in orderedRows) {
                     val isNext = row.isNext
-                    val capsuleDrawable = if (isNext) R.drawable.widget_capsule_active else R.drawable.widget_capsule_inactive
-                    val titleColor = if (isNext) darkTextOnGold else softMutedText
-                    val timeColor = if (isNext) darkTextOnGold else whiteText
+                    val capsuleDrawable = if (isNext) colors.activeCapsuleRes else colors.inactiveCapsuleRes
+                    val titleColor = if (isNext) colors.textOnActiveCapsule else colors.textSecondary
+                    val timeColor = if (isNext) colors.textOnActiveCapsule else colors.textPrimary
 
                     Box(
                         modifier = GlanceModifier
@@ -138,7 +134,7 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                                 text = row.prayerName,
                                 style = TextStyle(
                                     color = titleColor,
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
                                     textAlign = TextAlign.Center
                                 )
@@ -148,7 +144,7 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                                 text = row.azanShort.ifEmpty { row.azanFormatted.take(5) },
                                 style = TextStyle(
                                     color = timeColor,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
                                 )
@@ -156,7 +152,7 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                         }
                     }
                     if (row != orderedRows.last()) {
-                        Spacer(modifier = GlanceModifier.width(4.dp))
+                        Spacer(modifier = GlanceModifier.width(3.dp))
                     }
                 }
             }

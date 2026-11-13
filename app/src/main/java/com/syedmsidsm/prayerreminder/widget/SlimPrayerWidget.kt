@@ -2,7 +2,6 @@ package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -23,7 +22,6 @@ import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
@@ -31,7 +29,6 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
@@ -52,9 +49,7 @@ class SlimPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
-    val whiteText = ColorProvider(Color.White)
-    val goldText = ColorProvider(Color(0xFFFCD34D))
-    val softGoldText = ColorProvider(Color(0xFFE2D9C8))
+    val colors = WidgetThemeConfig.getColors(state.theme)
     val launchAction = actionStartActivity<MainActivity>()
 
     Box(
@@ -63,17 +58,17 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
             .cornerRadius(32.dp)
             .clickable(launchAction)
     ) {
-        // 1. Layered Grand Mosque Background (Cropped Horizontally)
+        // 1. Minimalist Theme Pill Frame Background
         Image(
-            provider = ImageProvider(R.drawable.widget_mosque_sanctuary_bg),
+            provider = ImageProvider(colors.pillBackgroundRes),
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
         )
 
-        // 2. Subtle Golden Frame Overlay
+        // 2. Subtle Minimalist Mosque Silhouette Watermark
         Image(
-            provider = ImageProvider(R.drawable.widget_pill_frame),
+            provider = ImageProvider(R.drawable.widget_mosque_silhouette),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -89,7 +84,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.place,
                     style = TextStyle(
-                        color = goldText,
+                        color = colors.textAccent,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -103,7 +98,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = importMsg,
                     style = TextStyle(
-                        color = whiteText,
+                        color = colors.textPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -130,14 +125,14 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                     Text(
                         text = "${state.prayerName} ${state.mainTime}",
                         style = TextStyle(
-                            color = whiteText,
+                            color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
                 }
 
-                // Center Spacer shows the illuminated mosque dome
+                // Center Spacer shows the subtle silhouette
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
                 // Right: "Next in" above countdown chronometer + golden crescent moon
@@ -158,32 +153,29 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                         Text(
                             text = nextInLabel,
                             style = TextStyle(
-                                color = softGoldText,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium
+                                color = colors.textSecondary,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         )
-                        Spacer(modifier = GlanceModifier.height(1.dp))
-
                         val chronometerViews = WidgetThemeConfig.buildChronometer(
                             context = context,
                             targetEpochMillis = state.countdownTargetEpochMillis,
                             isRtl = state.isRtl,
-                            textColorInt = 0xFFFCD34D.toInt()
+                            textColorInt = colors.chronometerTextColorInt
                         )
-
                         AndroidRemoteViews(
                             remoteViews = chronometerViews,
-                            modifier = GlanceModifier.height(18.dp)
+                            modifier = GlanceModifier.height(16.dp)
                         )
                     }
 
-                    Spacer(modifier = GlanceModifier.width(8.dp))
+                    Spacer(modifier = GlanceModifier.width(6.dp))
 
                     Image(
                         provider = ImageProvider(R.drawable.widget_crescent_gold),
                         contentDescription = null,
-                        modifier = GlanceModifier.size(18.dp)
+                        modifier = GlanceModifier.size(15.dp)
                     )
                 }
             }

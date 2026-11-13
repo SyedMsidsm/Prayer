@@ -195,20 +195,33 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "ur"
         }
 
-        val prayer = if (kind == "jumuah_before_azan") "jumuah" else "asr"
+        val prayer = when {
+            kind == "jumuah_before_azan" || kind.contains("jumuah") -> "jumuah"
+            kind.contains("sunrise") -> "sunrise"
+            else -> "asr"
+        }
+
+        if (prayer == "sunrise") {
+            return "audio/samples/chime.mp3"
+        }
+
         val min = when (kind) {
-            "before_azan" -> if (minutes > 0) minutes else 10
-            "jumuah_before_azan" -> if (minutes > 0) minutes else 30
-            "before_jamaat" -> if (minutes > 0) minutes else 5
+            "before_azan", "jumuah_before_azan" -> {
+                val supported = listOf(30, 20, 15, 10, 5)
+                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 10
+            }
+            "before_jamaat" -> {
+                val supported = listOf(15, 10, 5, 2)
+                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 5
+            }
             else -> null
         }
 
         val filename = when (kind) {
-            "before_azan" -> "before_azan_${prayer}_${min}.mp3"
-            "jumuah_before_azan" -> "before_azan_jumuah_${min}.mp3"
+            "before_azan", "jumuah_before_azan" -> "before_azan_${prayer}_${min}.mp3"
             "at_azan" -> "at_azan_${prayer}.mp3"
             "before_jamaat" -> "before_jamaat_${prayer}_${min}.mp3"
-            else -> "before_azan_asr_10.mp3"
+            else -> "before_azan_${prayer}_10.mp3"
         }
 
         if (gender.lowercase() == "female") {
@@ -216,19 +229,24 @@ class AudioSamplePlayer(private val context: Context) {
             if (assetExists(femalePackPath)) {
                 return femalePackPath
             }
-            val femaleDefaultPackPath = "audio/voice-pack-female/$lang/before_azan_asr_10.mp3"
-            if (assetExists(femaleDefaultPackPath)) {
-                return femaleDefaultPackPath
-            }
-            val femaleAsset = "audio/samples/female_${lang}_before_azan_asr_10.mp3"
-            if (assetExists(femaleAsset)) {
-                return femaleAsset
+            val femaleFallbackPrayer = "audio/voice-pack-female/$lang/at_azan_${prayer}.mp3"
+            if (assetExists(femaleFallbackPrayer)) {
+                return femaleFallbackPrayer
             }
         }
 
         // Male preview pack
         val assetPath = "audio/voice-pack-preview/$lang/$filename"
-        return if (assetExists(assetPath)) assetPath else "audio/voice-pack-preview/$lang/before_azan_asr_10.mp3"
+        if (assetExists(assetPath)) {
+            return assetPath
+        }
+
+        val prayerFallback = "audio/voice-pack-preview/$lang/at_azan_${prayer}.mp3"
+        if (assetExists(prayerFallback)) {
+            return prayerFallback
+        }
+
+        return "audio/samples/chime.mp3"
     }
 
     private fun assetExists(path: String): Boolean {

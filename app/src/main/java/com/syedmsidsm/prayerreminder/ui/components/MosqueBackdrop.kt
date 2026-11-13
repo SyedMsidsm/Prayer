@@ -183,10 +183,9 @@ fun MosqueBackdrop(
             }
         }
 
-        // 4. Celestial Crescent or Glowing Sun
-        val celX = if (isRtl) w * 0.16f else w * 0.84f
-        val celCenter = Offset(celX, horizonBottom * 0.21f)
-        val celRadius = w * 0.036f
+        // 4. Celestial Crescent or Glowing Sun (Centered majestically above Grand Central Dome)
+        val celCenter = Offset(w * 0.5f, horizonBottom * 0.16f)
+        val celRadius = (w * 0.034f).coerceIn(12f, 26f)
         if (theme.isCrescent) {
             // Subtle halo
             drawCircle(
@@ -203,11 +202,11 @@ fun MosqueBackdrop(
                 radius = celRadius,
                 center = celCenter
             )
-            val cutoutOffsetX = celRadius * 0.36f
+            val cutoutOffsetX = celRadius * 0.34f
             drawCircle(
                 color = topSky,
                 radius = celRadius * 0.86f,
-                center = Offset(celCenter.x + cutoutOffsetX, celCenter.y - celRadius * 0.24f)
+                center = Offset(celCenter.x + cutoutOffsetX, celCenter.y - celRadius * 0.22f)
             )
         } else {
             drawCircle(

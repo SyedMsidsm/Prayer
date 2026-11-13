@@ -2,7 +2,6 @@ package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -33,7 +32,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.ui.MainActivity
@@ -55,10 +53,7 @@ class WidePrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
-    val darkTextOnGold = ColorProvider(Color(0xFF1E1B18))
-    val whiteText = ColorProvider(Color.White)
-    val softMutedText = ColorProvider(Color(0xFFE2E8F0))
-    val goldText = ColorProvider(Color(0xFFFCD34D))
+    val colors = WidgetThemeConfig.getColors(state.theme)
     val launchAction = actionStartActivity<MainActivity>()
 
     Box(
@@ -67,17 +62,17 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
             .cornerRadius(26.dp)
             .clickable(launchAction)
     ) {
-        // 1. Layered Grand Illuminated Mosque & Starry Night Background
+        // 1. Minimalist Theme Card Frame Background
         Image(
-            provider = ImageProvider(R.drawable.widget_mosque_sanctuary_bg),
+            provider = ImageProvider(colors.cardBackgroundRes),
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
         )
 
-        // 2. Subtle Golden Frame Overlay
+        // 2. Subtle Minimalist Mosque Silhouette Watermark
         Image(
-            provider = ImageProvider(R.drawable.widget_card_frame),
+            provider = ImageProvider(R.drawable.widget_mosque_silhouette),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -92,7 +87,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.place,
                     style = TextStyle(
-                        color = goldText,
+                        color = colors.textAccent,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -106,7 +101,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = importMsg,
                     style = TextStyle(
-                        color = whiteText,
+                        color = colors.textPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
@@ -138,7 +133,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                         Text(
                             text = state.place,
                             style = TextStyle(
-                                color = whiteText,
+                                color = colors.textPrimary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -147,12 +142,12 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
 
                     Spacer(modifier = GlanceModifier.defaultWeight())
 
-                    // Next: Prayer + Chronometer countdown in warm amber
+                    // Next: Prayer + Chronometer countdown in theme accent
                     val chronometerViews = WidgetThemeConfig.buildChronometer(
                         context = context,
                         targetEpochMillis = state.countdownTargetEpochMillis,
                         isRtl = state.isRtl,
-                        textColorInt = 0xFFFCD34D.toInt()
+                        textColorInt = colors.chronometerTextColorInt
                     )
 
                     Row(
@@ -167,7 +162,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                         Text(
                             text = "$nextLabel${state.prayerName} ",
                             style = TextStyle(
-                                color = goldText,
+                                color = colors.textAccent,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -179,10 +174,10 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                     }
                 }
 
-                // Middle area lets the glowing central dome, crescent & minarets shine through
+                // Middle area lets the subtle mosque watermark breathe
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // Bottom Row: 5 Fard Prayers with golden active capsule
+                // Bottom Row: 5 Fard Prayers with themed active/inactive capsules
                 val fardRows = state.rows.filter { it.prayer != Prayer.SUNRISE }
                 val orderedRows = if (state.isRtl) fardRows.reversed() else fardRows
 
@@ -192,9 +187,9 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                 ) {
                     for (row in orderedRows) {
                         val isNext = row.isNext
-                        val capsuleDrawable = if (isNext) R.drawable.widget_capsule_active else R.drawable.widget_capsule_inactive
-                        val titleColor = if (isNext) darkTextOnGold else softMutedText
-                        val timeColor = if (isNext) darkTextOnGold else whiteText
+                        val capsuleDrawable = if (isNext) colors.activeCapsuleRes else colors.inactiveCapsuleRes
+                        val titleColor = if (isNext) colors.textOnActiveCapsule else colors.textSecondary
+                        val timeColor = if (isNext) colors.textOnActiveCapsule else colors.textPrimary
 
                         Box(
                             modifier = GlanceModifier

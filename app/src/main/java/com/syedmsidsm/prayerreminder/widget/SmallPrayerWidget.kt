@@ -2,7 +2,6 @@ package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -30,7 +29,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
@@ -51,9 +49,7 @@ class SmallPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
-    val whiteText = ColorProvider(Color.White)
-    val goldText = ColorProvider(Color(0xFFFCD34D))
-    val mutedText = ColorProvider(Color(0xFFCBD5E1))
+    val colors = WidgetThemeConfig.getColors(state.theme)
     val launchAction = actionStartActivity<MainActivity>()
 
     val arabicName = when (state.nextPrayerKey.uppercase()) {
@@ -72,17 +68,17 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
             .cornerRadius(26.dp)
             .clickable(launchAction)
     ) {
-        // 1. Layered Grand Illuminated Mosque & Starry Night Background
+        // 1. Minimalist Theme Card Frame Background
         Image(
-            provider = ImageProvider(R.drawable.widget_mosque_sanctuary_bg),
+            provider = ImageProvider(colors.cardBackgroundRes),
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
         )
 
-        // 2. Subtle Golden Frame Overlay
+        // 2. Subtle Minimalist Mosque Silhouette Watermark
         Image(
-            provider = ImageProvider(R.drawable.widget_card_frame),
+            provider = ImageProvider(R.drawable.widget_mosque_silhouette),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -97,7 +93,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = state.place,
                     style = TextStyle(
-                        color = goldText,
+                        color = colors.textAccent,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -111,7 +107,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = importMsg,
                     style = TextStyle(
-                        color = whiteText,
+                        color = colors.textPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
@@ -133,7 +129,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     Text(
                         text = state.prayerName,
                         style = TextStyle(
-                            color = whiteText,
+                            color = colors.textPrimary,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -144,7 +140,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     Text(
                         text = arabicName,
                         style = TextStyle(
-                            color = goldText,
+                            color = colors.textAccent,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -161,7 +157,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     Text(
                         text = state.mainTime,
                         style = TextStyle(
-                            color = whiteText,
+                            color = colors.textPrimary,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -172,7 +168,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                         context = context,
                         targetEpochMillis = state.countdownTargetEpochMillis,
                         isRtl = state.isRtl,
-                        textColorInt = 0xFFFCD34D.toInt()
+                        textColorInt = colors.chronometerTextColorInt
                     )
 
                     AndroidRemoteViews(
@@ -183,20 +179,21 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
 
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // Bottom Row: Iqamah Jamaat (Left) & Place (Right)
+                // Bottom Subtitle Row: Iqamah Jamaat (Left) & Place (Right)
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val secondaryLabel = if (state.secondaryTime.isNotEmpty()) {
+                    val secondaryText = if (state.secondaryTime.isNotBlank()) {
                         state.secondaryTime
                     } else {
-                        state.place
+                        state.sunriseFormatted
                     }
+
                     Text(
-                        text = secondaryLabel,
+                        text = secondaryText,
                         style = TextStyle(
-                            color = mutedText,
+                            color = colors.textSecondary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -207,7 +204,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     Text(
                         text = state.place,
                         style = TextStyle(
-                            color = mutedText,
+                            color = colors.textSecondary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium
                         )

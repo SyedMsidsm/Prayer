@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="180dp"
+    android:viewportWidth="360"
+    android:viewportHeight="180">
+
+    <!-- 1. Soft Warm Golden Ambient Glow behind Central Grand Dome -->
+    <path
+        android:fillColor="#1AFBBF24"
+        android:pathData="M180,95m-65,0a65,65 0 1,0 130,0a65,65 0 1,0 -130,0" />
+
+    <!-- 2. Golden Crescent Moon in Night Sky (Centered above Central Dome) -->
+    <group android:alpha="0.88">
+        <!-- Moon Soft Halo -->
+        <path
+            android:fillColor="#28FBBF24"
+            android:pathData="M180,32m-14,0a14,14 0 1,0 28,0a14,14 0 1,0 -28,0" />
+        <!-- Crescent Body -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M183,23 A9,9 0 0,1 174,32 A9,9 0 1,0 182,19 A9,9 0 0,1 183,23 Z" />
+    </group>
+
+    <!-- 3. Twinkling Night Stars -->
+    <group android:alpha="0.75">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M72,25m-1.2,0a1.2,1.2 0 1,0 2.4,0a1.2,1.2 0 1,0 -2.4,0" />
+        <path
+            android:fillColor="#FFFDE68A"
+            android:pathData="M115,18m-1.0,0a1.0,1.0 0 1,0 2.0,0a1.0,1.0 0 1,0 -2.0,0" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M245,20m-1.1,0a1.1,1.1 0 1,0 2.2,0a1.1,1.1 0 1,0 -2.2,0" />
+        <path
+            android:fillColor="#FFFDE68A"
+            android:pathData="M288,28m-1.3,0a1.3,1.3 0 1,0 2.6,0a1.3,1.3 0 1,0 -2.6,0" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M142,38m-0.8,0a0.8,0.8 0 1,0 1.6,0a0.8,0.8 0 1,0 -1.6,0" />
+        <path
+            android:fillColor="#FFFDE68A"
+            android:pathData="M218,36m-0.8,0a0.8,0.8 0 1,0 1.6,0a0.8,0.8 0 1,0 -1.6,0" />
+    </group>
+
+    <!-- 4. Mosque Architectural Silhouettes with Golden Spire Accents -->
+    <group android:alpha="0.32">
+        <!-- Distant Left Minaret -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M48,70 h6 v100 h-6 z M51,52 l3,18 h-6 z" />
+
+        <!-- Distant Right Minaret -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M306,70 h6 v100 h-6 z M309,52 l3,18 h-6 z" />
+
+        <!-- Distant Domes -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M68,170 C68,125 116,125 116,170 Z" />
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M244,170 C244,125 292,125 292,170 Z" />
+
+        <!-- Main Left Minaret: Shaft, Balcony, Spire -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M95,55 h11 v115 h-11 z M100.5,30 l5,25 h-10 z M92,72 h17 v3.5 h-17 z" />
+
+        <!-- Main Right Minaret: Shaft, Balcony, Spire -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M254,55 h11 v115 h-11 z M259.5,30 l5,25 h-10 z M251,72 h17 v3.5 h-17 z" />
+
+        <!-- Foreground Grand Central Dome -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M124,170 C124,98 174,62 180,48 C186,62 236,98 236,170 Z" />
+
+        <!-- Dome Spire & Finial -->
+        <path
+            android:strokeColor="#FFFDE68A"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:pathData="M180,34 L180,48" />
+
+        <!-- Arched Sanctuary Glowing Window -->
+        <path
+            android:fillColor="#FFFDE68A"
+            android:pathData="M174,130 C174,122 186,122 186,130 L186,146 L174,146 Z" />
+
+        <!-- Foundation Horizon Line -->
+        <path
+            android:fillColor="#FFFBBF24"
+            android:pathData="M0,170 h360 v10 h-360 z" />
+    </group>
+
+</vector>

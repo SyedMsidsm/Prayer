@@ -96,6 +96,8 @@ fun RemindersVoiceSettingsScreen(
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
     val beforeJamaatOffsets by viewModel.remBeforeJamaatOffsets.collectAsState()
     val afterPrayerOffsets by viewModel.remAfterPrayerOffsets.collectAsState()
+    val sunriseBeforeOffsets by viewModel.remSunriseBeforeOffsets.collectAsState()
+    val sunriseAt by viewModel.remSunriseAt.collectAsState()
 
     var customDialogTarget by remember { mutableStateOf<String?>(null) }
     var customMinuteInput by remember { mutableStateOf("") }
@@ -189,7 +191,7 @@ fun RemindersVoiceSettingsScreen(
                                 color = textPrimary
                             )
                             Text(
-                                text = "Spoken countdowns, Azan audio & Jamaat reminders",
+                                text = stringResource(R.string.voice_enabled_desc),
                                 fontSize = 11.sp,
                                 color = textMuted
                             )
@@ -540,7 +542,7 @@ fun RemindersVoiceSettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val jumuahOptions = (listOf(0, 15, 30, 45, 60) + jumuahBeforeAzanOffsets).distinct().sorted()
+                        val jumuahOptions = (listOf(0, 5, 10, 15, 20, 30, 45, 60) + jumuahBeforeAzanOffsets).distinct().sorted()
                         for (min in jumuahOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
                             val isSel = if (min == 0) jumuahBeforeAzanOffsets.isEmpty() else jumuahBeforeAzanOffsets.contains(min)
@@ -563,6 +565,90 @@ fun RemindersVoiceSettingsScreen(
                                 customDialogTarget = "jumuah"
                                 customMinuteInput = ""
                             }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = glassBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Sunrise Reminders (Countdown before & at sunrise time, never after)
+                    TimingSectionHeader(
+                        title = stringResource(R.string.sunrise_reminders_title),
+                        isPlaying = playingKind == "sunrise",
+                        textColor = textPrimary,
+                        chipBg = chipUnselectedBg,
+                        border = glassBorder,
+                        onPlay = { viewModel.playSample("sunrise", sunriseBeforeOffsets.firstOrNull() ?: 15) },
+                        onStop = { viewModel.stopSample() }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.sunrise_reminders_desc),
+                        fontSize = 11.sp,
+                        color = textMuted
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.time_left_until_sunrise),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val sunriseOptions = (listOf(0, 5, 10, 15, 20, 30) + sunriseBeforeOffsets).distinct().sorted()
+                        for (min in sunriseOptions) {
+                            val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
+                            val isSel = if (min == 0) sunriseBeforeOffsets.isEmpty() else sunriseBeforeOffsets.contains(min)
+                            SanctuaryChoiceChip(
+                                label = label,
+                                isSelected = isSel,
+                                unselectedBg = chipUnselectedBg,
+                                border = glassBorder,
+                                textPrimary = textPrimary,
+                                onClick = { viewModel.toggleSunriseBeforeOffset(min) }
+                            )
+                        }
+                        SanctuaryChoiceChip(
+                            label = stringResource(R.string.custom_chip_label),
+                            isSelected = false,
+                            unselectedBg = chipUnselectedBg,
+                            border = glassBorder,
+                            textPrimary = selectedGoldText,
+                            onClick = {
+                                customDialogTarget = "sunrise"
+                                customMinuteInput = ""
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.time_of_sunrise),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = textPrimary
+                        )
+                        Switch(
+                            checked = sunriseAt,
+                            onCheckedChange = { viewModel.setRemSunriseAt(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = AmberTextDark,
+                                checkedTrackColor = AmberAccent,
+                                uncheckedThumbColor = textMuted,
+                                uncheckedTrackColor = chipUnselectedBg
+                            )
                         )
                     }
                 }
@@ -816,6 +902,7 @@ fun RemindersVoiceSettingsScreen(
 
                     val prayerEntries = listOf(
                         Pair("FAJR", R.string.prayer_fajr),
+                        Pair("SUNRISE", R.string.prayer_sunrise),
                         Pair("DHUHR", R.string.prayer_dhuhr),
                         Pair("ASR", R.string.prayer_asr),
                         Pair("MAGHRIB", R.string.prayer_maghrib),
@@ -868,27 +955,35 @@ fun RemindersVoiceSettingsScreen(
                             }
 
                             Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
-                                Checkbox(
-                                    checked = beforeJamaatActive,
-                                    onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_JAMAAT", it) },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = AmberAccent,
-                                        checkmarkColor = AmberTextDark,
-                                        uncheckedColor = textMuted
+                                if (key == "SUNRISE") {
+                                    Text("—", color = textMuted, fontSize = 14.sp, modifier = Modifier.padding(start = 12.dp))
+                                } else {
+                                    Checkbox(
+                                        checked = beforeJamaatActive,
+                                        onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_JAMAAT", it) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = AmberAccent,
+                                            checkmarkColor = AmberTextDark,
+                                            uncheckedColor = textMuted
+                                        )
                                     )
-                                )
+                                }
                             }
 
                             Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
-                                Checkbox(
-                                    checked = afterPrayerActive,
-                                    onCheckedChange = { viewModel.setReminderMatrixEntry(key, "AFTER_PRAYER", it) },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = AmberAccent,
-                                        checkmarkColor = AmberTextDark,
-                                        uncheckedColor = textMuted
+                                if (key == "SUNRISE") {
+                                    Text("—", color = textMuted, fontSize = 14.sp, modifier = Modifier.padding(start = 12.dp))
+                                } else {
+                                    Checkbox(
+                                        checked = afterPrayerActive,
+                                        onCheckedChange = { viewModel.setReminderMatrixEntry(key, "AFTER_PRAYER", it) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = AmberAccent,
+                                            checkmarkColor = AmberTextDark,
+                                            uncheckedColor = textMuted
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
@@ -945,7 +1040,7 @@ fun RemindersVoiceSettingsScreen(
                                 color = textPrimary
                             )
                             Text(
-                                text = "Play gentle bell tone before announcements",
+                                text = stringResource(R.string.chime_desc),
                                 fontSize = 11.sp,
                                 color = textMuted
                             )
@@ -983,6 +1078,7 @@ fun RemindersVoiceSettingsScreen(
                             "before_jamaat" -> "Enter minutes before Jamaat (1 - 180):"
                             "after_prayer" -> "Enter minutes after Prayer / Jamaat (1 - 180):"
                             "jumuah" -> "Enter minutes before Jumu'ah (1 - 180):"
+                            "sunrise" -> "Enter minutes before Sunrise (1 - 180):"
                             else -> "Enter minutes:"
                         }
                         Text(
@@ -1020,6 +1116,7 @@ fun RemindersVoiceSettingsScreen(
                                     "before_jamaat" -> viewModel.addCustomBeforeJamaatOffset(min)
                                     "after_prayer" -> viewModel.addCustomAfterPrayerOffset(min)
                                     "jumuah" -> viewModel.addCustomJumuahOffset(min)
+                                    "sunrise" -> viewModel.addCustomSunriseOffset(min)
                                 }
                             }
                             customDialogTarget = null

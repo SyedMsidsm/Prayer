@@ -22,8 +22,8 @@ class SettingsRepository(
 ) {
 
     companion object {
-        val PRAYER_KEYS = listOf("FAJR", "DHUHR", "ASR", "MAGHRIB", "ISHA", "JUMUAH")
-        val REMINDER_KINDS = listOf("BEFORE_AZAN", "AT_AZAN", "BEFORE_JAMAAT")
+        val PRAYER_KEYS = listOf("FAJR", "SUNRISE", "DHUHR", "ASR", "MAGHRIB", "ISHA", "JUMUAH")
+        val REMINDER_KINDS = listOf("BEFORE_AZAN", "AT_AZAN", "BEFORE_JAMAAT", "AFTER_PRAYER")
 
         val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
@@ -38,6 +38,8 @@ class SettingsRepository(
         val KEY_REM_BEFORE_JAMAAT_OFFSETS = stringPreferencesKey("rem_before_jamaat_offsets")
         val KEY_REM_AFTER_PRAYER_OFFSETS = stringPreferencesKey("rem_after_prayer_offsets")
         val KEY_REM_JUMUAH_BEFORE_AZAN_OFFSETS = stringPreferencesKey("rem_jumuah_before_azan_offsets")
+        val KEY_REM_SUNRISE_BEFORE_OFFSETS = stringPreferencesKey("rem_sunrise_before_offsets")
+        val KEY_REM_SUNRISE_AT = booleanPreferencesKey("rem_sunrise_at")
 
         val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
         val KEY_VOICE_LANGUAGE = stringPreferencesKey("voice_language")
@@ -236,6 +238,33 @@ class SettingsRepository(
 
     suspend fun setRemAtAzan(enabled: Boolean) {
         dataStore.edit { it[KEY_REM_AT_AZAN] = enabled }
+    }
+
+    val remSunriseBeforeOffsets: Flow<Set<Int>> = dataStore.data.map { prefs ->
+        val raw = prefs[KEY_REM_SUNRISE_BEFORE_OFFSETS]
+        if (raw == null) {
+            setOf(15) // Default 15m before sunrise
+        } else if (raw.isBlank()) {
+            emptySet()
+        } else {
+            raw.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+        }
+    }
+
+    suspend fun setRemSunriseBeforeOffsets(offsets: Set<Int>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REM_SUNRISE_BEFORE_OFFSETS] = offsets.sortedDescending().joinToString(",")
+        }
+    }
+
+    val remSunriseAt: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_REM_SUNRISE_AT] ?: true
+    }
+
+    suspend fun setRemSunriseAt(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REM_SUNRISE_AT] = enabled
+        }
     }
 
     val remBeforeJamaatMin: Flow<Int> = dataStore.data.map { prefs ->

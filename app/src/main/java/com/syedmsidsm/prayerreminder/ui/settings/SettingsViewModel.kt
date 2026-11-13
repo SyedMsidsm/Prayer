@@ -264,6 +264,18 @@ class SettingsViewModel(
         emptySet()
     )
 
+    val remSunriseBeforeOffsets: StateFlow<Set<Int>> = settingsRepository.remSunriseBeforeOffsets.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        setOf(15)
+    )
+
+    val remSunriseAt: StateFlow<Boolean> = settingsRepository.remSunriseAt.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        true
+    )
+
     val reminderMatrix: StateFlow<Map<Pair<String, String>, Boolean>> = settingsRepository.reminderMatrix.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -497,6 +509,40 @@ class SettingsViewModel(
             current.add(minutes)
             settingsRepository.setRemJumuahBeforeAzanOffsets(current)
             context?.let { AppRefresher.refreshAll(it, "custom_jumuah_added") }
+        }
+    }
+
+    fun toggleSunriseBeforeOffset(minutes: Int) {
+        viewModelScope.launch {
+            if (minutes == 0) {
+                settingsRepository.setRemSunriseBeforeOffsets(emptySet())
+            } else {
+                val current = remSunriseBeforeOffsets.value.toMutableSet()
+                if (current.contains(minutes)) {
+                    current.remove(minutes)
+                } else {
+                    current.add(minutes)
+                }
+                settingsRepository.setRemSunriseBeforeOffsets(current)
+            }
+            context?.let { AppRefresher.refreshAll(it, "sunrise_offsets_changed") }
+        }
+    }
+
+    fun addCustomSunriseOffset(minutes: Int) {
+        if (minutes <= 0) return
+        viewModelScope.launch {
+            val current = remSunriseBeforeOffsets.value.toMutableSet()
+            current.add(minutes)
+            settingsRepository.setRemSunriseBeforeOffsets(current)
+            context?.let { AppRefresher.refreshAll(it, "custom_sunrise_added") }
+        }
+    }
+
+    fun setRemSunriseAt(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setRemSunriseAt(enabled)
+            context?.let { AppRefresher.refreshAll(it, "sunrise_at_changed") }
         }
     }
 

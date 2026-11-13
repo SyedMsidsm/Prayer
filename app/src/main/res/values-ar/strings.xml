@@ -112,7 +112,9 @@
     <string name="speak_on_silent">التحدث والهاتف صامت</string>
     <string name="speak_on_silent_desc">عند الإيقاف: في الوضع الصامت أو الاهتزاز تصلك اهتزازة فقط.</string>
     <string name="chime">نغمة قبل الصوت</string>
+    <string name="chime_desc">تشغيل نغمة لطيفة قبل التنبيهات</string>
     <string name="voice_enabled">التذكيرات الصوتية</string>
+    <string name="voice_enabled_desc">عد تنازلي صوتي، صوت الأذان وتذكيرات الجماعة</string>
     <string name="play_sample">تشغيل عينة</string>
 
     <string name="reliability">فحص موثوقية التنبيهات</string>
@@ -225,6 +227,12 @@
     <string name="sunrise_notification">تنبيه الشروق بالصوت</string>
     <string name="sunrise_notification_desc">تنبيه صوتي عند حلول وقت الشروق</string>
     <string name="notif_sunrise_body">دخل وقت الشروق</string>
+    <string name="notif_before_sunrise">الشروق خلال %1$s</string>
+    <string name="notif_sunrise_time_is">وقت شروق الشمس هو %1$s</string>
+    <string name="sunrise_reminders_title">تذكيرات الشروق</string>
+    <string name="sunrise_reminders_desc">تنبيه قبل الشروق وعند وقت الشروق. (بدون تذكيرات بعد الشروق)</string>
+    <string name="time_left_until_sunrise">الوقت المتبقي حتى الشروق</string>
+    <string name="time_of_sunrise">وقت الشروق</string>
     <string name="manual_place">اسم المكان / المدينة</string>
     <string name="manual_month">الشهر الهجري (1-12)</string>
     <string name="manual_year">السنة الهجرية</string>

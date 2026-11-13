@@ -198,7 +198,7 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
-                    .padding(top = 6.dp, bottom = 104.dp),
+                    .padding(top = 6.dp, bottom = 144.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 val today = LocalDate.now()
@@ -208,8 +208,13 @@ fun SettingsScreen(
                     first != null && last != null && !today.isBefore(first) && !today.isAfter(last)
                 } ?: activeTimetable
 
-                val activePlace = currentTable?.place ?: "Bhatkal, Karnataka"
-                val activeMonth = currentTable?.let { "${it.hijriMonthName} ${it.hijriYear}" } ?: "Bhatkal Mosque Schedule"
+                val rawPlace = currentTable?.place ?: "Bhatkal, Karnataka"
+                val activePlace = when {
+                    rawPlace.contains("Bhatkal", ignoreCase = true) && currentLangTag == "ar" -> "باتكال، كارناتاكا"
+                    rawPlace.contains("Bhatkal", ignoreCase = true) && currentLangTag == "ur" -> "بھٹکل، کرناٹک"
+                    else -> rawPlace
+                }
+                val activeMonth = currentTable?.let { "${it.hijriMonthName} ${it.hijriYear}" } ?: stringResource(R.string.settings_timetable_title)
 
                 val lastDate = currentTable?.let { runCatching { LocalDate.parse(it.lastDate) }.getOrNull() }
                 val daysLeft = if (lastDate != null) ChronoUnit.DAYS.between(today, lastDate).toInt().coerceAtLeast(0) else 0
@@ -343,6 +348,42 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    val previewCardBgRes = when (widgetTheme) {
+                        "light_cream" -> R.drawable.widget_bg_light_cream
+                        "warm_gold" -> R.drawable.widget_bg_warm_gold
+                        else -> R.drawable.widget_bg_dark_teal
+                    }
+                    val previewPillBgRes = when (widgetTheme) {
+                        "light_cream" -> R.drawable.widget_pill_bg_light_cream
+                        "warm_gold" -> R.drawable.widget_pill_bg_warm_gold
+                        else -> R.drawable.widget_pill_bg_dark_teal
+                    }
+                    val previewActiveCapsule = when (widgetTheme) {
+                        "light_cream" -> R.drawable.widget_capsule_active_cream
+                        "warm_gold" -> R.drawable.widget_capsule_active_gold
+                        else -> R.drawable.widget_capsule_active
+                    }
+                    val previewInactiveCapsule = when (widgetTheme) {
+                        "light_cream" -> R.drawable.widget_capsule_inactive_cream
+                        "warm_gold" -> R.drawable.widget_capsule_inactive_gold
+                        else -> R.drawable.widget_capsule_inactive
+                    }
+                    val pPrimary = when (widgetTheme) {
+                        "light_cream" -> Color(0xFF0F172A)
+                        "warm_gold" -> Color(0xFFFFFBEB)
+                        else -> Color.White
+                    }
+                    val pMuted = when (widgetTheme) {
+                        "light_cream" -> Color(0xFF64748B)
+                        "warm_gold" -> Color(0xFFD4C7B0)
+                        else -> Color(0xFF94A3B8)
+                    }
+                    val pGold = when (widgetTheme) {
+                        "light_cream" -> Color(0xFFB45309)
+                        "warm_gold" -> Color(0xFFFBBF24)
+                        else -> Color(0xFFFCD34D)
+                    }
+
                     // 1) 4x2 Compact 5-Prayer Strip Widget Preview & Pin
                     WidgetPreviewCard(
                         title = stringResource(R.string.widget_strip_title),
@@ -355,13 +396,13 @@ fun SettingsScreen(
                                     .clip(RoundedCornerShape(18.dp))
                             ) {
                                 Image(
-                                    painter = painterResource(R.drawable.widget_mosque_sanctuary_bg),
+                                    painter = painterResource(previewCardBgRes),
                                     contentDescription = null,
-                                    contentScale = ContentScale.Crop,
+                                    contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
                                 )
                                 Image(
-                                    painter = painterResource(R.drawable.widget_card_frame),
+                                    painter = painterResource(R.drawable.widget_mosque_silhouette),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
@@ -385,7 +426,7 @@ fun SettingsScreen(
                                             )
                                             Spacer(modifier = Modifier.width(3.dp))
                                             val townName = activePlace.split(',').first().trim()
-                                            Text(townName, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            Text(townName, color = pPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                         }
                                         val fajrLabel = stringResource(R.string.prayer_fajr)
                                         val nextPrefix = when (currentLangTag) {
@@ -393,7 +434,7 @@ fun SettingsScreen(
                                             "ur" -> "اگلی: "
                                             else -> "Next: "
                                         }
-                                        Text("$nextPrefix$fajrLabel 02:45:10", color = Color(0xFFFCD34D), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text("$nextPrefix$fajrLabel 02:45:10", color = pGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
 
                                     Row(
@@ -415,7 +456,7 @@ fun SettingsScreen(
                                                     .clip(RoundedCornerShape(8.dp))
                                             ) {
                                                 Image(
-                                                    painter = painterResource(if (isNext) R.drawable.widget_capsule_active else R.drawable.widget_capsule_inactive),
+                                                    painter = painterResource(if (isNext) previewActiveCapsule else previewInactiveCapsule),
                                                     contentDescription = null,
                                                     contentScale = ContentScale.FillBounds,
                                                     modifier = Modifier.matchParentSize()
@@ -426,8 +467,8 @@ fun SettingsScreen(
                                                         .padding(vertical = 5.dp),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
-                                                    Text(pName, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) Color(0xFF1E1B18) else Color(0xFFE2E8F0))
-                                                    Text(pTime, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = if (isNext) Color(0xFF1E1B18) else Color.White)
+                                                    Text(pName, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) Color(0xFF1E1B18) else pMuted)
+                                                    Text(pTime, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = if (isNext) Color(0xFF1E1B18) else pPrimary)
                                                 }
                                             }
                                         }
@@ -457,13 +498,13 @@ fun SettingsScreen(
                                     .clip(RoundedCornerShape(18.dp))
                             ) {
                                 Image(
-                                    painter = painterResource(R.drawable.widget_mosque_sanctuary_bg),
+                                    painter = painterResource(previewCardBgRes),
                                     contentDescription = null,
-                                    contentScale = ContentScale.Crop,
+                                    contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
                                 )
                                 Image(
-                                    painter = painterResource(R.drawable.widget_card_frame),
+                                    painter = painterResource(R.drawable.widget_mosque_silhouette),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
@@ -479,15 +520,15 @@ fun SettingsScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(stringResource(R.string.prayer_fajr), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                        Text("الفجر", color = Color(0xFFFCD34D), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text(stringResource(R.string.prayer_fajr), color = pPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("الفجر", color = pGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                     Column(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text("05:15 ${stringResource(R.string.am_marker)}", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                        Text("02:45:10", color = Color(0xFFFCD34D), fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                                        Text("05:15 ${stringResource(R.string.am_marker)}", color = pPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                        Text("02:45:10", color = pGold, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -495,8 +536,8 @@ fun SettingsScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         val townName = activePlace.split(',').first().trim()
-                                        Text("${stringResource(R.string.jamaat)} 05:40", color = Color(0xFFCBD5E1), fontSize = 9.sp)
-                                        Text(townName, color = Color(0xFFCBD5E1), fontSize = 9.sp)
+                                        Text("${stringResource(R.string.jamaat)} 05:40", color = pMuted, fontSize = 9.sp)
+                                        Text(townName, color = pMuted, fontSize = 9.sp)
                                     }
                                 }
                             }
@@ -523,13 +564,13 @@ fun SettingsScreen(
                                     .clip(RoundedCornerShape(25.dp))
                             ) {
                                 Image(
-                                    painter = painterResource(R.drawable.widget_mosque_sanctuary_bg),
+                                    painter = painterResource(previewPillBgRes),
                                     contentDescription = null,
-                                    contentScale = ContentScale.Crop,
+                                    contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
                                 )
                                 Image(
-                                    painter = painterResource(R.drawable.widget_pill_frame),
+                                    painter = painterResource(R.drawable.widget_mosque_silhouette),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
@@ -548,7 +589,7 @@ fun SettingsScreen(
                                             modifier = Modifier.size(10.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("${stringResource(R.string.prayer_fajr)} 05:15 ${stringResource(R.string.am_marker)}", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("${stringResource(R.string.prayer_fajr)} 05:15 ${stringResource(R.string.am_marker)}", color = pPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         val nextInLabel = when (currentLangTag) {
@@ -556,7 +597,7 @@ fun SettingsScreen(
                                             "ur" -> "باقی "
                                             else -> "Next in "
                                         }
-                                        Text("$nextInLabel 02:45:10", color = Color(0xFFFCD34D), fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                                        Text("$nextInLabel 02:45:10", color = pGold, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.width(5.dp))
                                         Image(
                                             painter = painterResource(R.drawable.widget_crescent_gold),

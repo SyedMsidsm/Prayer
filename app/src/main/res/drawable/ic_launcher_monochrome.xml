@@ -7,62 +7,59 @@
 
     <group
         android:pivotX="54"
-        android:pivotY="50"
-        android:scaleX="0.54"
-        android:scaleY="0.54"
-        android:translateY="2">
+        android:pivotY="54"
+        android:scaleX="0.72"
+        android:scaleY="0.72">
+
+        <!-- Outer Squircle Badge Border -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="1.8"
+            android:fillColor="#00000000"
+            android:pathData="M32,18 C24,18 18,24 18,32 L18,76 C18,84 24,90 32,90 L76,90 C84,90 90,84 90,76 L90,32 C90,24 84,18 76,18 Z" />
 
         <!-- Left Minaret -->
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M20,38 L24,38 L24,84 L20,84 Z" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M27,45 L32,45 L32,84 L27,84 Z" />
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M20,38 L22,30 L24,38 Z" />
-        <path
-            android:strokeColor="#FFFFFFFF"
-            android:strokeWidth="1.2"
-            android:strokeLineCap="round"
-            android:pathData="M22,25 L22,30" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M27,45 L29.5,35 L32,45 Z" />
 
         <!-- Right Minaret -->
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M84,38 L88,38 L88,84 L84,84 Z" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M76,45 L81,45 L81,84 L76,84 Z" />
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M84,38 L86,30 L88,38 Z" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M76,45 L78.5,35 L81,45 Z" />
+
+        <!-- Central Grand Dome -->
         <path
-            android:strokeColor="#FFFFFFFF"
+            android:strokeColor="#FFFFFF"
             android:strokeWidth="1.2"
+            android:fillColor="#00000000"
+            android:pathData="M35,84 C35,58 46,44 54,34 C62,44 73,58 73,84 Z" />
+
+        <!-- Spire & Crescent -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="1.6"
             android:strokeLineCap="round"
-            android:pathData="M86,25 L86,30" />
-
-        <!-- Central Dome -->
+            android:pathData="M54,23 L54,34" />
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M30,84 C30,55 45,40 54,30 C63,40 78,55 78,84 Z" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M56,18 A4.5,4.5 0 0,1 51.5,22.5 A4.5,4.5 0 1,0 55.5,16 A4.5,4.5 0 0,1 56,18 Z" />
 
-        <!-- Dome Spire & Finial -->
+        <!-- Glowing Window -->
         <path
-            android:strokeColor="#FFFFFFFF"
-            android:strokeWidth="1.8"
-            android:strokeLineCap="round"
-            android:pathData="M54,18 L54,30" />
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M54,22m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M50,72 C50,67 58,67 58,72 L58,80 L50,80 Z" />
 
-        <!-- Crescent Moon -->
+        <!-- Base -->
         <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M56,12 A5,5 0 0,1 51,17 A5,5 0 1,0 55.5,10 A5,5 0 0,1 56,12 Z" />
-
-        <!-- Horizon Base -->
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M16,84 L92,84 L92,90 L16,90 Z" />
-
+            android:fillColor="#FFFFFF"
+            android:pathData="M24,84 L84,84 L84,86 L24,86 Z" />
     </group>
 
 </vector>

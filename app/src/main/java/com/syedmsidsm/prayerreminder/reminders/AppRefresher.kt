@@ -39,7 +39,9 @@ object AppRefresher {
                 remBeforeAzanOffsets = settingsRepo.remBeforeAzanOffsets.first(),
                 remBeforeJamaatOffsets = settingsRepo.remBeforeJamaatOffsets.first(),
                 remAfterPrayerOffsets = settingsRepo.remAfterPrayerOffsets.first(),
-                remJumuahBeforeAzanOffsets = settingsRepo.remJumuahBeforeAzanOffsets.first()
+                remJumuahBeforeAzanOffsets = settingsRepo.remJumuahBeforeAzanOffsets.first(),
+                remSunriseBeforeOffsets = settingsRepo.remSunriseBeforeOffsets.first(),
+                remSunriseAt = settingsRepo.remSunriseAt.first()
             )
 
             val latestTimetable = timetables.firstOrNull()

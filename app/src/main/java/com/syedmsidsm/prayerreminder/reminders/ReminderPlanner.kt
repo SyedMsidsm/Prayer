@@ -18,9 +18,16 @@ data class ReminderSettingsSnapshot(
     val remBeforeAzanOffsets: Set<Int> = emptySet(),
     val remBeforeJamaatOffsets: Set<Int> = emptySet(),
     val remAfterPrayerOffsets: Set<Int> = emptySet(),
-    val remJumuahBeforeAzanOffsets: Set<Int> = emptySet()
+    val remJumuahBeforeAzanOffsets: Set<Int> = emptySet(),
+    val remSunriseBeforeOffsets: Set<Int> = setOf(15),
+    val remSunriseAt: Boolean = true
 ) {
     fun isEnabled(prayerKey: String, kind: ReminderKind): Boolean {
+        if (prayerKey == "SUNRISE") {
+            if (kind == ReminderKind.BEFORE_AZAN) return matrix[Pair("SUNRISE", "BEFORE_AZAN")] ?: true
+            if (kind == ReminderKind.AT_AZAN) return remSunriseAt && (matrix[Pair("SUNRISE", "AT_AZAN")] ?: true)
+            return false // Statically false for BEFORE_JAMAAT and AFTER_PRAYER!
+        }
         val kindStr = when (kind) {
             ReminderKind.BEFORE_AZAN -> "BEFORE_AZAN"
             ReminderKind.AT_AZAN -> "AT_AZAN"
@@ -73,20 +80,28 @@ class ReminderPlanner {
             val prayers = listOf(Prayer.FAJR, Prayer.SUNRISE, Prayer.DHUHR, Prayer.ASR, Prayer.MAGHRIB, Prayer.ISHA)
             for (prayer in prayers) {
                 val isJumuah = day.isFriday && prayer == Prayer.DHUHR
+                val isSunrise = prayer == Prayer.SUNRISE
                 val prayerKey = if (isJumuah) "JUMUAH" else prayer.name
                 val azan = day.azan[prayer] ?: continue
                 val jamaat = day.jamaat[prayer]
 
                 val beforeAzanMin = if (isJumuah) settings.remJumuahBeforeAzanMin else settings.remBeforeAzanMin
-                val azanOffsets = if (isJumuah) {
-                    if (settings.remJumuahBeforeAzanOffsets.isNotEmpty()) settings.remJumuahBeforeAzanOffsets
-                    else setOf(beforeAzanMin).filter { it > 0 }.toSet()
-                } else {
-                    if (settings.remBeforeAzanOffsets.isNotEmpty()) settings.remBeforeAzanOffsets
-                    else setOf(beforeAzanMin).filter { it > 0 }.toSet()
+                val azanOffsets = when {
+                    isJumuah -> {
+                        if (settings.remJumuahBeforeAzanOffsets.isNotEmpty()) settings.remJumuahBeforeAzanOffsets
+                        else setOf(beforeAzanMin).filter { it > 0 }.toSet()
+                    }
+                    isSunrise -> {
+                        if (settings.remSunriseBeforeOffsets.isNotEmpty()) settings.remSunriseBeforeOffsets
+                        else setOf(15)
+                    }
+                    else -> {
+                        if (settings.remBeforeAzanOffsets.isNotEmpty()) settings.remBeforeAzanOffsets
+                        else setOf(beforeAzanMin).filter { it > 0 }.toSet()
+                    }
                 }
 
-                // 1. BEFORE_AZAN (Support multiple reminder intervals)
+                // 1. BEFORE_AZAN / BEFORE_SUNRISE (Support multiple reminder intervals)
                 for (offset in azanOffsets) {
                     if (offset > 0 && settings.isEnabled(prayerKey, ReminderKind.BEFORE_AZAN)) {
                         val fireTime = day.date.atTime(azan).minusMinutes(offset.toLong()).atZone(now.zone)
@@ -108,8 +123,9 @@ class ReminderPlanner {
                     }
                 }
 
-                // 2. AT_AZAN
-                if (settings.remAtAzan && settings.isEnabled(prayerKey, ReminderKind.AT_AZAN)) {
+                // 2. AT_AZAN / AT_SUNRISE
+                val atTimeAllowed = if (isSunrise) settings.remSunriseAt else settings.remAtAzan
+                if (atTimeAllowed && settings.isEnabled(prayerKey, ReminderKind.AT_AZAN)) {
                     val fireTime = day.date.atTime(azan).atZone(now.zone)
                     if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
                         events.add(
@@ -127,6 +143,9 @@ class ReminderPlanner {
                         )
                     }
                 }
+
+                // NEVER schedule BEFORE_JAMAAT, AFTER_PRAYER, or PHASE for Sunrise!
+                if (isSunrise) continue
 
                 // 3. BEFORE_JAMAAT (Support multiple reminder intervals)
                 val jamaatOffsets = if (settings.remBeforeJamaatOffsets.isNotEmpty()) {
