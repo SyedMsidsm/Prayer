@@ -190,6 +190,12 @@
     <string name="theme_light">فاتح</string>
     <string name="theme_dark">داكن</string>
     <string name="theme_system">تلقائي</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="up_next">التالي</string>
+    <string name="remaining">المتبقي</string>
+    <string name="auto_sky">سماء تلقائية</string>
+    <string name="minimalist_widgets">أدوات الشاشة البسيطة</string>
+    <string name="pin_widget">تثبيت</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربيع الأول</item><item>ربيع الآخر</item>

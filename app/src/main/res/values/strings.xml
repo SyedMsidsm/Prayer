@@ -190,6 +190,12 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_system">Follow System</string>
+    <string name="nav_home">Home</string>
+    <string name="up_next">Up Next</string>
+    <string name="remaining">Remaining</string>
+    <string name="auto_sky">Auto Sky</string>
+    <string name="minimalist_widgets">Minimalist Widgets</string>
+    <string name="pin_widget">Pin</string>
 
     <string-array name="hijri_months">
         <item>Muharram</item><item>Safar</item><item>Rabi al-Awwal</item><item>Rabi al-Thani</item>

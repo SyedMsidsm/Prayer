@@ -190,6 +190,12 @@
     <string name="theme_light">لائٹ</string>
     <string name="theme_dark">ڈارک</string>
     <string name="theme_system">سسٹم کا انتخاب</string>
+    <string name="nav_home">ہوم</string>
+    <string name="up_next">اگلی نماز</string>
+    <string name="remaining">باقی وقت</string>
+    <string name="auto_sky">خودکار آسمان</string>
+    <string name="minimalist_widgets">مختصر ویجیٹس</string>
+    <string name="pin_widget">پن کریں</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>

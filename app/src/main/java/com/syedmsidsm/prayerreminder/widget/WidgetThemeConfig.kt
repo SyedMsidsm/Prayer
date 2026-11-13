@@ -43,14 +43,14 @@ object WidgetThemeConfig {
                 chronometerTextColorInt = 0xFF0A2C2F.toInt(),
                 mosqueBgDrawableRes = R.drawable.widget_mosque_bg_dark
             )
-            else -> WidgetColors( // "dark_teal" default
-                background = Color(0xFF0E2A2E),
-                textPrimary = ColorProvider(Color(0xFFF7F4EC)),
-                textSecondary = ColorProvider(Color(0xFFB7C5C4)),
-                textAccent = ColorProvider(Color(0xFFD9AE5C)),
-                capsuleBackground = Color(0xFF1B383C),
-                activeCapsuleBg = Color(0xFF23403E),
-                chronometerTextColorInt = 0xFFD9AE5C.toInt(),
+            else -> WidgetColors( // "dark_teal" Sanctuary Dark default
+                background = Color(0xFF07131A),
+                textPrimary = ColorProvider(Color(0xFFF8FAFC)),
+                textSecondary = ColorProvider(Color(0xFFA8A29E)),
+                textAccent = ColorProvider(Color(0xFFFBBF24)),
+                capsuleBackground = Color(0xFF102029),
+                activeCapsuleBg = Color(0xFF1E323D),
+                chronometerTextColorInt = 0xFFFCD34D.toInt(),
                 mosqueBgDrawableRes = R.drawable.widget_mosque_bg
             )
         }

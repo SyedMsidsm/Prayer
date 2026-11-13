@@ -67,6 +67,88 @@ class SettingsViewModel(
         }
     }
 
+    val selectedCityId: StateFlow<String> = settingsRepository.selectedCityId.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "bhatkal"
+    )
+
+    fun setSelectedCityId(cityId: String) {
+        viewModelScope.launch {
+            settingsRepository.setSelectedCityId(cityId)
+            context?.let {
+                AppRefresher.refreshAll(it, "city_changed")
+                com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(it)
+            }
+        }
+    }
+
+    val autoGps: StateFlow<Boolean> = settingsRepository.autoGps.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        true
+    )
+
+    fun setAutoGps(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAutoGps(enabled)
+        }
+    }
+
+    val calcMethod: StateFlow<String> = settingsRepository.calcMethod.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "MWL"
+    )
+
+    fun setCalcMethod(method: String) {
+        viewModelScope.launch {
+            settingsRepository.setCalcMethod(method)
+            context?.let {
+                AppRefresher.refreshAll(it, "calc_method_changed")
+                com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(it)
+            }
+        }
+    }
+
+    val asrMethod: StateFlow<String> = settingsRepository.asrMethod.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "Standard"
+    )
+
+    fun setAsrMethod(method: String) {
+        viewModelScope.launch {
+            settingsRepository.setAsrMethod(method)
+            context?.let {
+                AppRefresher.refreshAll(it, "asr_method_changed")
+                com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(it)
+            }
+        }
+    }
+
+    val use24Hour: StateFlow<Boolean> = settingsRepository.use24Hour.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        false
+    )
+
+    fun setUse24Hour(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setUse24Hour(enabled)
+            context?.let {
+                com.syedmsidsm.prayerreminder.widget.WidgetUpdater.updateAll(it)
+            }
+        }
+    }
+
+    fun adjustIqamahDelay(prayerKey: String, deltaMinutes: Int) {
+        val currentRule = jamaatRules.value[prayerKey]
+        val currentMin = (currentRule as? JamaatRule.AfterAzan)?.minutes ?: 15
+        val newMin = (currentMin + deltaMinutes).coerceIn(0, 60)
+        setJamaatRule(prayerKey, JamaatRule.AfterAzan(newMin))
+    }
+
     val jamaatRules: StateFlow<Map<String, JamaatRule>> = settingsRepository.jamaatRules.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),

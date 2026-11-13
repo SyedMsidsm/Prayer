@@ -149,10 +149,23 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         )
 
         val voiceEnabled = settingsRepo.voiceEnabled.first()
-        notificationHelper.postReminderNotification(event, voiceEnabled = voiceEnabled, date = LocalDate.now())
+        val alertMode = if (prayer != null) {
+            settingsRepo.prayerAlertModes.first()[prayer] ?: "sound"
+        } else {
+            "sound"
+        }
 
-        // Play voice if enabled
-        if (voiceEnabled && prayer != null) {
+        if (alertMode == "muted") {
+            firedEventLog.record(code, nowEpochSeconds)
+            AppRefresher.refreshAll(context, "alarm_muted")
+            return
+        }
+
+        val playSoundForPrayer = voiceEnabled && alertMode == "sound"
+        notificationHelper.postReminderNotification(event, voiceEnabled = playSoundForPrayer, date = LocalDate.now())
+
+        // Play voice if enabled and alert mode is sound (skip for vibrate-only mode)
+        if (playSoundForPrayer && prayer != null) {
             val voiceLang = settingsRepo.voiceLanguage.first()
             val voiceGender = settingsRepo.voiceGender.first()
             val voiceChime = settingsRepo.voiceChime.first()

@@ -52,6 +52,13 @@ class SettingsRepository(
         val KEY_AZAN_LENGTH = stringPreferencesKey("azan_length")
         val KEY_PLAY_DUA_AFTER_AZAN = booleanPreferencesKey("play_dua_after_azan")
         val KEY_WIDGET_THEME = stringPreferencesKey("widget_theme")
+
+        val KEY_SELECTED_CITY_ID = stringPreferencesKey("selected_city_id")
+        val KEY_AUTO_GPS = booleanPreferencesKey("auto_gps")
+        val KEY_CALC_METHOD = stringPreferencesKey("calc_method")
+        val KEY_ASR_METHOD = stringPreferencesKey("asr_method")
+        val KEY_USE_24_HOUR = booleanPreferencesKey("use_24_hour")
+        val KEY_SKY_OVERRIDE = stringPreferencesKey("sky_override")
     }
 
     val atAzanType: Flow<String> = dataStore.data.map { prefs ->
@@ -366,6 +373,105 @@ class SettingsRepository(
             for (pk in prayerKeysToToggle) {
                 for (kind in REMINDER_KINDS) {
                     prefs[booleanPreferencesKey("rem_${pk}_${kind}")] = targetState
+                }
+            }
+            prefs[stringPreferencesKey("alert_mode_${prayer.name}")] = if (targetState) "sound" else "muted"
+        }
+    }
+
+    val selectedCityId: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_SELECTED_CITY_ID] ?: "bhatkal"
+    }
+
+    suspend fun setSelectedCityId(cityId: String) {
+        dataStore.edit { it[KEY_SELECTED_CITY_ID] = cityId }
+    }
+
+    val autoGps: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_AUTO_GPS] ?: true
+    }
+
+    suspend fun setAutoGps(enabled: Boolean) {
+        dataStore.edit { it[KEY_AUTO_GPS] = enabled }
+    }
+
+    val calcMethod: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_CALC_METHOD] ?: "MWL"
+    }
+
+    suspend fun setCalcMethod(method: String) {
+        dataStore.edit { it[KEY_CALC_METHOD] = method }
+    }
+
+    val asrMethod: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_ASR_METHOD] ?: "Standard"
+    }
+
+    suspend fun setAsrMethod(method: String) {
+        dataStore.edit { it[KEY_ASR_METHOD] = method }
+    }
+
+    val use24Hour: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_USE_24_HOUR] ?: false
+    }
+
+    suspend fun setUse24Hour(enabled: Boolean) {
+        dataStore.edit { it[KEY_USE_24_HOUR] = enabled }
+    }
+
+    val skyOverride: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_SKY_OVERRIDE] ?: ""
+    }
+
+    suspend fun setSkyOverride(sky: String) {
+        dataStore.edit { it[KEY_SKY_OVERRIDE] = sky }
+    }
+
+    val prayerAlertModes: Flow<Map<Prayer, String>> = dataStore.data.map { prefs ->
+        val map = mutableMapOf<Prayer, String>()
+        for (prayer in Prayer.entries) {
+            val savedMode = prefs[stringPreferencesKey("alert_mode_${prayer.name}")]
+            if (savedMode != null) {
+                map[prayer] = savedMode
+            } else if (!prayer.hasReminders) {
+                map[prayer] = "muted"
+            } else {
+                val anyActive = REMINDER_KINDS.any { kind ->
+                    prefs[booleanPreferencesKey("rem_${prayer.name}_${kind}")] ?: true
+                }
+                map[prayer] = if (anyActive) "sound" else "muted"
+            }
+        }
+        map
+    }
+
+    suspend fun cyclePrayerAlertMode(prayer: Prayer) {
+        val prayerKeysToToggle = when {
+            !prayer.hasReminders -> emptyList()
+            prayer == Prayer.DHUHR -> listOf("DHUHR", "JUMUAH")
+            else -> listOf(prayer.name)
+        }
+        dataStore.edit { prefs ->
+            val currentMode = prefs[stringPreferencesKey("alert_mode_${prayer.name}")] ?: run {
+                if (!prayer.hasReminders) {
+                    "muted"
+                } else {
+                    val anyActive = REMINDER_KINDS.any { kind ->
+                        prefs[booleanPreferencesKey("rem_${prayer.name}_${kind}")] ?: true
+                    }
+                    if (anyActive) "sound" else "muted"
+                }
+            }
+            val nextMode = when (currentMode) {
+                "sound" -> "vibrate"
+                "vibrate" -> "muted"
+                else -> "sound"
+            }
+            prefs[stringPreferencesKey("alert_mode_${prayer.name}")] = nextMode
+            val enabled = nextMode != "muted"
+            for (pk in prayerKeysToToggle) {
+                for (kind in REMINDER_KINDS) {
+                    prefs[booleanPreferencesKey("rem_${pk}_${kind}")] = enabled
                 }
             }
         }
