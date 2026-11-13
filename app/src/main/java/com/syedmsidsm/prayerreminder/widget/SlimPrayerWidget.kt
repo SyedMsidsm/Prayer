@@ -55,7 +55,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
             .cornerRadius(20.dp)
             .background(colors.background)
             .clickable(actionStartActivity<MainActivity>())
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         if (!state.hasTable) {
@@ -138,14 +138,14 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                             },
                             style = TextStyle(
                                 color = colors.textPrimary,
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 textAlign = TextAlign.End
                             )
                         )
                     }
 
-                    Spacer(modifier = GlanceModifier.width(20.dp))
+                    Spacer(modifier = GlanceModifier.width(16.dp))
 
                     // Prayer Name & Azan Time
                     Column(horizontalAlignment = Alignment.End) {
@@ -153,7 +153,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                             text = prayerUpper,
                             style = TextStyle(
                                 color = colors.textAccent,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.End
                             )
@@ -162,7 +162,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                             text = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) state.mainTime else state.secondaryTime,
                             style = TextStyle(
                                 color = colors.textPrimary,
-                                fontSize = 18.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.End
                             )
@@ -181,7 +181,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                             text = prayerUpper,
                             style = TextStyle(
                                 color = colors.textAccent,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
@@ -189,13 +189,13 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                             text = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) state.mainTime else state.secondaryTime,
                             style = TextStyle(
                                 color = colors.textPrimary,
-                                fontSize = 18.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
                     }
 
-                    Spacer(modifier = GlanceModifier.width(24.dp))
+                    Spacer(modifier = GlanceModifier.width(16.dp))
 
                     // Jamaat Section
                     Column(horizontalAlignment = Alignment.Start) {
@@ -215,7 +215,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                             },
                             style = TextStyle(
                                 color = colors.textPrimary,
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         )

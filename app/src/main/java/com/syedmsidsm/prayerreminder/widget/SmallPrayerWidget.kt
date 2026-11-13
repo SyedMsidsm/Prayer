@@ -61,7 +61,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
             .cornerRadius(24.dp)
             .background(colors.background)
             .clickable(actionStartActivity<MainActivity>())
-            .padding(16.dp)
+            .padding(14.dp)
     ) {
         if (!state.hasTable) {
             Column(
@@ -104,7 +104,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     text = state.place,
                     style = TextStyle(
                         color = colors.textSecondary,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = textAlign
                     )
@@ -126,7 +126,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     text = title,
                     style = TextStyle(
                         color = colors.textAccent,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = textAlign
                     )
@@ -137,7 +137,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     text = state.mainTime,
                     style = TextStyle(
                         color = colors.textPrimary,
-                        fontSize = 32.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = textAlign
                     )
@@ -148,7 +148,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     text = state.secondaryTime,
                     style = TextStyle(
                         color = colors.textSecondary,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = textAlign
                     )
@@ -161,7 +161,7 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     modifier = GlanceModifier
                         .background(colors.capsuleBackground)
                         .cornerRadius(12.dp)
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     val chronometerViews = WidgetThemeConfig.buildChronometer(

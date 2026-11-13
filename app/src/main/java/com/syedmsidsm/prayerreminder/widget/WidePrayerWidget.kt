@@ -56,7 +56,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
             .cornerRadius(24.dp)
             .background(colors.background)
             .clickable(actionStartActivity<MainActivity>())
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
         if (!state.hasTable) {
             Column(
@@ -124,7 +124,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                             text = headerSubtitle,
                             style = TextStyle(
                                 color = colors.textSecondary,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.End
                             )
@@ -135,7 +135,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                             text = headerSubtitle,
                             style = TextStyle(
                                 color = colors.textSecondary,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Normal
                             )
                         )
@@ -174,7 +174,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                         text = state.prayerName,
                         style = TextStyle(
                             color = colors.textAccent,
-                            fontSize = 17.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = textAlign
                         )
@@ -199,7 +199,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                                 text = state.mainTime,
                                 style = TextStyle(
                                     color = colors.textPrimary,
-                                    fontSize = 26.sp,
+                                    fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.End
                                 )
@@ -209,7 +209,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                                 text = state.mainTime,
                                 style = TextStyle(
                                     color = colors.textPrimary,
-                                    fontSize = 26.sp,
+                                    fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -243,12 +243,12 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                             GlanceModifier
                                 .defaultWeight()
                                 .background(colors.activeCapsuleBg)
-                                .cornerRadius(10.dp)
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 3.dp, vertical = 3.dp)
                         } else {
                             GlanceModifier
                                 .defaultWeight()
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .padding(horizontal = 3.dp, vertical = 3.dp)
                         }
 
                         val nameColor = when {
@@ -290,7 +290,7 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                                 text = compactTime,
                                 style = TextStyle(
                                     color = timeColor,
-                                    fontSize = 13.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = fontWeight,
                                     textAlign = TextAlign.Center
                                 ),
