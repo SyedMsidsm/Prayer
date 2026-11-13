@@ -29,16 +29,29 @@ class TimetableRepository(
     val timetables: StateFlow<List<Timetable>> = _timetables.asStateFlow()
 
     init {
+        ensureBuiltInTablesLoaded()
         loadAllFromDisk()
-        if (_timetables.value.isEmpty()) {
-            loadBuiltInDemo()
-        }
     }
 
     suspend fun initialize() = withContext(ioDispatcher) {
+        ensureBuiltInTablesLoaded()
         loadAllFromDisk()
-        if (_timetables.value.isEmpty()) {
-            loadBuiltInDemo()
+    }
+
+    private fun ensureBuiltInTablesLoaded() {
+        val builtInAssets = listOf("default_timetable.json", "bhatkal_1448_06.json")
+        for (assetName in builtInAssets) {
+            runCatching {
+                context.assets.open(assetName).bufferedReader().use { reader ->
+                    val content = reader.readText()
+                    val table = json.decodeFromString<Timetable>(content)
+                    val filename = "${table.hijriYear}-${table.hijriMonth.toString().padStart(2, '0')}.json"
+                    val targetFile = File(timetablesDir, filename)
+                    if (!targetFile.exists()) {
+                        targetFile.writeText(json.encodeToString(Timetable.serializer(), table))
+                    }
+                }
+            }
         }
     }
 
@@ -54,16 +67,6 @@ class TimetableRepository(
         }
         // Sort descending by first date (newest first)
         _timetables.value = loaded.sortedByDescending { it.firstDate }
-    }
-
-    private fun loadBuiltInDemo() {
-        runCatching {
-            context.assets.open("default_timetable.json").bufferedReader().use { reader ->
-                val content = reader.readText()
-                val demoTable = json.decodeFromString<Timetable>(content)
-                saveTimetableSync(demoTable)
-            }
-        }
     }
 
     suspend fun saveTimetable(timetable: Timetable) = withContext(ioDispatcher) {

@@ -129,8 +129,8 @@ fun ManualEntryScreen(
                 onClick = { dayCount = 29 },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (dayCount == 29) PrayerReminderColors.Ground else PrayerReminderColors.Surface,
-                    contentColor = if (dayCount == 29) PrayerReminderColors.Ivory else PrayerReminderColors.Ink
+                    containerColor = if (dayCount == 29) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Surface,
+                    contentColor = if (dayCount == 29) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink
                 ),
                 modifier = Modifier.weight(1f)
             ) {
@@ -140,8 +140,8 @@ fun ManualEntryScreen(
                 onClick = { dayCount = 30 },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (dayCount == 30) PrayerReminderColors.Ground else PrayerReminderColors.Surface,
-                    contentColor = if (dayCount == 30) PrayerReminderColors.Ivory else PrayerReminderColors.Ink
+                    containerColor = if (dayCount == 30) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Surface,
+                    contentColor = if (dayCount == 30) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink
                 ),
                 modifier = Modifier.weight(1f)
             ) {
@@ -186,8 +186,8 @@ fun ManualEntryScreen(
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = PrayerReminderColors.Ground,
-                contentColor = PrayerReminderColors.Ivory
+                containerColor = PrayerReminderColors.PrimaryBtnBg,
+                contentColor = PrayerReminderColors.PrimaryBtnText
             )
         ) {
             Text(

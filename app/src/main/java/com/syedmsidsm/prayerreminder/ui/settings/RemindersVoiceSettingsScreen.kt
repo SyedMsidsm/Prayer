@@ -78,6 +78,7 @@ fun RemindersVoiceSettingsScreen(
     val reminderMatrix by viewModel.reminderMatrix.collectAsState()
     val isPlaying by viewModel.audioPlayer.isPlaying.collectAsState()
     val currentTrack by viewModel.audioPlayer.currentTrack.collectAsState()
+    val playingKind by viewModel.audioPlayer.playingKind.collectAsState()
 
     val atAzanType by viewModel.atAzanType.collectAsState()
     val azanReciter by viewModel.azanReciter.collectAsState()
@@ -142,8 +143,8 @@ fun RemindersVoiceSettingsScreen(
                         checked = voiceEnabled,
                         onCheckedChange = { viewModel.setVoiceEnabled(it) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = PrayerReminderColors.Ivory,
-                            checkedTrackColor = PrayerReminderColors.Ground,
+                            checkedThumbColor = PrayerReminderColors.PrimaryBtnText,
+                            checkedTrackColor = PrayerReminderColors.PrimaryBtnBg,
                             uncheckedThumbColor = PrayerReminderColors.Muted,
                             uncheckedTrackColor = PrayerReminderColors.Line
                         )
@@ -234,7 +235,7 @@ fun RemindersVoiceSettingsScreen(
                     // Before Azan
                     TimingSectionHeader(
                         title = stringResource(R.string.before_azan),
-                        isPlaying = isPlaying,
+                        isPlaying = playingKind == "before_azan",
                         onPlay = { viewModel.playSample("before_azan", beforeAzanMin) },
                         onStop = { viewModel.stopSample() }
                     )
@@ -272,7 +273,7 @@ fun RemindersVoiceSettingsScreen(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             SamplePlayButton(
-                                isPlaying = isPlaying,
+                                isPlaying = playingKind == "at_azan",
                                 onPlay = { viewModel.playSample("at_azan") },
                                 onStop = { viewModel.stopSample() }
                             )
@@ -281,8 +282,8 @@ fun RemindersVoiceSettingsScreen(
                                 checked = atAzanEnabled,
                                 onCheckedChange = { viewModel.setRemAtAzan(it) },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = PrayerReminderColors.Ivory,
-                                    checkedTrackColor = PrayerReminderColors.Ground,
+                                    checkedThumbColor = PrayerReminderColors.PrimaryBtnText,
+                                    checkedTrackColor = PrayerReminderColors.PrimaryBtnBg,
                                     uncheckedThumbColor = PrayerReminderColors.Muted,
                                     uncheckedTrackColor = PrayerReminderColors.Line
                                 )
@@ -297,7 +298,7 @@ fun RemindersVoiceSettingsScreen(
                     // Before Jamaat
                     TimingSectionHeader(
                         title = stringResource(R.string.before_jamaat),
-                        isPlaying = isPlaying,
+                        isPlaying = playingKind == "before_jamaat",
                         onPlay = { viewModel.playSample("before_jamaat", beforeJamaatMin) },
                         onStop = { viewModel.stopSample() }
                     )
@@ -324,7 +325,7 @@ fun RemindersVoiceSettingsScreen(
                     // Jumu'ah Before Azan
                     TimingSectionHeader(
                         title = stringResource(R.string.jumuah_before_azan),
-                        isPlaying = isPlaying,
+                        isPlaying = playingKind == "jumuah_before_azan",
                         onPlay = { viewModel.playSample("jumuah_before_azan", jumuahBeforeAzanMin) },
                         onStop = { viewModel.stopSample() }
                     )
@@ -610,8 +611,8 @@ fun RemindersVoiceSettingsScreen(
                                     checked = beforeAzanActive,
                                     onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_AZAN", it) },
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = PrayerReminderColors.Ground,
-                                        checkmarkColor = PrayerReminderColors.Ivory,
+                                        checkedColor = PrayerReminderColors.PrimaryBtnBg,
+                                        checkmarkColor = PrayerReminderColors.PrimaryBtnText,
                                         uncheckedColor = PrayerReminderColors.Muted
                                     )
                                 )
@@ -623,8 +624,8 @@ fun RemindersVoiceSettingsScreen(
                                     checked = atAzanActive,
                                     onCheckedChange = { viewModel.setReminderMatrixEntry(key, "AT_AZAN", it) },
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = PrayerReminderColors.Ground,
-                                        checkmarkColor = PrayerReminderColors.Ivory,
+                                        checkedColor = PrayerReminderColors.PrimaryBtnBg,
+                                        checkmarkColor = PrayerReminderColors.PrimaryBtnText,
                                         uncheckedColor = PrayerReminderColors.Muted
                                     )
                                 )
@@ -636,8 +637,8 @@ fun RemindersVoiceSettingsScreen(
                                     checked = beforeJamaatActive,
                                     onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_JAMAAT", it) },
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = PrayerReminderColors.Ground,
-                                        checkmarkColor = PrayerReminderColors.Ivory,
+                                        checkedColor = PrayerReminderColors.PrimaryBtnBg,
+                                        checkmarkColor = PrayerReminderColors.PrimaryBtnText,
                                         uncheckedColor = PrayerReminderColors.Muted
                                     )
                                 )
@@ -681,8 +682,8 @@ fun RemindersVoiceSettingsScreen(
                             checked = voiceOnSilent,
                             onCheckedChange = { viewModel.setVoiceOnSilent(it) },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = PrayerReminderColors.Ivory,
-                                checkedTrackColor = PrayerReminderColors.Ground,
+                                checkedThumbColor = PrayerReminderColors.PrimaryBtnText,
+                                checkedTrackColor = PrayerReminderColors.PrimaryBtnBg,
                                 uncheckedThumbColor = PrayerReminderColors.Muted,
                                 uncheckedTrackColor = PrayerReminderColors.Line
                             )
@@ -711,8 +712,8 @@ fun RemindersVoiceSettingsScreen(
                             checked = voiceChime,
                             onCheckedChange = { viewModel.setVoiceChime(it) },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = PrayerReminderColors.Ivory,
-                                checkedTrackColor = PrayerReminderColors.Ground,
+                                checkedThumbColor = PrayerReminderColors.PrimaryBtnText,
+                                checkedTrackColor = PrayerReminderColors.PrimaryBtnBg,
                                 uncheckedThumbColor = PrayerReminderColors.Muted,
                                 uncheckedTrackColor = PrayerReminderColors.Line
                             )
@@ -798,13 +799,13 @@ private fun VoiceOptionChip(
             .height(42.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+        color = if (isSelected) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Ivory,
         border = if (isSelected) null else BorderStroke(1.dp, PrayerReminderColors.Line)
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = label,
-                color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                color = if (isSelected) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 13.sp
             )
@@ -823,7 +824,7 @@ private fun ChoiceChip(
             .height(36.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+        color = if (isSelected) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Ivory,
         border = if (isSelected) null else BorderStroke(1.dp, PrayerReminderColors.Line)
     ) {
         Box(
@@ -832,7 +833,7 @@ private fun ChoiceChip(
         ) {
             Text(
                 text = label,
-                color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                color = if (isSelected) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 13.sp
             )

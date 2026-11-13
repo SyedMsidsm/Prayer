@@ -27,6 +27,8 @@ class SettingsRepository(
 
         val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
+        val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+        val KEY_FONT_SCALE = stringPreferencesKey("font_scale")
 
         val KEY_REM_BEFORE_AZAN_MIN = intPreferencesKey("rem_before_azan_min")
         val KEY_REM_JUMUAH_BEFORE_AZAN_MIN = intPreferencesKey("rem_jumuah_before_azan_min")
@@ -97,6 +99,22 @@ class SettingsRepository(
         dataStore.edit { it[KEY_APP_LANGUAGE] = languageCode }
     }
 
+    val themeMode: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_THEME_MODE] ?: "system"
+    }
+
+    suspend fun setThemeMode(mode: String) {
+        dataStore.edit { it[KEY_THEME_MODE] = mode }
+    }
+
+    val fontScale: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_FONT_SCALE] ?: "normal"
+    }
+
+    suspend fun setFontScale(scale: String) {
+        dataStore.edit { it[KEY_FONT_SCALE] = scale }
+    }
+
     val isOnboardingDone: Flow<Boolean> = dataStore.data.map { prefs ->
         prefs[KEY_ONBOARDING_DONE] ?: false
     }
@@ -114,7 +132,7 @@ class SettingsRepository(
     }
 
     val voiceLanguage: Flow<String> = dataStore.data.map { prefs ->
-        prefs[KEY_VOICE_LANGUAGE] ?: "ur"
+        prefs[KEY_VOICE_LANGUAGE] ?: prefs[KEY_APP_LANGUAGE]?.ifEmpty { null } ?: "ur"
     }
 
     suspend fun setVoiceLanguage(lang: String) {

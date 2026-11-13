@@ -154,4 +154,52 @@ class BhatkalTimetableParserTest {
         assertEquals("19:50", parser.cleanAndFormatTime("7:50", "isha"))
         assertEquals("05:21", parser.cleanAndFormatTime("5:21", "fajr"))
     }
+
+    @Test
+    fun testNovDec2026TimetableWithSehriColumnAndJumada2Header() {
+        val tokens = mutableListOf<OcrToken>()
+        // Banner tokens
+        tokens.add(OcrToken("Bhatkal Azan Timing", 200, 5, 600, 25))
+        tokens.add(OcrToken("NOV - DEC 2026", 250, 30, 550, 50))
+
+        // Header Row with JUMADA - 2 and SEHRI columns
+        val headers = listOf(
+            "JUMADA - 2" to 45,
+            "DATE" to 135,
+            "DAY" to 220,
+            "SEHRI" to 310,
+            "FAJR" to 400,
+            "SUNRISE" to 495,
+            "ZOHR" to 590,
+            "ASR" to 680,
+            "MAGHRIB" to 780,
+            "ISHA" to 880
+        )
+        for ((text, x) in headers) {
+            tokens.add(OcrToken(text, x - 30, 60, x + 30, 80))
+        }
+
+        // Row 1: 01 | Nov 11 | Wed | 05:07 | 05:12 | 06:29 | 12:21 | 03:36 | 06:04 | 07:12
+        val row1 = listOf("01", "Nov 11", "Wed", "05:07", "05:12", "06:29", "12:21", "03:36", "06:04", "07:12")
+        val xs = listOf(45, 135, 220, 310, 400, 495, 590, 680, 780, 880)
+        for (i in row1.indices) {
+            tokens.add(OcrToken(row1[i], xs[i] - 25, 100, xs[i] + 25, 120))
+        }
+
+        val parsed = parser.parse(tokens)
+        assertNotNull(parsed)
+        val table = parsed!!.timetable
+        assertEquals("Bhatkal", table.place)
+        assertEquals(6, table.hijriMonth)
+        assertEquals("Jumada al-Akhirah", table.hijriMonthName)
+        assertEquals(1448, table.hijriYear)
+        assertEquals("2026-11-11", table.firstDate)
+        val day1 = table.days.first()
+        assertEquals("05:12", day1.times["fajr"]) // Not 05:07 Sehri!
+        assertEquals("06:29", day1.times["sunrise"])
+        assertEquals("12:21", day1.times["dhuhr"])
+        assertEquals("15:36", day1.times["asr"])
+        assertEquals("18:04", day1.times["maghrib"])
+        assertEquals("19:12", day1.times["isha"])
+    }
 }

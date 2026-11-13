@@ -26,12 +26,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,11 +45,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -83,12 +90,92 @@ fun SettingsScreen(
     val beforeAzanMin by viewModel.remBeforeAzanMin.collectAsState()
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
     val widgetTheme by viewModel.widgetTheme.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsState()
+    val fontScale by viewModel.fontScale.collectAsState()
 
     val currentAppLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangTag = if (!currentAppLocales.isEmpty) {
         currentAppLocales.get(0)?.language ?: "en"
     } else {
         "en"
+    }
+    var showWidgetPickerDialog by remember { mutableStateOf(false) }
+
+    if (showWidgetPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showWidgetPickerDialog = false },
+            containerColor = PrayerReminderColors.Surface,
+            title = {
+                Text(
+                    text = stringResource(R.string.add_widget),
+                    color = PrayerReminderColors.Ink,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    listOf(
+                        Triple(
+                            "Wide Card (4×2)",
+                            "Next prayer countdown + full 5-prayer table",
+                            com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
+                        ),
+                        Triple(
+                            "Circular Ring (2×2)",
+                            "Compact gold progress ring with live countdown",
+                            com.syedmsidsm.prayerreminder.widget.SmallPrayerWidgetReceiver::class.java
+                        ),
+                        Triple(
+                            "Slim Strip (4×1)",
+                            "Horizontal 5-prayer strip with Hijri date",
+                            com.syedmsidsm.prayerreminder.widget.StripPrayerWidgetReceiver::class.java
+                        )
+                    ).forEach { (title, subtitle, receiverClass) ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showWidgetPickerDialog = false
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                        val mgr = android.appwidget.AppWidgetManager.getInstance(context)
+                                        if (mgr.isRequestPinAppWidgetSupported) {
+                                            mgr.requestPinAppWidget(
+                                                android.content.ComponentName(context, receiverClass),
+                                                null,
+                                                null
+                                            )
+                                        }
+                                    } else {
+                                        onAddWidget()
+                                    }
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Ivory)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = PrayerReminderColors.Ink,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrayerReminderColors.Muted
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showWidgetPickerDialog = false }) {
+                    Text(stringResource(R.string.cancel), color = PrayerReminderColors.Ink)
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -160,6 +247,7 @@ fun SettingsScreen(
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
                                 viewModel.setAppLanguage("en")
+                                viewModel.setVoiceLanguage("en")
                             }
                         )
                         LanguageChoiceChip(
@@ -169,6 +257,7 @@ fun SettingsScreen(
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ar"))
                                 viewModel.setAppLanguage("ar")
+                                viewModel.setVoiceLanguage("ar")
                             }
                         )
                         LanguageChoiceChip(
@@ -178,8 +267,117 @@ fun SettingsScreen(
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ur"))
                                 viewModel.setAppLanguage("ur")
+                                viewModel.setVoiceLanguage("ur")
                             }
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.DarkMode,
+                            contentDescription = null,
+                            tint = PrayerReminderColors.GoldText,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        val themeTitle = when (currentLangTag) {
+                            "ar" -> "المظهر (فاتح / داكن)"
+                            "ur" -> "تھیم (لائٹ / ڈارک)"
+                            else -> "Appearance (Light / Dark)"
+                        }
+                        Text(
+                            text = themeTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PrayerReminderColors.Ink,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val lightLabel = when (currentLangTag) {
+                            "ar" -> "☀️ فاتح"
+                            "ur" -> "☀️ لائٹ"
+                            else -> "☀️ Light"
+                        }
+                        val darkLabel = when (currentLangTag) {
+                            "ar" -> "🌙 داكن"
+                            "ur" -> "🌙 ڈارک"
+                            else -> "🌙 Dark"
+                        }
+                        val systemLabel = when (currentLangTag) {
+                            "ar" -> "تلقائي"
+                            "ur" -> "سسٹم"
+                            else -> "System"
+                        }
+                        LanguageChoiceChip(
+                            label = lightLabel,
+                            isSelected = themeMode == "light",
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.setThemeMode("light") }
+                        )
+                        LanguageChoiceChip(
+                            label = darkLabel,
+                            isSelected = themeMode == "dark",
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.setThemeMode("dark") }
+                        )
+                        LanguageChoiceChip(
+                            label = systemLabel,
+                            isSelected = themeMode == "system",
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.setThemeMode("system") }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.FormatSize,
+                            contentDescription = null,
+                            tint = PrayerReminderColors.GoldText,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = stringResource(R.string.font_size),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PrayerReminderColors.Ink,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val fontOptions = listOf(
+                            "small" to stringResource(R.string.font_small),
+                            "normal" to stringResource(R.string.font_normal),
+                            "large" to stringResource(R.string.font_large),
+                            "xl" to stringResource(R.string.font_xl)
+                        )
+                        for ((scaleKey, scaleLabel) in fontOptions) {
+                            LanguageChoiceChip(
+                                label = scaleLabel,
+                                isSelected = fontScale == scaleKey,
+                                modifier = Modifier.weight(1f),
+                                onClick = { viewModel.setFontScale(scaleKey) }
+                            )
+                        }
                     }
                 }
             }
@@ -209,18 +407,29 @@ fun SettingsScreen(
                         )
                     }
 
-                    if (activeTimetable != null) {
-                        val lastDate = runCatching { LocalDate.parse(activeTimetable.lastDate) }.getOrNull()
+                    val today = LocalDate.now()
+                    val currentTable = timetables.firstOrNull { table ->
+                        val first = runCatching { LocalDate.parse(table.firstDate) }.getOrNull()
+                        val last = runCatching { LocalDate.parse(table.lastDate) }.getOrNull()
+                        first != null && last != null && !today.isBefore(first) && !today.isAfter(last)
+                    } ?: activeTimetable
+
+                    if (currentTable != null) {
+                        val lastDate = runCatching { LocalDate.parse(currentTable.lastDate) }.getOrNull()
                         val daysLeft = if (lastDate != null) {
-                            val today = LocalDate.now()
                             ChronoUnit.DAYS.between(today, lastDate).toInt().coerceAtLeast(0)
                         } else {
                             0
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+                        val statusLine = if (daysLeft > 0) {
+                            "${currentTable.hijriMonthName} ${currentTable.hijriYear} · ${stringResource(R.string.days_left, daysLeft)}"
+                        } else {
+                            "Built-in Bhatkal schedule active · ${currentTable.hijriMonthName} ${currentTable.hijriYear} ready"
+                        }
                         Text(
-                            text = "${activeTimetable.hijriMonthName} ${activeTimetable.hijriYear} · ${stringResource(R.string.days_left, daysLeft)}",
+                            text = statusLine,
                             style = MaterialTheme.typography.bodyMedium,
                             color = PrayerReminderColors.Muted
                         )
@@ -235,14 +444,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.import_new),
                         onClick = onImportNewTimetable
                     )
-
-                    if (activeTimetable != null) {
-                        SettingsNavigationRow(
-                            icon = Icons.Default.Share,
-                            title = stringResource(R.string.send_family),
-                            onClick = { onSendCurrentToFamily(activeTimetable) }
-                        )
-                    }
 
                     SettingsNavigationRow(
                         icon = Icons.Default.DateRange,
@@ -300,7 +501,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Widgets,
                         title = stringResource(R.string.widget),
                         subtitle = stringResource(R.string.add_widget),
-                        onClick = onAddWidget
+                        onClick = { showWidgetPickerDialog = true }
                     )
 
                     HorizontalDivider(
@@ -415,12 +616,14 @@ private fun LanguageChoiceChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
+    val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
     Surface(
         modifier = modifier
             .height(44.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+        color = if (isSelected) selectedBg else PrayerReminderColors.Ivory,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, PrayerReminderColors.Line)
     ) {
         Box(
@@ -429,7 +632,7 @@ private fun LanguageChoiceChip(
         ) {
             Text(
                 text = label,
-                color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                color = if (isSelected) selectedText else PrayerReminderColors.Ink,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 14.sp
             )

@@ -263,13 +263,28 @@ private fun ImportReviewContent(
                 shape = RoundedCornerShape(12.dp),
                 color = PrayerReminderColors.WarnBg
             ) {
-                Text(
-                    text = stringResource(R.string.import_flags, unresolvedFlags.size),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = PrayerReminderColors.WarnText,
-                    modifier = Modifier.padding(12.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.import_flags, unresolvedFlags.size),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = PrayerReminderColors.WarnText,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = { viewModel.autoFixAllFlags() }) {
+                        Text(
+                            text = "Auto-fix all",
+                            color = PrayerReminderColors.Ground,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         } else {
             Surface(
@@ -372,8 +387,8 @@ private fun ImportReviewContent(
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = PrayerReminderColors.Ground,
-                contentColor = PrayerReminderColors.Ivory,
+                containerColor = PrayerReminderColors.PrimaryBtnBg,
+                contentColor = PrayerReminderColors.PrimaryBtnText,
                 disabledContainerColor = PrayerReminderColors.Line,
                 disabledContentColor = PrayerReminderColors.Muted
             )
@@ -421,7 +436,7 @@ private fun ImportReviewContent(
 private fun TableHeaderCell(text: String, width: androidx.compose.ui.unit.Dp) {
     Text(
         text = text,
-        color = PrayerReminderColors.Ivory,
+        color = PrayerReminderColors.CardTextLight,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,

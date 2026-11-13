@@ -2,6 +2,7 @@ package com.syedmsidsm.prayerreminder.domain.model
 
 enum class ScheduleSource {
     TABLE,
+    CALCULATED,
     ESTIMATED_CARRY_FORWARD,
     ESTIMATED_LAST_YEAR,
     NONE;

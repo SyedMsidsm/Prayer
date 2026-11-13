@@ -261,9 +261,9 @@ fun JamaatSettingsScreen(
                                 }
                                 timePickerTargetKey = null
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Ground)
+                            colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.PrimaryBtnBg)
                         ) {
-                            Text(stringResource(R.string.done), color = PrayerReminderColors.Ivory)
+                            Text(stringResource(R.string.done), color = PrayerReminderColors.PrimaryBtnText)
                         }
                     }
                 }
@@ -336,12 +336,12 @@ private fun JamaatPrayerCard(
                             }
                         },
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isAfter) PrayerReminderColors.Ground else PrayerReminderColors.Ivory
+                    color = if (isAfter) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Ivory
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = stringResource(R.string.jamaat_after),
-                            color = if (isAfter) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                            color = if (isAfter) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink,
                             fontWeight = if (isAfter) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 13.sp
                         )
@@ -359,12 +359,12 @@ private fun JamaatPrayerCard(
                             }
                         },
                     shape = RoundedCornerShape(8.dp),
-                    color = if (!isAfter) PrayerReminderColors.Ground else PrayerReminderColors.Ivory
+                    color = if (!isAfter) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Ivory
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = stringResource(R.string.jamaat_fixed),
-                            color = if (!isAfter) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,
+                            color = if (!isAfter) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink,
                             fontWeight = if (!isAfter) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 13.sp
                         )

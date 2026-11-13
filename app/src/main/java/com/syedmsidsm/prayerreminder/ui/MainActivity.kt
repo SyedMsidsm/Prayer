@@ -2,6 +2,7 @@ package com.syedmsidsm.prayerreminder.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
@@ -17,7 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
@@ -29,6 +30,7 @@ import com.syedmsidsm.prayerreminder.importing.FamilyShare
 import com.syedmsidsm.prayerreminder.importing.ImportUiState
 import com.syedmsidsm.prayerreminder.importing.ImportViewModel
 import com.syedmsidsm.prayerreminder.importing.OcrEngine
+import com.syedmsidsm.prayerreminder.reminders.AppRefresher
 import com.syedmsidsm.prayerreminder.ui.home.HomeScreen
 import com.syedmsidsm.prayerreminder.ui.home.HomeViewModel
 import com.syedmsidsm.prayerreminder.ui.importing.ImportReviewScreen
@@ -43,6 +45,8 @@ import com.syedmsidsm.prayerreminder.ui.settings.SettingsScreen
 import com.syedmsidsm.prayerreminder.ui.settings.SettingsViewModel
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderTheme
 import com.syedmsidsm.prayerreminder.ui.timetables.TimetablesScreen
+import com.syedmsidsm.prayerreminder.widget.WidgetUpdater
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 enum class Screen {
@@ -60,6 +64,8 @@ enum class Screen {
 }
 
 class MainActivity : AppCompatActivity() {
+
+    private val currentIntentFlow = MutableStateFlow<Intent?>(null)
 
     private val homeViewModel: HomeViewModel by viewModels {
         val container = (application as PrayerReminderApp).container
@@ -109,6 +115,10 @@ class MainActivity : AppCompatActivity() {
         val splash = installSplashScreen()
         val start = SystemClock.uptimeMillis()
 
+        // Eagerly initialize ViewModels so state is ready immediately on cold start or widget click
+        homeViewModel
+        settingsViewModel
+
         val animatorDurationScale = Settings.Global.getFloat(
             contentResolver,
             Settings.Global.ANIMATOR_DURATION_SCALE,
@@ -118,16 +128,23 @@ class MainActivity : AppCompatActivity() {
 
         splash.setKeepOnScreenCondition {
             val dataReady = homeViewModel.isReady.value && settingsViewModel.isOnboardingDone.value != null
-            if (!animationsEnabled) !dataReady else !dataReady || (SystemClock.uptimeMillis() - start < 900)
+            val elapsed = SystemClock.uptimeMillis() - start
+            if (!animationsEnabled) {
+                !dataReady && elapsed < 500
+            } else {
+                (!dataReady || elapsed < 650) && elapsed < 1100
+            }
         }
 
         splash.setOnExitAnimationListener { provider ->
-            provider.iconView.animate()
-                .scaleX(0.85f)
-                .scaleY(0.85f)
-                .alpha(0f)
-                .setDuration(250)
-                .start()
+            runCatching {
+                provider.iconView.animate()
+                    .scaleX(0.85f)
+                    .scaleY(0.85f)
+                    .alpha(0f)
+                    .setDuration(250)
+                    .start()
+            }
             provider.view.animate()
                 .alpha(0f)
                 .setDuration(320)
@@ -136,18 +153,32 @@ class MainActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        currentIntentFlow.value = intent
 
         setContent {
-            PrayerReminderTheme {
+            val themeMode by settingsViewModel.themeMode.collectAsState()
+            val fontScale by settingsViewModel.fontScale.collectAsState()
+            PrayerReminderTheme(themeMode = themeMode, fontScale = fontScale) {
                 MainAppNavigation()
             }
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        currentIntentFlow.value = intent
+    }
+
+    override fun onResume() {
+        super.onResume()
+        WidgetUpdater.updateAll(applicationContext)
+    }
+
     @Composable
     private fun MainAppNavigation() {
         val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
-        var currentScreen by remember {
+        var currentScreen by rememberSaveable {
             mutableStateOf(
                 if (settingsViewModel.isOnboardingDone.value == false) Screen.BRAND_INTRO else Screen.HOME
             )
@@ -161,6 +192,7 @@ class MainActivity : AppCompatActivity() {
 
         val importState by importViewModel.uiState.collectAsState()
         val timetables by (application as PrayerReminderApp).container.timetableRepository.timetables.collectAsState()
+        val activeIntent by currentIntentFlow.collectAsState()
 
         val photoPickerLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia(),
@@ -172,27 +204,34 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        val prttPickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-            onResult = { uri ->
-                if (uri != null) {
-                    runCatching {
-                        contentResolver.openInputStream(uri)?.use { stream ->
-                            FamilyShare.parseAndValidate(stream).getOrThrow()
-                        } ?: error("Unable to open stream")
-                    }.onSuccess { table ->
-                        importViewModel.loadParsedTable(table)
-                        currentScreen = Screen.IMPORT_REVIEW
+        LaunchedEffect(activeIntent) {
+            val intentToProcess = activeIntent ?: return@LaunchedEffect
+            val pinType = intentToProcess.getStringExtra("pin_widget")
+            if (pinType != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this@MainActivity)
+                if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                    val receiverClass = when (pinType) {
+                        "small" -> com.syedmsidsm.prayerreminder.widget.SmallPrayerWidgetReceiver::class.java
+                        "strip" -> com.syedmsidsm.prayerreminder.widget.StripPrayerWidgetReceiver::class.java
+                        else -> com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
                     }
+                    appWidgetManager.requestPinAppWidget(
+                        android.content.ComponentName(this@MainActivity, receiverClass),
+                        null,
+                        null
+                    )
                 }
             }
-        )
-
-        LaunchedEffect(intent) {
-            val incomingUri = intent?.data ?: intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            val incomingUri: Uri? = intentToProcess.data ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intentToProcess.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intentToProcess.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
             if (incomingUri != null) {
-                val mime = contentResolver.getType(incomingUri) ?: intent?.type ?: ""
-                if (mime.startsWith("image/")) {
+                val pathLower = incomingUri.toString().lowercase()
+                val mime = contentResolver.getType(incomingUri) ?: intentToProcess.type ?: ""
+                if (mime.startsWith("image/") || pathLower.endsWith(".jpg") || pathLower.endsWith(".jpeg") || pathLower.endsWith(".png")) {
                     importViewModel.processImage(incomingUri)
                     currentScreen = Screen.IMPORT_REVIEW
                 } else {
@@ -208,8 +247,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        when {
-            importState is ImportUiState.Saved && currentScreen == Screen.IMPORT_REVIEW -> {
+        LaunchedEffect(importState) {
+            if (importState is ImportUiState.Saved && currentScreen == Screen.IMPORT_REVIEW) {
+                AppRefresher.refreshAll(applicationContext, "timetable_imported")
+                WidgetUpdater.updateAll(applicationContext)
                 currentScreen = Screen.IMPORT_SAVED
             }
         }
@@ -253,11 +294,9 @@ class MainActivity : AppCompatActivity() {
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
-                    onImportFile = {
-                        prttPickerLauncher.launch(arrayOf("*/*", "application/json", "application/octet-stream"))
-                    },
                     onFinished = {
                         settingsViewModel.setOnboardingDone(true)
+                        WidgetUpdater.updateAll(applicationContext)
                         currentScreen = Screen.HOME
                     }
                 )
@@ -265,7 +304,11 @@ class MainActivity : AppCompatActivity() {
             Screen.HOME -> {
                 HomeScreen(
                     viewModel = homeViewModel,
-                    onSettingsClick = { currentScreen = Screen.SETTINGS }
+                    onSettingsClick = { currentScreen = Screen.SETTINGS },
+                    onToggleTheme = {
+                        val nextMode = if ( com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors.isDark) "light" else "dark"
+                        settingsViewModel.setThemeMode(nextMode)
+                    }
                 )
             }
             Screen.SETTINGS -> {
@@ -281,17 +324,14 @@ class MainActivity : AppCompatActivity() {
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
-                    onSendCurrentToFamily = { table ->
-                        val shareIntent = FamilyShare.createShareIntent(this@MainActivity, table)
-                        startActivity(shareIntent)
-                    },
+                    onSendCurrentToFamily = {},
                     onAddWidget = {
                         val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this@MainActivity)
                         val provider = android.content.ComponentName(
                             this@MainActivity,
                             com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
                         )
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported) {
                             appWidgetManager.requestPinAppWidget(provider, null, null)
                         }
                     }
@@ -326,16 +366,14 @@ class MainActivity : AppCompatActivity() {
                         )
                     },
                     onManualEntry = { currentScreen = Screen.MANUAL_ENTRY },
-                    onSendToFamily = { table ->
-                        val shareIntent = FamilyShare.createShareIntent(this@MainActivity, table)
-                        startActivity(shareIntent)
-                    },
+                    onSendToFamily = {},
                     onDeleteTimetable = { table ->
                         homeViewModel.viewModelScope.launch {
                             (application as PrayerReminderApp).container.timetableRepository.deleteTimetable(
                                 table.hijriYear,
                                 table.hijriMonth
                             )
+                            AppRefresher.refreshAll(applicationContext, "timetable_deleted")
                         }
                     }
                 )
@@ -375,24 +413,16 @@ class MainActivity : AppCompatActivity() {
                 if (savedTable != null) {
                     ImportSavedScreen(
                         timetable = savedTable,
-                        onSendToFamily = {
-                            val shareIntent = FamilyShare.createShareIntent(this@MainActivity, savedTable)
-                            startActivity(shareIntent)
-                        },
                         onDone = {
-                            currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
-                                Screen.ONBOARDING
-                            } else {
-                                Screen.HOME
+                            importViewModel.resetState()
+                            if (settingsViewModel.isOnboardingDone.value == false) {
+                                settingsViewModel.setOnboardingDone(true)
                             }
+                            currentScreen = Screen.HOME
                         }
                     )
                 } else {
-                    currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
-                        Screen.ONBOARDING
-                    } else {
-                        Screen.HOME
-                    }
+                    currentScreen = Screen.HOME
                 }
             }
         }

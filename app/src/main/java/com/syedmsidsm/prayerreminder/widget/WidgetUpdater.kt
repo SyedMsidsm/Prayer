@@ -19,6 +19,9 @@ object WidgetUpdater {
             try {
                 WidePrayerWidget().updateAll(context)
             } catch (_: Exception) {}
+            try {
+                StripPrayerWidget().updateAll(context)
+            } catch (_: Exception) {}
         }
     }
 }

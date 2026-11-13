@@ -54,6 +54,10 @@ class SettingsRepositoryTest {
         assertEquals("male", settingsRepository.voiceGender.first())
         assertTrue(settingsRepository.voiceChime.first())
         assertFalse(settingsRepository.voiceOnSilent.first())
+        assertEquals("normal", settingsRepository.fontScale.first())
+
+        settingsRepository.setFontScale("xl")
+        assertEquals("xl", settingsRepository.fontScale.first())
 
         val rules = settingsRepository.jamaatRules.first()
         for (key in SettingsRepository.PRAYER_KEYS) {

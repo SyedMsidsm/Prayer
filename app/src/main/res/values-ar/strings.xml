@@ -154,6 +154,11 @@
     <string name="dontkillmyapp_note">مزيد من المساعدة: dontkillmyapp.com</string>
     <string name="intro_tagline">أوقات الأذان والإقامة · تذكيرات صوتية · أداة الشاشة</string>
     <string name="intro_skip">اضغط للتخطي</string>
+    <string name="font_size">حجم الخط</string>
+    <string name="font_small">صغير</string>
+    <string name="font_normal">عادي</string>
+    <string name="font_large">كبير</string>
+    <string name="font_xl">كبير جداً</string>
 
     <string name="azan_sound">صوت الأذان</string>
     <string name="azan_sound_desc">اختر ما يتم تشغيله عند وقت الأذان</string>

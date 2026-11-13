@@ -145,8 +145,8 @@ fun TimetablesScreen(
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = PrayerReminderColors.Ground,
-                contentColor = PrayerReminderColors.Ivory
+                containerColor = PrayerReminderColors.PrimaryBtnBg,
+                contentColor = PrayerReminderColors.PrimaryBtnText
             )
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = null)
@@ -242,13 +242,6 @@ private fun TimetableCard(
                 }
 
                 Row {
-                    IconButton(onClick = onSend) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.send_family),
-                            tint = PrayerReminderColors.Ground
-                        )
-                    }
                     IconButton(onClick = onDelete) {
                         Icon(
                             imageVector = Icons.Default.Delete,

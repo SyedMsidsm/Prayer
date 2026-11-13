@@ -43,6 +43,30 @@ class SettingsViewModel(
         ""
     )
 
+    val themeMode: StateFlow<String> = settingsRepository.themeMode.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "system"
+    )
+
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch {
+            settingsRepository.setThemeMode(mode)
+        }
+    }
+
+    val fontScale: StateFlow<String> = settingsRepository.fontScale.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        "normal"
+    )
+
+    fun setFontScale(scale: String) {
+        viewModelScope.launch {
+            settingsRepository.setFontScale(scale)
+        }
+    }
+
     val jamaatRules: StateFlow<Map<String, JamaatRule>> = settingsRepository.jamaatRules.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -157,11 +181,8 @@ class SettingsViewModel(
         timetableRepository.timetables,
         settingsRepository.jamaatRules
     ) { tables, rules ->
-        val now = ZonedDateTime.now(zoneId)
-        val today = now.toLocalDate()
-        val hasToday = tables.any { table -> table.days.any { it.date == today.toString() } }
-        val date = if (hasToday) today else LocalDate.of(2026, 3, 24)
-        dayScheduleResolver.resolve(date, tables, rules)
+        val today = ZonedDateTime.now(zoneId).toLocalDate()
+        dayScheduleResolver.resolve(today, tables, rules)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun setAppLanguage(languageCode: String) {

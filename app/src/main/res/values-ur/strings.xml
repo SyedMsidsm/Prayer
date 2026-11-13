@@ -154,6 +154,11 @@
     <string name="dontkillmyapp_note">مزید مدد: dontkillmyapp.com</string>
     <string name="intro_tagline">اذان اور جماعت کے اوقات · آواز والی یاد دہانی · وجٹ</string>
     <string name="intro_skip">چھوڑنے کے لیے ٹیپ کریں</string>
+    <string name="font_size">فونٹ سائز</string>
+    <string name="font_small">چھوٹا</string>
+    <string name="font_normal">نارمل</string>
+    <string name="font_large">بڑا</string>
+    <string name="font_xl">بہت بڑا</string>
 
     <string name="azan_sound">اذان کی آواز</string>
     <string name="azan_sound_desc">اذان کے وقت کیا چلے منتخب کریں</string>

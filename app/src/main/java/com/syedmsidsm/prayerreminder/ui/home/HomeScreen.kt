@@ -10,14 +10,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Place
@@ -42,6 +46,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
@@ -58,7 +63,8 @@ import java.util.Locale
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onToggleTheme: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val configuration = LocalConfiguration.current
@@ -74,16 +80,23 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(PrayerReminderColors.Ivory)
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        // 1. Header (Place name, Timetable subtitle, Settings button)
+        // 1. Header (Place name, Timetable subtitle, Theme toggle + Settings button)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -99,15 +112,18 @@ fun HomeScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = uiState.place,
                         style = MaterialTheme.typography.headlineLarge,
                         color = PrayerReminderColors.Ink,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     val table = uiState.activeTimetable
-                    if (table != null) {
+                    val scheduleSource = uiState.schedule?.source
+                    if (scheduleSource == ScheduleSource.TABLE && table != null) {
                         val monthName = HijriNames.getMonthName(table.hijriMonth, languageCode)
                         val lastDateStr = runCatching {
                             val ld = java.time.LocalDate.parse(table.lastDate)
@@ -122,18 +138,68 @@ fun HomeScreen(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = PrayerReminderColors.Muted
+                            color = PrayerReminderColors.Muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else if (uiState.schedule?.hijri != null) {
+                        val h = uiState.schedule!!.hijri!!
+                        val monthName = HijriNames.getMonthName(h.month, languageCode)
+                        val autoLabel = when (languageCode) {
+                            "ar" -> "$monthName ${h.year} · جدول بهتكل المدمج"
+                            "ur" -> "$monthName ${h.year} · بھٹکل کا بلٹ ان نظام الاوقات"
+                            else -> "$monthName ${h.year} · Built-in Bhatkal"
+                        }
+                        Text(
+                            text = autoLabel,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PrayerReminderColors.Muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
 
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = stringResource(R.string.settings),
-                    tint = PrayerReminderColors.Ink
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = PrayerReminderColors.Surface,
+                    shadowElevation = 2.dp
+                ) {
+                    IconButton(
+                        onClick = onToggleTheme,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (PrayerReminderColors.isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Toggle Dark/Light Theme",
+                            tint = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ink,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = PrayerReminderColors.Surface,
+                    shadowElevation = 2.dp
+                ) {
+                    IconButton(
+                        onClick = onSettingsClick,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings),
+                            tint = PrayerReminderColors.Ink,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
             }
         }
 
@@ -288,7 +354,7 @@ private fun NextPrayerCard(
                 }
                 Text(
                     text = prayerName,
-                    color = PrayerReminderColors.Ivory,
+                    color = PrayerReminderColors.CardTextLight,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -311,7 +377,7 @@ private fun NextPrayerCard(
                         )
                         Text(
                             text = TimeFormatter.format12Hour(next.azanTime, amMarker, pmMarker),
-                            color = PrayerReminderColors.Ivory,
+                            color = PrayerReminderColors.CardTextLight,
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -358,7 +424,7 @@ private fun NextPrayerCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = TimeFormatter.format12Hour(next.jamaatTime, amMarker, pmMarker),
-                                color = PrayerReminderColors.Ivory,
+                                color = PrayerReminderColors.CardTextLight,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -649,7 +715,7 @@ private fun PrayerRow(
                         imageVector = if (isReminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsNone,
                         contentDescription = null,
                         tint = if (isReminderEnabled) {
-                            if (isNext) PrayerReminderColors.Ground else PrayerReminderColors.GoldText
+                            PrayerReminderColors.GoldText
                         } else {
                             PrayerReminderColors.Muted
                         },

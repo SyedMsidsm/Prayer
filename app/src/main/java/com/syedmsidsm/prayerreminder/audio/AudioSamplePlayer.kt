@@ -25,6 +25,9 @@ class AudioSamplePlayer(private val context: Context) {
     private val _currentTrack = MutableStateFlow<String?>(null)
     val currentTrack: StateFlow<String?> = _currentTrack.asStateFlow()
 
+    private val _playingKind = MutableStateFlow<String?>(null)
+    val playingKind: StateFlow<String?> = _playingKind.asStateFlow()
+
     fun stop() {
         playJob?.cancel()
         playJob = null
@@ -36,6 +39,7 @@ class AudioSamplePlayer(private val context: Context) {
         mediaPlayer = null
         _isPlaying.value = false
         _currentTrack.value = null
+        _playingKind.value = null
     }
 
     fun playSample(
@@ -49,6 +53,7 @@ class AudioSamplePlayer(private val context: Context) {
         playJob = scope.launch {
             _isPlaying.value = true
             _currentTrack.value = "speech_$kind"
+            _playingKind.value = kind
             try {
                 if (chime) {
                     playAssetFile("audio/samples/chime.mp3")
@@ -64,6 +69,7 @@ class AudioSamplePlayer(private val context: Context) {
             } finally {
                 _isPlaying.value = false
                 _currentTrack.value = null
+                _playingKind.value = null
             }
         }
     }
@@ -73,6 +79,7 @@ class AudioSamplePlayer(private val context: Context) {
         playJob = scope.launch {
             _isPlaying.value = true
             _currentTrack.value = "azan_$reciterId"
+            _playingKind.value = "azan_$reciterId"
             try {
                 val clipPath = "audio/azan/${reciterId}_sample.mp3"
                 if (assetExists(clipPath)) {
@@ -86,6 +93,7 @@ class AudioSamplePlayer(private val context: Context) {
             } finally {
                 _isPlaying.value = false
                 _currentTrack.value = null
+                _playingKind.value = null
             }
         }
     }
@@ -95,6 +103,7 @@ class AudioSamplePlayer(private val context: Context) {
         playJob = scope.launch {
             _isPlaying.value = true
             _currentTrack.value = "dua_after_azan"
+            _playingKind.value = "dua_after_azan"
             try {
                 val clipPath = "audio/azan/dua_after_azan.mp3"
                 if (assetExists(clipPath)) {
@@ -105,6 +114,7 @@ class AudioSamplePlayer(private val context: Context) {
             } finally {
                 _isPlaying.value = false
                 _currentTrack.value = null
+                _playingKind.value = null
             }
         }
     }
@@ -147,7 +157,7 @@ class AudioSamplePlayer(private val context: Context) {
         }
     }
 
-    private fun resolveClipPath(
+    fun resolveClipPath(
         language: String,
         gender: String,
         kind: String,
@@ -159,22 +169,6 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "ur"
         }
 
-        if (gender.lowercase() == "female") {
-            val femaleAsset = "audio/samples/female_${lang}_before_azan_asr_10.mp3"
-            return if (assetExists(femaleAsset)) {
-                femaleAsset
-            } else {
-                val fullLang = when (lang) {
-                    "ar" -> "arabic"
-                    "en" -> "english"
-                    else -> "urdu"
-                }
-                val sampleLang = "audio/samples/female-voice-$fullLang.mp3"
-                if (assetExists(sampleLang)) sampleLang else null
-            }
-        }
-
-        // Male preview pack
         val prayer = if (kind == "jumuah_before_azan") "jumuah" else "asr"
         val min = when (kind) {
             "before_azan" -> if (minutes > 0) minutes else 10
@@ -191,6 +185,22 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "before_azan_asr_10.mp3"
         }
 
+        if (gender.lowercase() == "female") {
+            val femalePackPath = "audio/voice-pack-female/$lang/$filename"
+            if (assetExists(femalePackPath)) {
+                return femalePackPath
+            }
+            val femaleDefaultPackPath = "audio/voice-pack-female/$lang/before_azan_asr_10.mp3"
+            if (assetExists(femaleDefaultPackPath)) {
+                return femaleDefaultPackPath
+            }
+            val femaleAsset = "audio/samples/female_${lang}_before_azan_asr_10.mp3"
+            if (assetExists(femaleAsset)) {
+                return femaleAsset
+            }
+        }
+
+        // Male preview pack
         val assetPath = "audio/voice-pack-preview/$lang/$filename"
         return if (assetExists(assetPath)) assetPath else "audio/voice-pack-preview/$lang/before_azan_asr_10.mp3"
     }

@@ -29,10 +29,10 @@ data class HomeUiState(
     val isReady: Boolean = false,
     val place: String = "Bhatkal",
     val activeTimetable: Timetable? = null,
-    val selectedDate: LocalDate = LocalDate.of(2026, 3, 24),
+    val selectedDate: LocalDate = LocalDate.now(ZoneId.of("Asia/Kolkata")),
     val schedule: DaySchedule? = null,
     val nextPrayer: NextPrayer? = null,
-    val currentTime: LocalTime = LocalTime.now(),
+    val currentTime: LocalTime = LocalTime.now(ZoneId.of("Asia/Kolkata")),
     val voiceSummary: String = "",
     val voiceEnabled: Boolean = true,
     val reminderStates: Map<Prayer, Boolean> = emptyMap(),
@@ -91,21 +91,8 @@ class HomeViewModel(
         val now = ZonedDateTime.now(zoneId)
         val today = now.toLocalDate()
 
-        val hasScheduleForToday = tables.any { table ->
-            table.days.any { it.date == today.toString() }
-        }
-
-        // Use selectedDate if user picked one or default to 2026-03-24 for acceptance demo
-        val currentSelected = _uiState.value.selectedDate
-        val displayDate = if (_uiState.value.isReady) {
-            currentSelected
-        } else if (hasScheduleForToday) {
-            today
-        } else {
-            LocalDate.of(2026, 3, 24)
-        }
-
-        val isDemo = displayDate != today
+        val isDemo = _uiState.value.isSimulatedDemoDate
+        val displayDate = if (isDemo) _uiState.value.selectedDate else today
 
         val activeTable = timetableRepository.getTimetableFor(displayDate)
             ?: tables.firstOrNull()
@@ -113,13 +100,13 @@ class HomeViewModel(
         val todaySchedule = dayScheduleResolver.resolve(displayDate, tables, rules)
         val tomorrowSchedule = dayScheduleResolver.resolve(displayDate.plusDays(1), tables, rules)
 
-        val simTime = if (isDemo) {
-            if (_uiState.value.isReady) _uiState.value.currentTime else LocalTime.of(14, 35)
+        val currentTime = if (isDemo) {
+            _uiState.value.currentTime
         } else {
             now.toLocalTime()
         }
 
-        val next = nextPrayerResolver.resolve(simTime, todaySchedule, tomorrowSchedule)
+        val next = nextPrayerResolver.resolve(currentTime, todaySchedule, tomorrowSchedule)
 
         val remStates = mutableMapOf<Prayer, Boolean>()
         for (prayer in Prayer.entries) {
@@ -141,7 +128,7 @@ class HomeViewModel(
             selectedDate = displayDate,
             schedule = todaySchedule,
             nextPrayer = next,
-            currentTime = simTime,
+            currentTime = currentTime,
             voiceEnabled = voiceOn,
             voiceSummary = voiceSummaryText,
             reminderStates = remStates,
@@ -164,11 +151,25 @@ class HomeViewModel(
             while (isActive) {
                 delay(1000)
                 val current = _uiState.value
-                val schedule = current.schedule ?: continue
                 val tables = timetableRepository.timetables.value
                 val rules = settingsRepository.jamaatRules.first()
+
+                val now = ZonedDateTime.now(zoneId)
+                val effectiveDate = if (current.isSimulatedDemoDate) {
+                    current.selectedDate
+                } else {
+                    now.toLocalDate()
+                }
+
+                // Automatically re-resolve schedule if date rolled over at midnight
+                val todaySchedule = if (!current.isSimulatedDemoDate && effectiveDate != current.selectedDate) {
+                    dayScheduleResolver.resolve(effectiveDate, tables, rules)
+                } else {
+                    current.schedule ?: dayScheduleResolver.resolve(effectiveDate, tables, rules)
+                }
+
                 val tomorrowSchedule = dayScheduleResolver.resolve(
-                    current.selectedDate.plusDays(1),
+                    effectiveDate.plusDays(1),
                     tables,
                     rules
                 )
@@ -176,11 +177,17 @@ class HomeViewModel(
                 val updatedTime = if (current.isSimulatedDemoDate) {
                     current.currentTime.plusSeconds(1)
                 } else {
-                    LocalTime.now(zoneId)
+                    now.toLocalTime()
                 }
 
-                val next = nextPrayerResolver.resolve(updatedTime, schedule, tomorrowSchedule)
+                val activeTable = timetableRepository.getTimetableFor(effectiveDate)
+                    ?: tables.firstOrNull()
+
+                val next = nextPrayerResolver.resolve(updatedTime, todaySchedule, tomorrowSchedule)
                 _uiState.value = current.copy(
+                    selectedDate = effectiveDate,
+                    activeTimetable = activeTable,
+                    schedule = todaySchedule,
                     currentTime = updatedTime,
                     nextPrayer = next
                 )
