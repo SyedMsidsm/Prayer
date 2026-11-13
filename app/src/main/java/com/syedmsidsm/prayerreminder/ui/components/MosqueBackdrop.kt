@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
 
 data class SanctuarySkyTheme(
@@ -118,6 +120,7 @@ fun MosqueBackdrop(
     modifier: Modifier = Modifier
 ) {
     val theme = SanctuarySkyThemes.forPrayer(activeSky)
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val animSpec = tween<Color>(durationMillis = 800)
 
     val topSky by animateColorAsState(theme.skyGradient[0], animationSpec = animSpec, label = "skyTop")
@@ -181,7 +184,8 @@ fun MosqueBackdrop(
         }
 
         // 4. Celestial Crescent or Glowing Sun
-        val celCenter = Offset(w * 0.84f, horizonBottom * 0.21f)
+        val celX = if (isRtl) w * 0.16f else w * 0.84f
+        val celCenter = Offset(celX, horizonBottom * 0.21f)
         val celRadius = w * 0.036f
         if (theme.isCrescent) {
             // Subtle halo
@@ -199,10 +203,11 @@ fun MosqueBackdrop(
                 radius = celRadius,
                 center = celCenter
             )
+            val cutoutOffsetX = celRadius * 0.36f
             drawCircle(
                 color = topSky,
                 radius = celRadius * 0.86f,
-                center = Offset(celCenter.x + celRadius * 0.36f, celCenter.y - celRadius * 0.24f)
+                center = Offset(celCenter.x + cutoutOffsetX, celCenter.y - celRadius * 0.24f)
             )
         } else {
             drawCircle(

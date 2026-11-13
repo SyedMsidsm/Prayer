@@ -204,6 +204,33 @@
     <string name="custom_reminder_hint">الدقائق (مثال: 12)</string>
     <string name="custom_chip_label">+ مخصص</string>
     <string name="add">إضافة</string>
+    <string name="settings_timetable_title">جدول المسجد ومواقيت الصلاة</string>
+    <string name="settings_offline_timetable_badge">جدول محلي (بدون إنترنت)</string>
+    <string name="settings_timetable_desc">مبني بدقة 100% على جدول المسجد (بدون إنترنت)</string>
+    <string name="settings_widgets_title">عناصر الشاشة الرئيسية الأنيقة</string>
+    <string name="settings_widgets_desc">اضغط على تثبيت لإضافة الودجات الأنيقة مباشرة إلى شاشتك الرئيسية.</string>
+    <string name="widget_strip_title">شريط الصلوات الخمس 2×4</string>
+    <string name="widget_strip_desc">العد التنازلي للصلاة القادمة مع شريط الصلوات الخمس وشارة ذهبية</string>
+    <string name="widget_square_title">الودجت المربع 2×2</string>
+    <string name="widget_square_desc">وقت الصلاة بخط عريض، عد تنازلي حي ووقت الإقامة</string>
+    <string name="widget_pill_title">الشريط الأفقي البسيط 1×4</string>
+    <string name="widget_pill_desc">شريط سطر واحد بمؤشر مضيء وعد تنازلي حي</string>
+    <string name="widget_color_theme">سمة ألوان الودجت</string>
+    <string name="time_format">تنسيق الوقت</string>
+    <string name="pin_plus">+ تثبيت</string>
+    <string name="jamaat_settings_summary">تحديد الإقامة (بالدقائق بعد الأذان) أو وقت ثابت وصلاة الجمعة</string>
+    <string name="dua_on">دعاء بعد الأذان مفعل</string>
+    <string name="dua_off">دعاء بعد الأذان متوقف</string>
+    <string name="reminders_summary_line">قبل الأذان: %1$s • قبل الجماعة: %2$s</string>
+    <string name="sunrise_notification">تنبيه الشروق بالصوت</string>
+    <string name="sunrise_notification_desc">تنبيه صوتي عند حلول وقت الشروق</string>
+    <string name="notif_sunrise_body">دخل وقت الشروق</string>
+    <string name="manual_place">اسم المكان / المدينة</string>
+    <string name="manual_month">الشهر الهجري (1-12)</string>
+    <string name="manual_year">السنة الهجرية</string>
+    <string name="manual_start_date">تاريخ البدء (YYYY-MM-DD)</string>
+    <string name="manual_29_days">29 يوماً</string>
+    <string name="manual_30_days">30 يوماً</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربيع الأول</item><item>ربيع الآخر</item>

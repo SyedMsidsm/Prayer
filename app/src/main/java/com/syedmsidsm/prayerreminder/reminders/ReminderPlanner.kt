@@ -70,7 +70,7 @@ class ReminderPlanner {
         for (day in days) {
             if (day.source == ScheduleSource.NONE) continue
 
-            val prayers = listOf(Prayer.FAJR, Prayer.DHUHR, Prayer.ASR, Prayer.MAGHRIB, Prayer.ISHA)
+            val prayers = listOf(Prayer.FAJR, Prayer.SUNRISE, Prayer.DHUHR, Prayer.ASR, Prayer.MAGHRIB, Prayer.ISHA)
             for (prayer in prayers) {
                 val isJumuah = day.isFriday && prayer == Prayer.DHUHR
                 val prayerKey = if (isJumuah) "JUMUAH" else prayer.name

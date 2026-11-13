@@ -14,6 +14,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -158,8 +161,14 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val themeMode by settingsViewModel.themeMode.collectAsState()
             val fontScale by settingsViewModel.fontScale.collectAsState()
-            PrayerReminderTheme(themeMode = themeMode, fontScale = fontScale) {
-                MainAppNavigation()
+            val appLanguage by settingsViewModel.appLanguage.collectAsState()
+            val isRtl = appLanguage in listOf("ar", "ur")
+            val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                PrayerReminderTheme(themeMode = themeMode, fontScale = fontScale) {
+                    MainAppNavigation()
+                }
             }
         }
     }
@@ -190,9 +199,7 @@ class MainActivity : AppCompatActivity() {
     private fun MainAppNavigation() {
         val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
         var currentScreen by rememberSaveable {
-            mutableStateOf(
-                if (settingsViewModel.isOnboardingDone.value == false) Screen.BRAND_INTRO else Screen.HOME
-            )
+            mutableStateOf(Screen.BRAND_INTRO)
         }
 
         LaunchedEffect(isOnboardingDone) {
@@ -294,7 +301,9 @@ class MainActivity : AppCompatActivity() {
         when (currentScreen) {
             Screen.BRAND_INTRO -> {
                 BrandIntroScreen(
-                    onFinished = { currentScreen = Screen.ONBOARDING }
+                    onFinished = {
+                        currentScreen = if (isOnboardingDone == false) Screen.ONBOARDING else Screen.HOME
+                    }
                 )
             }
             Screen.ONBOARDING -> {

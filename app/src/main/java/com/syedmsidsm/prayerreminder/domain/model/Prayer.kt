@@ -2,7 +2,7 @@ package com.syedmsidsm.prayerreminder.domain.model
 
 enum class Prayer {
     FAJR,
-    SUNRISE, // Shown only, no jamaat, no reminders
+    SUNRISE,
     DHUHR,
     ASR,
     MAGHRIB,
@@ -12,5 +12,5 @@ enum class Prayer {
         get() = this != SUNRISE
 
     val hasReminders: Boolean
-        get() = this != SUNRISE
+        get() = true
 }

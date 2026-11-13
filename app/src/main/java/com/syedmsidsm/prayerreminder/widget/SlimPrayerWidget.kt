@@ -7,6 +7,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.AndroidRemoteViews
@@ -14,20 +16,23 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
+import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
 class SlimPrayerWidget : GlanceAppWidget() {
@@ -47,27 +52,44 @@ class SlimPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
-    val colors = WidgetThemeConfig.getColors(state.theme)
+    val whiteText = ColorProvider(Color.White)
+    val goldText = ColorProvider(Color(0xFFFCD34D))
+    val softGoldText = ColorProvider(Color(0xFFE2D9C8))
     val launchAction = actionStartActivity<MainActivity>()
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .cornerRadius(24.dp)
-            .background(colors.background)
+            .cornerRadius(32.dp)
             .clickable(launchAction)
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center
     ) {
+        // 1. Layered Grand Mosque Background (Cropped Horizontally)
+        Image(
+            provider = ImageProvider(R.drawable.widget_mosque_sanctuary_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = GlanceModifier.fillMaxSize()
+        )
+
+        // 2. Subtle Golden Frame Overlay
+        Image(
+            provider = ImageProvider(R.drawable.widget_pill_frame),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = GlanceModifier.fillMaxSize()
+        )
+
         if (!state.hasTable) {
             Row(
-                modifier = GlanceModifier.fillMaxWidth(),
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = state.place,
                     style = TextStyle(
-                        color = colors.textAccent,
+                        color = goldText,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -81,7 +103,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 Text(
                     text = importMsg,
                     style = TextStyle(
-                        color = colors.textPrimary,
+                        color = whiteText,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -89,104 +111,80 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
             }
         } else {
             Row(
-                modifier = GlanceModifier.fillMaxWidth(),
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Column 1: Next Prayer Name (Amber) + Adhan Time (Bold White)
-                Column(
-                    modifier = GlanceModifier.clickable(launchAction),
-                    verticalAlignment = Alignment.CenterVertically
+                // Left: Glowing amber sun/prayer dot + Prayer Name & Time
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = GlanceModifier.clickable(launchAction)
                 ) {
-                    Text(
-                        text = state.prayerName.uppercase(),
-                        style = TextStyle(
-                            color = colors.textAccent,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Image(
+                        provider = ImageProvider(R.drawable.widget_sun_dot),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(10.dp)
                     )
-                    Spacer(modifier = GlanceModifier.height(1.dp))
+                    Spacer(modifier = GlanceModifier.width(8.dp))
                     Text(
-                        text = state.mainTime,
+                        text = "${state.prayerName} ${state.mainTime}",
                         style = TextStyle(
-                            color = colors.textPrimary,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                }
-
-                Spacer(modifier = GlanceModifier.width(20.dp))
-
-                // Column 2: Jamaat Label (Muted) + Jamaat Time (Bold White)
-                val jamaatLabel = when (state.appLanguage) {
-                    "ar" -> "الجماعة"
-                    "ur" -> "جماعت"
-                    else -> "JAMAAT"
-                }
-                val cleanJamaatTime = state.secondaryTime
-                    .replace("Jamaat", "")
-                    .replace("جماعت", "")
-                    .replace("الجماعة", "")
-                    .replace("الإقامة", "")
-                    .replace("Azan ✓", "")
-                    .trim()
-                    .ifEmpty { state.secondaryTime.ifEmpty { state.mainTime } }
-                Column(
-                    modifier = GlanceModifier.clickable(launchAction),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = jamaatLabel,
-                        style = TextStyle(
-                            color = colors.textSecondary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Spacer(modifier = GlanceModifier.height(1.dp))
-                    Text(
-                        text = cleanJamaatTime,
-                        style = TextStyle(
-                            color = colors.textPrimary,
-                            fontSize = 18.sp,
+                            color = whiteText,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
                 }
 
+                // Center Spacer shows the illuminated mosque dome
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // Column 3: Elevated Pill Capsule with Clock Icon + Countdown Chronometer
-                val chronometerViews = WidgetThemeConfig.buildChronometer(
-                    context = context,
-                    targetEpochMillis = state.countdownTargetEpochMillis,
-                    isRtl = state.isRtl,
-                    textColorInt = colors.chronometerTextColorInt
-                )
-
-                Box(
-                    modifier = GlanceModifier
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .cornerRadius(16.dp)
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                        .clickable(launchAction),
-                    contentAlignment = Alignment.Center
+                // Right: "Next in" above countdown chronometer + golden crescent moon
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = GlanceModifier.clickable(launchAction)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    val nextInLabel = when (state.appLanguage) {
+                        "ar" -> "خلال"
+                        "ur" -> "باقی وقت"
+                        else -> "Next in"
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "⏱ ",
+                            text = nextInLabel,
                             style = TextStyle(
-                                color = colors.textAccent,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
+                                color = softGoldText,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         )
+                        Spacer(modifier = GlanceModifier.height(1.dp))
+
+                        val chronometerViews = WidgetThemeConfig.buildChronometer(
+                            context = context,
+                            targetEpochMillis = state.countdownTargetEpochMillis,
+                            isRtl = state.isRtl,
+                            textColorInt = 0xFFFCD34D.toInt()
+                        )
+
                         AndroidRemoteViews(
                             remoteViews = chronometerViews,
                             modifier = GlanceModifier.height(18.dp)
                         )
                     }
+
+                    Spacer(modifier = GlanceModifier.width(8.dp))
+
+                    Image(
+                        provider = ImageProvider(R.drawable.widget_crescent_gold),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(18.dp)
+                    )
                 }
             }
         }

@@ -77,7 +77,7 @@ fun FixValueSheet(
             OutlinedTextField(
                 value = customText,
                 onValueChange = { customText = it },
-                label = { Text("Time (24h or 12h)") },
+                label = { Text(stringResource(R.string.time_format)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

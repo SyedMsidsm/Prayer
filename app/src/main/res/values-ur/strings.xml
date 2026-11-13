@@ -204,6 +204,33 @@
     <string name="custom_reminder_hint">منٹ (مثلاً 12)</string>
     <string name="custom_chip_label">+ کسٹم</string>
     <string name="add">شامل کریں</string>
+    <string name="settings_timetable_title">مسجد شیڈول اور اوقات</string>
+    <string name="settings_offline_timetable_badge">آف لائن اوقات</string>
+    <string name="settings_timetable_desc">100% مستند مقامی شیڈول (بغیر انٹرنیٹ)</string>
+    <string name="settings_widgets_title">ہوم اسکرین ویجیٹس</string>
+    <string name="settings_widgets_desc">اپنے فون اسکرین پر خوبصورت ویجیٹس شامل کرنے کے لیے پن دبائیں۔</string>
+    <string name="widget_strip_title">پانچ نمازوں کی پٹی 2×4</string>
+    <string name="widget_strip_desc">اگلی نماز کا کاؤنٹ ڈاؤن اور سنہری بیج کے ساتھ 5 نمازیں</string>
+    <string name="widget_square_title">مربع ویجٹ 2×2</string>
+    <string name="widget_square_desc">نماز کا واضح وقت، لائیو کاؤنٹ ڈاؤن اور اقامت</string>
+    <string name="widget_pill_title">سادہ افقی پٹی 1×4</string>
+    <string name="widget_pill_desc">روشن اشارے اور لائیو کاؤنٹ ڈاؤن کے ساتھ ایک سطر کی پٹی</string>
+    <string name="widget_color_theme">ویجٹ کلر تھیم</string>
+    <string name="time_format">وقت کی ترتیب</string>
+    <string name="pin_plus">+ پن کریں</string>
+    <string name="jamaat_settings_summary">اذان کے بعد منٹ یا مقررہ وقت اور جمعہ کی اقامت</string>
+    <string name="dua_on">اذان کے بعد کی دعا فعال</string>
+    <string name="dua_off">اذان کے بعد کی دعا بند</string>
+    <string name="reminders_summary_line">اذان سے پہلے: %1$s • جماعت سے پہلے: %2$s</string>
+    <string name="sunrise_notification">آواز کے ساتھ طلوع آفتاب کی اطلاع</string>
+    <string name="sunrise_notification_desc">طلوع آفتاب کا وقت ہونے پر آواز کا نوٹیفکیشن</string>
+    <string name="notif_sunrise_body">طلوع آفتاب کا وقت ہو گیا ہے</string>
+    <string name="manual_place">مقام / شہر کا نام</string>
+    <string name="manual_month">ہجری مہینہ (1-12)</string>
+    <string name="manual_year">ہجری سال</string>
+    <string name="manual_start_date">تاریخ آغاز (YYYY-MM-DD)</string>
+    <string name="manual_29_days">29 دن</string>
+    <string name="manual_30_days">30 دن</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>

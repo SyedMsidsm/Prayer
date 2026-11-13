@@ -24,7 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
@@ -108,6 +108,7 @@ fun RemindersVoiceSettingsScreen(
     val azanReciter by viewModel.azanReciter.collectAsState()
     val azanLength by viewModel.azanLength.collectAsState()
     val playDuaAfterAzan by viewModel.playDuaAfterAzan.collectAsState()
+    val alertModes by viewModel.prayerAlertModes.collectAsState()
 
     val isDark = PrayerReminderColors.isDark
     val surfaceBg = if (isDark) SanctuaryDarkBg else SanctuaryLightBg
@@ -148,7 +149,7 @@ fun RemindersVoiceSettingsScreen(
                 ) {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.ArrowBack,
                             contentDescription = stringResource(R.string.cancel),
                             tint = Color.White,
                             modifier = Modifier.size(18.dp)
@@ -196,6 +197,46 @@ fun RemindersVoiceSettingsScreen(
                         Switch(
                             checked = voiceEnabled,
                             onCheckedChange = { viewModel.setVoiceEnabled(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = AmberTextDark,
+                                checkedTrackColor = AmberAccent,
+                                uncheckedThumbColor = textMuted,
+                                uncheckedTrackColor = chipUnselectedBg
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = glassBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val sunriseAlertMode = alertModes[Prayer.SUNRISE] ?: "sound"
+                    val isSunriseSound = sunriseAlertMode == "sound"
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.sunrise_notification),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(R.string.sunrise_notification_desc),
+                                fontSize = 11.sp,
+                                color = textMuted
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = isSunriseSound,
+                            onCheckedChange = { isChecked ->
+                                viewModel.setPrayerAlertMode(Prayer.SUNRISE, if (isChecked) "sound" else "muted")
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = AmberTextDark,
                                 checkedTrackColor = AmberAccent,

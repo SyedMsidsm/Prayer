@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -63,7 +63,7 @@ fun ManualEntryScreen(
         ) {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = Icons.Default.ArrowBack,
                     contentDescription = stringResource(R.string.cancel),
                     tint = PrayerReminderColors.Ink
                 )
@@ -82,7 +82,7 @@ fun ManualEntryScreen(
         OutlinedTextField(
             value = place,
             onValueChange = { place = it },
-            label = { Text("Place Name") },
+            label = { Text(stringResource(R.string.manual_place)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -93,7 +93,7 @@ fun ManualEntryScreen(
             OutlinedTextField(
                 value = hijriMonth.toString(),
                 onValueChange = { it.toIntOrNull()?.let { m -> if (m in 1..12) hijriMonth = m } },
-                label = { Text("Hijri Month (1-12)") },
+                label = { Text(stringResource(R.string.manual_month)) },
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
@@ -102,7 +102,7 @@ fun ManualEntryScreen(
             OutlinedTextField(
                 value = hijriYear.toString(),
                 onValueChange = { it.toIntOrNull()?.let { y -> hijriYear = y } },
-                label = { Text("Hijri Year") },
+                label = { Text(stringResource(R.string.manual_year)) },
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
@@ -114,7 +114,7 @@ fun ManualEntryScreen(
         OutlinedTextField(
             value = startDateText,
             onValueChange = { startDateText = it },
-            label = { Text("Start Date (YYYY-MM-DD)") },
+            label = { Text(stringResource(R.string.manual_start_date)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -134,7 +134,7 @@ fun ManualEntryScreen(
                 ),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("29 days")
+                Text(stringResource(R.string.manual_29_days))
             }
             Button(
                 onClick = { dayCount = 30 },
@@ -145,7 +145,7 @@ fun ManualEntryScreen(
                 ),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("30 days")
+                Text(stringResource(R.string.manual_30_days))
             }
         }
 

@@ -30,7 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.CameraAlt
@@ -156,7 +156,7 @@ fun OnboardingScreen(
                     ) {
                         IconButton(onClick = { currentStep-- }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = Icons.Default.ArrowBack,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
@@ -693,7 +693,7 @@ private fun StepTurnOnRemindersSanctuary(
 
     SanctuaryPermissionItem(
         icon = Icons.Default.Notifications,
-        title = "Notifications",
+        title = stringResource(R.string.reliability_notifications),
         isGranted = notifAllowed,
         glassCardBg = glassCardBg,
         glassBorder = glassBorder,
@@ -705,7 +705,7 @@ private fun StepTurnOnRemindersSanctuary(
 
     SanctuaryPermissionItem(
         icon = Icons.Default.AccessAlarm,
-        title = "Exact alarms",
+        title = stringResource(R.string.reliability_alarms),
         isGranted = exactAllowed,
         glassCardBg = glassCardBg,
         glassBorder = glassBorder,
@@ -727,7 +727,7 @@ private fun StepTurnOnRemindersSanctuary(
 
     SanctuaryPermissionItem(
         icon = Icons.Default.BatteryChargingFull,
-        title = "Run in background",
+        title = stringResource(R.string.reliability_battery),
         isGranted = batteryUnrestricted,
         glassCardBg = glassCardBg,
         glassBorder = glassBorder,

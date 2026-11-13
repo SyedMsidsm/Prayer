@@ -9,6 +9,7 @@ import com.syedmsidsm.prayerreminder.data.TimetableRepository
 import com.syedmsidsm.prayerreminder.domain.DayScheduleResolver
 import com.syedmsidsm.prayerreminder.domain.model.DaySchedule
 import com.syedmsidsm.prayerreminder.domain.model.JamaatRule
+import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.domain.model.Timetable
 import com.syedmsidsm.prayerreminder.notifications.NotificationHelper
 import com.syedmsidsm.prayerreminder.reminders.AlarmScheduler
@@ -269,6 +270,12 @@ class SettingsViewModel(
         emptyMap()
     )
 
+    val prayerAlertModes: StateFlow<Map<Prayer, String>> = settingsRepository.prayerAlertModes.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyMap()
+    )
+
     val lastTestResult: StateFlow<String> = settingsRepository.lastTestResult.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -347,6 +354,13 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsRepository.setVoiceOnSilent(enabled)
             context?.let { AppRefresher.refreshAll(it, "voice_silent_changed") }
+        }
+    }
+
+    fun setPrayerAlertMode(prayer: Prayer, mode: String) {
+        viewModelScope.launch {
+            settingsRepository.setPrayerAlertMode(prayer, mode)
+            context?.let { AppRefresher.refreshAll(it, "prayer_alert_mode_changed") }
         }
     }
 

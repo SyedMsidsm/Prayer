@@ -168,10 +168,16 @@ class NotificationHelper(private val context: Context) {
                 Pair(t, body)
             }
             ReminderKind.AT_AZAN -> {
-                val t = context.getString(R.string.notif_at_azan, prayerName, azanFormatted)
-                var body = context.getString(R.string.notif_jamaat_text, jamaatFormatted)
-                if (event.isEstimated) body += " " + context.getString(R.string.estimated_suffix)
-                Pair(t, body)
+                if (event.prayer == Prayer.SUNRISE) {
+                    val t = "${context.getString(R.string.prayer_sunrise)} · $azanFormatted"
+                    val body = context.getString(R.string.notif_sunrise_body)
+                    Pair(t, body)
+                } else {
+                    val t = context.getString(R.string.notif_at_azan, prayerName, azanFormatted)
+                    var body = context.getString(R.string.notif_jamaat_text, jamaatFormatted)
+                    if (event.isEstimated) body += " " + context.getString(R.string.estimated_suffix)
+                    Pair(t, body)
+                }
             }
             ReminderKind.BEFORE_JAMAAT -> {
                 val minStr = context.resources.getQuantityString(R.plurals.minutes, event.minutesOffset, event.minutesOffset)

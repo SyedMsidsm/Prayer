@@ -204,6 +204,33 @@
     <string name="custom_reminder_hint">Minutes (e.g. 12)</string>
     <string name="custom_chip_label">+ Custom</string>
     <string name="add">Add</string>
+    <string name="settings_timetable_title">Masjid Schedule &amp; Timetable</string>
+    <string name="settings_offline_timetable_badge">Offline Timetable</string>
+    <string name="settings_timetable_desc">Strictly timetable-based (100% offline accuracy)</string>
+    <string name="settings_widgets_title">Minimalist Home Screen Widgets</string>
+    <string name="settings_widgets_desc">Tap Pin to add the new Sanctuary minimalist widgets directly to your phone screen.</string>
+    <string name="widget_strip_title">Compact 5-Prayer Strip 2×4</string>
+    <string name="widget_strip_desc">Next prayer countdown + full 5-prayer row with golden active badge</string>
+    <string name="widget_square_title">Square / Lock-Screen Widget 2×2</string>
+    <string name="widget_square_desc">Next prayer bold time, live countdown chronometer &amp; Iqamah</string>
+    <string name="widget_pill_title">Minimal Horizontal Pill 1×4</string>
+    <string name="widget_pill_desc">Single-line bar with glowing amber indicator &amp; live countdown</string>
+    <string name="widget_color_theme">Widget Color Theme</string>
+    <string name="time_format">Time Format</string>
+    <string name="pin_plus">Pin +</string>
+    <string name="jamaat_settings_summary">Configure After-Azan (+minutes) or Fixed Iqamah times &amp; Jumu\'ah</string>
+    <string name="dua_on">Dua After Azan On</string>
+    <string name="dua_off">Dua After Azan Off</string>
+    <string name="reminders_summary_line">Before Azan: %1$s • Before Jamaat: %2$s</string>
+    <string name="sunrise_notification">Sunrise notification with sound</string>
+    <string name="sunrise_notification_desc">Sound notification when sunrise time arrives</string>
+    <string name="notif_sunrise_body">Sunrise time has arrived</string>
+    <string name="manual_place">Place Name</string>
+    <string name="manual_month">Hijri Month (1-12)</string>
+    <string name="manual_year">Hijri Year</string>
+    <string name="manual_start_date">Start Date (YYYY-MM-DD)</string>
+    <string name="manual_29_days">29 days</string>
+    <string name="manual_30_days">30 days</string>
 
     <string-array name="hijri_months">
         <item>Muharram</item><item>Safar</item><item>Rabi al-Awwal</item><item>Rabi al-Thani</item>

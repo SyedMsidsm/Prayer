@@ -5,13 +5,13 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Scaled to 0.66 and centered inside Android Adaptive Icon 66dp Safe Zone -->
+    <!-- Scaled to 0.54 and centered inside Android Adaptive Icon 66dp Safe Zone to prevent clipping on One UI & Pixel launchers -->
     <group
         android:pivotX="54"
-        android:pivotY="52"
-        android:scaleX="0.66"
-        android:scaleY="0.66"
-        android:translateY="4">
+        android:pivotY="50"
+        android:scaleX="0.54"
+        android:scaleY="0.54"
+        android:translateY="2">
 
         <!-- Soft Golden Ambient Glow behind Main Dome -->
         <path

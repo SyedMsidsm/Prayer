@@ -7,10 +7,10 @@
 
     <group
         android:pivotX="54"
-        android:pivotY="52"
-        android:scaleX="0.66"
-        android:scaleY="0.66"
-        android:translateY="4">
+        android:pivotY="50"
+        android:scaleX="0.54"
+        android:scaleY="0.54"
+        android:translateY="2">
 
         <!-- Left Minaret -->
         <path

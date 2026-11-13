@@ -492,4 +492,20 @@ class SettingsRepository(
             }
         }
     }
+
+    suspend fun setPrayerAlertMode(prayer: Prayer, mode: String) {
+        val prayerKeysToToggle = when {
+            prayer == Prayer.DHUHR -> listOf("DHUHR", "JUMUAH")
+            else -> listOf(prayer.name)
+        }
+        dataStore.edit { prefs ->
+            prefs[stringPreferencesKey("alert_mode_${prayer.name}")] = mode
+            val enabled = mode != "muted"
+            for (pk in prayerKeysToToggle) {
+                for (kind in REMINDER_KINDS) {
+                    prefs[booleanPreferencesKey("rem_${pk}_${kind}")] = enabled
+                }
+            }
+        }
+    }
 }
