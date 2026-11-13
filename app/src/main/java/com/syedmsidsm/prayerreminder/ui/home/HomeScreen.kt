@@ -1,5 +1,6 @@
 package com.syedmsidsm.prayerreminder.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +36,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,132 +79,158 @@ fun HomeScreen(
 
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PrayerReminderColors.Ivory)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp, vertical = 16.dp)
-    ) {
-        // 1. Header (Place name, Timetable subtitle, Theme toggle + Settings button)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
+    Scaffold(
+        containerColor = PrayerReminderColors.Ivory,
+        topBar = {
+            Surface(
+                color = PrayerReminderColors.Ivory,
+                shadowElevation = 2.dp,
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .statusBarsPadding()
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(PrayerReminderColors.Ground),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Place,
-                        contentDescription = null,
-                        tint = PrayerReminderColors.Gold,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = uiState.place,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = PrayerReminderColors.Ink,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    val table = uiState.activeTimetable
-                    val scheduleSource = uiState.schedule?.source
-                    if (scheduleSource == ScheduleSource.TABLE && table != null) {
-                        val monthName = HijriNames.getMonthName(table.hijriMonth, languageCode)
-                        val lastDateStr = runCatching {
-                            val ld = java.time.LocalDate.parse(table.lastDate)
-                            ld.format(DateTimeFormatter.ofPattern("d MMM", currentLocale))
-                        }.getOrDefault(table.lastDate)
-
-                        val subtitle = stringResource(
-                            R.string.timetable_line,
-                            "$monthName ${table.hijriYear}",
-                            lastDateStr
-                        )
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PrayerReminderColors.Muted,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    } else if (uiState.schedule?.hijri != null) {
-                        val h = uiState.schedule!!.hijri!!
-                        val monthName = HijriNames.getMonthName(h.month, languageCode)
-                        val autoLabel = when (languageCode) {
-                            "ar" -> "$monthName ${h.year} · جدول بهتكل المدمج"
-                            "ur" -> "$monthName ${h.year} · بھٹکل کا بلٹ ان نظام الاوقات"
-                            else -> "$monthName ${h.year} · Built-in Bhatkal"
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(PrayerReminderColors.Ground),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Place,
+                                contentDescription = null,
+                                tint = PrayerReminderColors.Gold,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
-                        Text(
-                            text = autoLabel,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PrayerReminderColors.Muted,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = uiState.place,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = PrayerReminderColors.Ink,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            val table = uiState.activeTimetable
+                            val scheduleSource = uiState.schedule?.source
+                            if (scheduleSource == ScheduleSource.TABLE && table != null) {
+                                val monthName = HijriNames.getMonthName(table.hijriMonth, languageCode)
+                                val lastDateStr = runCatching {
+                                    val ld = java.time.LocalDate.parse(table.lastDate)
+                                    ld.format(DateTimeFormatter.ofPattern("d MMM", currentLocale))
+                                }.getOrDefault(table.lastDate)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = PrayerReminderColors.Surface,
-                    shadowElevation = 2.dp
-                ) {
-                    IconButton(
-                        onClick = onToggleTheme,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (PrayerReminderColors.isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            contentDescription = "Toggle Dark/Light Theme",
-                            tint = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ink,
-                            modifier = Modifier.size(20.dp)
-                        )
+                                val subtitle = stringResource(
+                                    R.string.timetable_line,
+                                    "$monthName ${table.hijriYear}",
+                                    lastDateStr
+                                )
+                                Text(
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrayerReminderColors.Muted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            } else if (uiState.schedule?.hijri != null) {
+                                val h = uiState.schedule!!.hijri!!
+                                val monthName = HijriNames.getMonthName(h.month, languageCode)
+                                val autoLabel = when (languageCode) {
+                                    "ar" -> "$monthName ${h.year} · جدول بهتكل المدمج"
+                                    "ur" -> "$monthName ${h.year} · بھٹکل کا بلٹ ان نظام الاوقات"
+                                    else -> "$monthName ${h.year} · Built-in Bhatkal"
+                                }
+                                Text(
+                                    text = autoLabel,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrayerReminderColors.Muted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
-                }
 
-                Surface(
-                    shape = CircleShape,
-                    color = PrayerReminderColors.Surface,
-                    shadowElevation = 2.dp
-                ) {
-                    IconButton(
-                        onClick = onSettingsClick,
-                        modifier = Modifier.size(40.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(R.string.settings),
-                            tint = PrayerReminderColors.Ink,
-                            modifier = Modifier.size(22.dp)
-                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = PrayerReminderColors.Surface,
+                            border = BorderStroke(1.dp, PrayerReminderColors.Line),
+                            shadowElevation = 1.dp
+                        ) {
+                            IconButton(
+                                onClick = onToggleTheme,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (PrayerReminderColors.isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = "Toggle Theme",
+                                    tint = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ink,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        val btnBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
+                        val btnFg = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.Ivory
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = btnBg,
+                            shadowElevation = 2.dp,
+                            modifier = Modifier
+                                .height(40.dp)
+                                .clickable { onSettingsClick() }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(R.string.settings),
+                                    tint = btnFg,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = stringResource(R.string.settings),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = btnFg
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .navigationBarsPadding()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
 
         // 2. Warning Banners (if estimated or no table or missed reminders)
         val schedule = uiState.schedule
@@ -287,8 +316,63 @@ fun HomeScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 6. Direct Settings Card at Bottom of Home Page
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onSettingsClick() },
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
+            border = BorderStroke(1.dp, PrayerReminderColors.Line)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = null,
+                        tint = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.settings),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrayerReminderColors.Ink
+                    )
+                    Text(
+                        text = stringResource(R.string.home_settings_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrayerReminderColors.Muted
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = PrayerReminderColors.Muted,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
     }
+}
 }
 
 @Composable

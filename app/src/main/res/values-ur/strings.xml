@@ -183,6 +183,13 @@
     <string name="widget_theme_gold">سنہری</string>
     <string name="widget_theme_system">سسٹم کے مطابق</string>
     <string name="widget_slim_label">نماز کی افقی پٹی</string>
+    <string name="stop">روکیں</string>
+    <string name="multiple_reminders_hint">ایک یا زائد یاد دہانی کے اوقات منتخب کریں</string>
+    <string name="home_settings_desc">یاد دہانیاں، اذان کی آوازیں، فونٹ کا سائز، تھیم اور ٹائم ٹیبلز</string>
+    <string name="appearance_theme">ظاہری شکل اور تھیم</string>
+    <string name="theme_light">لائٹ</string>
+    <string name="theme_dark">ڈارک</string>
+    <string name="theme_system">سسٹم کا انتخاب</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>

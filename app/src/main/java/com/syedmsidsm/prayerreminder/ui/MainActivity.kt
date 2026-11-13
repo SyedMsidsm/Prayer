@@ -175,6 +175,17 @@ class MainActivity : AppCompatActivity() {
         WidgetUpdater.updateAll(applicationContext)
     }
 
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            if (com.syedmsidsm.prayerreminder.audio.VoicePlaybackService.isRunning || settingsViewModel.audioPlayer.isPlaying.value) {
+                com.syedmsidsm.prayerreminder.audio.VoicePlaybackService.stop(this)
+                settingsViewModel.stopSample()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
     @Composable
     private fun MainAppNavigation() {
         val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
@@ -324,7 +335,6 @@ class MainActivity : AppCompatActivity() {
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
-                    onSendCurrentToFamily = {},
                     onAddWidget = {
                         val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this@MainActivity)
                         val provider = android.content.ComponentName(
@@ -366,7 +376,6 @@ class MainActivity : AppCompatActivity() {
                         )
                     },
                     onManualEntry = { currentScreen = Screen.MANUAL_ENTRY },
-                    onSendToFamily = {},
                     onDeleteTimetable = { table ->
                         homeViewModel.viewModelScope.launch {
                             (application as PrayerReminderApp).container.timetableRepository.deleteTimetable(

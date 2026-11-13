@@ -224,7 +224,7 @@ class NotificationHelper(private val context: Context) {
         }
     }
 
-    fun buildForegroundServiceNotification(): Notification {
+    fun buildForegroundServiceNotification(isVoicePlaying: Boolean = true): Notification {
         val contentIntent = PendingIntent.getActivity(
             context,
             0,
@@ -232,13 +232,32 @@ class NotificationHelper(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(context, CHANNEL_VOICE)
+        val stopIntent = PendingIntent.getService(
+            context,
+            99912,
+            Intent(context, com.syedmsidsm.prayerreminder.audio.VoicePlaybackService::class.java).apply {
+                action = com.syedmsidsm.prayerreminder.audio.VoicePlaybackService.ACTION_STOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_VOICE)
             .setSmallIcon(R.drawable.ic_stat_prayer)
             .setContentTitle(context.getString(R.string.app_name))
             .setContentText(context.getString(R.string.notif_playing))
             .setContentIntent(contentIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
+            .setOngoing(true)
+
+        if (isVoicePlaying) {
+            builder.addAction(
+                android.R.drawable.ic_media_pause,
+                context.getString(R.string.stop),
+                stopIntent
+            )
+        }
+
+        return builder.build()
     }
 
     fun cancel(notificationId: Int) {

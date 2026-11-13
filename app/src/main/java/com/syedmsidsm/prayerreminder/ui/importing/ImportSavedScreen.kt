@@ -33,7 +33,6 @@ import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 @Composable
 fun ImportSavedScreen(
     timetable: Timetable,
-    onSendToFamily: () -> Unit = {},
     onDone: () -> Unit
 ) {
     Column(

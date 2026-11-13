@@ -53,9 +53,28 @@ class ImportViewModel(
             Log.d("ImportViewModel", "processImage started for URI: $uri")
             _uiState.value = ImportUiState.Reading(uri)
             try {
-                val tokens = ocrEngine.recognizeFromUri(uri)
-                Log.d("ImportViewModel", "Recognized ${tokens.size} OCR tokens. Parsing timetable...")
-                val parseResult = timetableParser.parse(tokens)
+                val baseBitmap = ocrEngine.loadBitmap(uri)
+                var tokens = ocrEngine.recognizeFromBitmap(baseBitmap)
+                Log.d("ImportViewModel", "Recognized ${tokens.size} OCR tokens (pass 0). Parsing timetable...")
+                var parseResult = timetableParser.parse(tokens)
+
+                // If first pass didn't yield a full timetable, try 90, 270, 180 degrees
+                if (parseResult == null || parseResult.timetable.days.size < 5) {
+                    val testRotations = listOf(90f, 270f, 180f)
+                    for (deg in testRotations) {
+                        Log.d("ImportViewModel", "Attempting rotation fallback at $deg degrees...")
+                        val rotated = ocrEngine.rotateBitmap(baseBitmap, deg)
+                        val candidateTokens = ocrEngine.recognizeFromBitmap(rotated)
+                        val candidateResult = timetableParser.parse(candidateTokens)
+                        if (candidateResult != null && candidateResult.timetable.days.size > (parseResult?.timetable?.days?.size ?: 0)) {
+                            Log.d("ImportViewModel", "Found better timetable with rotation $deg: ${candidateResult.timetable.days.size} days")
+                            tokens = candidateTokens
+                            parseResult = candidateResult
+                            if (candidateResult.timetable.days.size >= 25) break
+                        }
+                    }
+                }
+
                 if (parseResult != null) {
                     val flags = timetableValidator.validate(parseResult.timetable)
                     Log.d("ImportViewModel", "Parsed timetable for ${parseResult.timetable.place} (${parseResult.timetable.hijriMonthName} ${parseResult.timetable.hijriYear}) with ${parseResult.timetable.days.size} days, ${flags.size} flags")

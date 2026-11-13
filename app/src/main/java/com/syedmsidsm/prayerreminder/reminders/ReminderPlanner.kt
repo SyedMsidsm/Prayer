@@ -14,7 +14,10 @@ data class ReminderSettingsSnapshot(
     val remJumuahBeforeAzanMin: Int = 30,
     val remAtAzan: Boolean = true,
     val remBeforeJamaatMin: Int = 5,
-    val matrix: Map<Pair<String, String>, Boolean> = emptyMap()
+    val matrix: Map<Pair<String, String>, Boolean> = emptyMap(),
+    val remBeforeAzanOffsets: Set<Int> = emptySet(),
+    val remBeforeJamaatOffsets: Set<Int> = emptySet(),
+    val remJumuahBeforeAzanOffsets: Set<Int> = emptySet()
 ) {
     fun isEnabled(prayerKey: String, kind: ReminderKind): Boolean {
         val kindStr = when (kind) {
@@ -30,9 +33,9 @@ data class ReminderSettingsSnapshot(
 class ReminderPlanner {
 
     companion object {
-        fun calculateCode(date: LocalDate, prayer: Prayer, kind: ReminderKind): Int {
-            // Unique deterministic integer code: Day of year * 1000 + prayer ordinal * 10 + kind ordinal
-            return (date.dayOfYear * 1000) + (prayer.ordinal * 10) + kind.ordinal
+        fun calculateCode(date: LocalDate, prayer: Prayer, kind: ReminderKind, offsetMinutes: Int = 0): Int {
+            // Unique deterministic integer code: Day of year * 10000 + prayer ordinal * 100 + kind ordinal * 20 + offset
+            return (date.dayOfYear * 10000) + (prayer.ordinal * 100) + (kind.ordinal * 20) + (offsetMinutes % 20)
         }
 
         fun calculateTableExpiringCode(date: LocalDate): Int {
@@ -73,24 +76,33 @@ class ReminderPlanner {
                 val jamaat = day.jamaat[prayer]
 
                 val beforeAzanMin = if (isJumuah) settings.remJumuahBeforeAzanMin else settings.remBeforeAzanMin
+                val azanOffsets = if (isJumuah) {
+                    if (settings.remJumuahBeforeAzanOffsets.isNotEmpty()) settings.remJumuahBeforeAzanOffsets
+                    else setOf(beforeAzanMin).filter { it > 0 }.toSet()
+                } else {
+                    if (settings.remBeforeAzanOffsets.isNotEmpty()) settings.remBeforeAzanOffsets
+                    else setOf(beforeAzanMin).filter { it > 0 }.toSet()
+                }
 
-                // 1. BEFORE_AZAN
-                if (beforeAzanMin > 0 && settings.isEnabled(prayerKey, ReminderKind.BEFORE_AZAN)) {
-                    val fireTime = day.date.atTime(azan).minusMinutes(beforeAzanMin.toLong()).atZone(now.zone)
-                    if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
-                        events.add(
-                            ScheduledReminderEvent(
-                                code = calculateCode(day.date, prayer, ReminderKind.BEFORE_AZAN),
-                                fireAtEpochSeconds = fireTime.toEpochSecond(),
-                                prayer = prayer,
-                                kind = ReminderKind.BEFORE_AZAN,
-                                isJumuah = isJumuah,
-                                minutesOffset = beforeAzanMin,
-                                azanTimeIso = azan.toString(),
-                                jamaatTimeIso = jamaat?.toString(),
-                                isEstimated = day.source.isEstimated
+                // 1. BEFORE_AZAN (Support multiple reminder intervals)
+                for (offset in azanOffsets) {
+                    if (offset > 0 && settings.isEnabled(prayerKey, ReminderKind.BEFORE_AZAN)) {
+                        val fireTime = day.date.atTime(azan).minusMinutes(offset.toLong()).atZone(now.zone)
+                        if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
+                            events.add(
+                                ScheduledReminderEvent(
+                                    code = calculateCode(day.date, prayer, ReminderKind.BEFORE_AZAN, offset),
+                                    fireAtEpochSeconds = fireTime.toEpochSecond(),
+                                    prayer = prayer,
+                                    kind = ReminderKind.BEFORE_AZAN,
+                                    isJumuah = isJumuah,
+                                    minutesOffset = offset,
+                                    azanTimeIso = azan.toString(),
+                                    jamaatTimeIso = jamaat?.toString(),
+                                    isEstimated = day.source.isEstimated
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
@@ -100,7 +112,7 @@ class ReminderPlanner {
                     if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
                         events.add(
                             ScheduledReminderEvent(
-                                code = calculateCode(day.date, prayer, ReminderKind.AT_AZAN),
+                                code = calculateCode(day.date, prayer, ReminderKind.AT_AZAN, 0),
                                 fireAtEpochSeconds = fireTime.toEpochSecond(),
                                 prayer = prayer,
                                 kind = ReminderKind.AT_AZAN,
@@ -114,25 +126,32 @@ class ReminderPlanner {
                     }
                 }
 
-                // 3. BEFORE_JAMAAT
-                if (jamaat != null && settings.remBeforeJamaatMin > 0 && settings.isEnabled(prayerKey, ReminderKind.BEFORE_JAMAAT)) {
-                    val fireTime = day.date.atTime(jamaat).minusMinutes(settings.remBeforeJamaatMin.toLong()).atZone(now.zone)
-                    // Fire time must be > azan time per Section 10.1
-                    val fireLocalTime = fireTime.toLocalTime()
-                    if (fireLocalTime.isAfter(azan) && fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
-                        events.add(
-                            ScheduledReminderEvent(
-                                code = calculateCode(day.date, prayer, ReminderKind.BEFORE_JAMAAT),
-                                fireAtEpochSeconds = fireTime.toEpochSecond(),
-                                prayer = prayer,
-                                kind = ReminderKind.BEFORE_JAMAAT,
-                                isJumuah = isJumuah,
-                                minutesOffset = settings.remBeforeJamaatMin,
-                                azanTimeIso = azan.toString(),
-                                jamaatTimeIso = jamaat.toString(),
-                                isEstimated = day.source.isEstimated
+                // 3. BEFORE_JAMAAT (Support multiple reminder intervals)
+                val jamaatOffsets = if (settings.remBeforeJamaatOffsets.isNotEmpty()) {
+                    settings.remBeforeJamaatOffsets
+                } else {
+                    setOf(settings.remBeforeJamaatMin).filter { it > 0 }.toSet()
+                }
+
+                for (offset in jamaatOffsets) {
+                    if (jamaat != null && offset > 0 && settings.isEnabled(prayerKey, ReminderKind.BEFORE_JAMAAT)) {
+                        val fireTime = day.date.atTime(jamaat).minusMinutes(offset.toLong()).atZone(now.zone)
+                        val fireLocalTime = fireTime.toLocalTime()
+                        if (fireLocalTime.isAfter(azan) && fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
+                            events.add(
+                                ScheduledReminderEvent(
+                                    code = calculateCode(day.date, prayer, ReminderKind.BEFORE_JAMAAT, offset),
+                                    fireAtEpochSeconds = fireTime.toEpochSecond(),
+                                    prayer = prayer,
+                                    kind = ReminderKind.BEFORE_JAMAAT,
+                                    isJumuah = isJumuah,
+                                    minutesOffset = offset,
+                                    azanTimeIso = azan.toString(),
+                                    jamaatTimeIso = jamaat.toString(),
+                                    isEstimated = day.source.isEstimated
+                                )
                             )
-                        )
+                        }
                     }
                 }
 

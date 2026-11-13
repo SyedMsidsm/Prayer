@@ -89,10 +89,6 @@ class ShareReceiverActivity : AppCompatActivity() {
                         is ImportUiState.Saved -> {
                             ImportSavedScreen(
                                 timetable = state.timetable,
-                                onSendToFamily = {
-                                    val shareIntent = FamilyShare.createShareIntent(this, state.timetable)
-                                    startActivity(shareIntent)
-                                },
                                 onDone = { finish() }
                             )
                         }

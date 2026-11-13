@@ -1,8 +1,10 @@
 package com.syedmsidsm.prayerreminder.audio
 
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.AssetFileDescriptor
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -10,6 +12,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.syedmsidsm.prayerreminder.notifications.NotificationHelper
 import kotlinx.coroutines.CompletableDeferred
@@ -25,6 +28,8 @@ class VoicePlaybackService : Service() {
 
     companion object {
         const val FOREGROUND_NOTIF_ID = 999991
+        const val ACTION_STOP = "com.syedmsidsm.prayerreminder.action.STOP_PLAYBACK"
+        @Volatile var isRunning: Boolean = false
 
         const val EXTRA_LANGUAGE = "extra_language"
         const val EXTRA_GENDER = "extra_gender"
@@ -37,6 +42,13 @@ class VoicePlaybackService : Service() {
         const val EXTRA_AZAN_RECITER = "extra_azan_reciter"
         const val EXTRA_AZAN_LENGTH = "extra_azan_length"
         const val EXTRA_PLAY_DUA = "extra_play_dua"
+
+        fun stop(context: Context) {
+            val intent = Intent(context, VoicePlaybackService::class.java).apply {
+                action = ACTION_STOP
+            }
+            context.startService(intent)
+        }
 
         fun start(
             context: Context,
@@ -72,18 +84,59 @@ class VoicePlaybackService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     private var mediaPlayer: MediaPlayer? = null
     private var audioFocusRequest: AudioFocusRequest? = null
+    private var volumeReceiver: BroadcastReceiver? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         val notifHelper = NotificationHelper(this)
-        startForeground(FOREGROUND_NOTIF_ID, notifHelper.buildForegroundServiceNotification())
+        startForeground(FOREGROUND_NOTIF_ID, notifHelper.buildForegroundServiceNotification(true))
+        registerVolumeReceiver()
+    }
+
+    private fun registerVolumeReceiver() {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Log.d("VoicePlaybackService", "Hardware volume key event detected; stopping playback immediately")
+                stopPlaybackAndExit()
+            }
+        }
+        volumeReceiver = receiver
+        val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(receiver, filter)
+        }
+    }
+
+    private fun unregisterVolumeReceiver() {
+        volumeReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: Exception) {}
+        }
+        volumeReceiver = null
+    }
+
+    fun stopPlaybackAndExit() {
+        isRunning = false
+        serviceScope.cancel()
+        try {
+            mediaPlayer?.stop()
+            mediaPlayer?.reset()
+            mediaPlayer?.release()
+        } catch (_: Exception) {}
+        mediaPlayer = null
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent == null) {
-            stopSelf()
+        if (intent == null || intent.action == ACTION_STOP) {
+            stopPlaybackAndExit()
             return START_NOT_STICKY
         }
 
@@ -103,7 +156,7 @@ class VoicePlaybackService : Service() {
 
         // 1. In a call -> don't play
         if (audioManager.mode == AudioManager.MODE_IN_CALL || audioManager.mode == AudioManager.MODE_IN_COMMUNICATION) {
-            stopSelf()
+            stopPlaybackAndExit()
             return START_NOT_STICKY
         }
 
@@ -112,14 +165,14 @@ class VoicePlaybackService : Service() {
                 audioManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE
 
         if (isSilentOrVibrate && !overrideSilent) {
-            stopSelf()
+            stopPlaybackAndExit()
             return START_NOT_STICKY
         }
 
         val audioUsage = if (isSilentOrVibrate && overrideSilent) {
             AudioAttributes.USAGE_ALARM
         } else {
-            AudioAttributes.USAGE_NOTIFICATION_EVENT
+            AudioAttributes.USAGE_MEDIA
         }
 
         val timeoutMs = if (kind == "at_azan") 300000L else 20000L // 5 min for azan, 20s for short reminders
@@ -143,8 +196,7 @@ class VoicePlaybackService : Service() {
                     playVoiceSequence(audioManager, audioUsage, language, gender, kind, prayer, minutes, chime)
                 }
             }
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+            stopPlaybackAndExit()
         }
 
         return START_NOT_STICKY
@@ -198,12 +250,14 @@ class VoicePlaybackService : Service() {
 
                 // 3. Optional Dua after Azan
                 if (playDua) {
-                    delay(1500)
+                    delay(1200)
                     val duaPath = "audio/azan/dua_after_azan.mp3"
-                    if (assetExists(duaPath)) {
-                        playAssetFile(duaPath, audioAttributes)
-                    }
+                    playAssetFile(duaPath, audioAttributes)
                 }
+            } else if (playDua) {
+                delay(800)
+                val duaPath = "audio/azan/dua_after_azan.mp3"
+                playAssetFile(duaPath, audioAttributes)
             }
         } finally {
             abandonAudioFocus(audioManager)
@@ -225,7 +279,6 @@ class VoicePlaybackService : Service() {
             .setUsage(usage)
             .build()
 
-        // Request audio focus with ducking
         requestAudioFocus(audioManager, audioAttributes)
 
         try {
@@ -255,7 +308,7 @@ class VoicePlaybackService : Service() {
             @Suppress("DEPRECATION")
             audioManager.requestAudioFocus(
                 null,
-                if (attributes.usage == AudioAttributes.USAGE_ALARM) AudioManager.STREAM_ALARM else AudioManager.STREAM_NOTIFICATION,
+                if (attributes.usage == AudioAttributes.USAGE_ALARM) AudioManager.STREAM_ALARM else AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
             )
         }
@@ -273,26 +326,46 @@ class VoicePlaybackService : Service() {
 
     private suspend fun playAssetFile(path: String, attributes: AudioAttributes) {
         var afd: AssetFileDescriptor? = null
+        var tempFile: java.io.File? = null
         try {
-            afd = assets.openFd(path)
             val mp = MediaPlayer().apply {
                 setAudioAttributes(attributes)
-                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                prepare()
             }
+
+            try {
+                afd = assets.openFd(path)
+                mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                mp.prepare()
+            } catch (e: Exception) {
+                Log.w("VoicePlaybackService", "openFd failed for $path ($e), falling back to temp cache file")
+                val safeName = "voice_" + path.replace("/", "_")
+                val target = java.io.File(cacheDir, safeName)
+                assets.open(path).use { input ->
+                    target.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                tempFile = target
+                mp.reset()
+                mp.setAudioAttributes(attributes)
+                mp.setDataSource(target.absolutePath)
+                mp.prepare()
+            }
+
             mediaPlayer = mp
             val completionDeferred = CompletableDeferred<Unit>()
             mp.setOnCompletionListener {
                 completionDeferred.complete(Unit)
             }
-            mp.setOnErrorListener { _, _, _ ->
+            mp.setOnErrorListener { _, what, extra ->
+                Log.e("VoicePlaybackService", "MediaPlayer error in playback: what=$what extra=$extra")
                 completionDeferred.complete(Unit)
                 true
             }
             mp.start()
             completionDeferred.await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("VoicePlaybackService", "Error in playAssetFile: $path", e)
         } finally {
             try {
                 mediaPlayer?.release()
@@ -300,6 +373,9 @@ class VoicePlaybackService : Service() {
             mediaPlayer = null
             try {
                 afd?.close()
+            } catch (_: Exception) {}
+            try {
+                tempFile?.delete()
             } catch (_: Exception) {}
         }
     }
@@ -358,12 +434,19 @@ class VoicePlaybackService : Service() {
             assets.openFd(path).close()
             true
         } catch (_: Exception) {
-            false
+            try {
+                assets.open(path).close()
+                true
+            } catch (_: Exception) {
+                false
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        isRunning = false
+        unregisterVolumeReceiver()
         serviceScope.cancel()
         try {
             mediaPlayer?.release()

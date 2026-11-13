@@ -79,7 +79,6 @@ fun SettingsScreen(
     onNavigateToRemindersVoice: () -> Unit,
     onNavigateToTimetables: () -> Unit,
     onImportNewTimetable: () -> Unit,
-    onSendCurrentToFamily: (Timetable) -> Unit,
     onNavigateToReliability: () -> Unit = {},
     onAddWidget: () -> Unit = {}
 ) {

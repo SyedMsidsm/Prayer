@@ -34,6 +34,9 @@ class SettingsRepository(
         val KEY_REM_JUMUAH_BEFORE_AZAN_MIN = intPreferencesKey("rem_jumuah_before_azan_min")
         val KEY_REM_AT_AZAN = booleanPreferencesKey("rem_at_azan")
         val KEY_REM_BEFORE_JAMAAT_MIN = intPreferencesKey("rem_before_jamaat_min")
+        val KEY_REM_BEFORE_AZAN_OFFSETS = stringPreferencesKey("rem_before_azan_offsets")
+        val KEY_REM_BEFORE_JAMAAT_OFFSETS = stringPreferencesKey("rem_before_jamaat_offsets")
+        val KEY_REM_JUMUAH_BEFORE_AZAN_OFFSETS = stringPreferencesKey("rem_jumuah_before_azan_offsets")
 
         val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
         val KEY_VOICE_LANGUAGE = stringPreferencesKey("voice_language")
@@ -167,16 +170,56 @@ class SettingsRepository(
         prefs[KEY_REM_BEFORE_AZAN_MIN] ?: 10
     }
 
+    val remBeforeAzanOffsets: Flow<Set<Int>> = dataStore.data.map { prefs ->
+        val raw = prefs[KEY_REM_BEFORE_AZAN_OFFSETS]
+        if (raw.isNullOrBlank()) {
+            val def = prefs[KEY_REM_BEFORE_AZAN_MIN] ?: 10
+            if (def > 0) setOf(def) else emptySet()
+        } else {
+            raw.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+        }
+    }
+
+    suspend fun setRemBeforeAzanOffsets(offsets: Set<Int>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REM_BEFORE_AZAN_OFFSETS] = offsets.sortedDescending().joinToString(",")
+            prefs[KEY_REM_BEFORE_AZAN_MIN] = offsets.maxOrNull() ?: 0
+        }
+    }
+
     suspend fun setRemBeforeAzanMin(minutes: Int) {
-        dataStore.edit { it[KEY_REM_BEFORE_AZAN_MIN] = minutes }
+        dataStore.edit {
+            it[KEY_REM_BEFORE_AZAN_MIN] = minutes
+            it[KEY_REM_BEFORE_AZAN_OFFSETS] = if (minutes > 0) minutes.toString() else ""
+        }
     }
 
     val remJumuahBeforeAzanMin: Flow<Int> = dataStore.data.map { prefs ->
         prefs[KEY_REM_JUMUAH_BEFORE_AZAN_MIN] ?: 30
     }
 
+    val remJumuahBeforeAzanOffsets: Flow<Set<Int>> = dataStore.data.map { prefs ->
+        val raw = prefs[KEY_REM_JUMUAH_BEFORE_AZAN_OFFSETS]
+        if (raw.isNullOrBlank()) {
+            val def = prefs[KEY_REM_JUMUAH_BEFORE_AZAN_MIN] ?: 30
+            if (def > 0) setOf(def) else emptySet()
+        } else {
+            raw.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+        }
+    }
+
+    suspend fun setRemJumuahBeforeAzanOffsets(offsets: Set<Int>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REM_JUMUAH_BEFORE_AZAN_OFFSETS] = offsets.sortedDescending().joinToString(",")
+            prefs[KEY_REM_JUMUAH_BEFORE_AZAN_MIN] = offsets.maxOrNull() ?: 0
+        }
+    }
+
     suspend fun setRemJumuahBeforeAzanMin(minutes: Int) {
-        dataStore.edit { it[KEY_REM_JUMUAH_BEFORE_AZAN_MIN] = minutes }
+        dataStore.edit {
+            it[KEY_REM_JUMUAH_BEFORE_AZAN_MIN] = minutes
+            it[KEY_REM_JUMUAH_BEFORE_AZAN_OFFSETS] = if (minutes > 0) minutes.toString() else ""
+        }
     }
 
     val remAtAzan: Flow<Boolean> = dataStore.data.map { prefs ->
@@ -191,8 +234,28 @@ class SettingsRepository(
         prefs[KEY_REM_BEFORE_JAMAAT_MIN] ?: 5
     }
 
+    val remBeforeJamaatOffsets: Flow<Set<Int>> = dataStore.data.map { prefs ->
+        val raw = prefs[KEY_REM_BEFORE_JAMAAT_OFFSETS]
+        if (raw.isNullOrBlank()) {
+            val def = prefs[KEY_REM_BEFORE_JAMAAT_MIN] ?: 5
+            if (def > 0) setOf(def) else emptySet()
+        } else {
+            raw.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+        }
+    }
+
+    suspend fun setRemBeforeJamaatOffsets(offsets: Set<Int>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REM_BEFORE_JAMAAT_OFFSETS] = offsets.sortedDescending().joinToString(",")
+            prefs[KEY_REM_BEFORE_JAMAAT_MIN] = offsets.maxOrNull() ?: 0
+        }
+    }
+
     suspend fun setRemBeforeJamaatMin(minutes: Int) {
-        dataStore.edit { it[KEY_REM_BEFORE_JAMAAT_MIN] = minutes }
+        dataStore.edit {
+            it[KEY_REM_BEFORE_JAMAAT_MIN] = minutes
+            it[KEY_REM_BEFORE_JAMAAT_OFFSETS] = if (minutes > 0) minutes.toString() else ""
+        }
     }
 
     val oemStepConfirmed: Flow<Boolean> = dataStore.data.map { prefs ->

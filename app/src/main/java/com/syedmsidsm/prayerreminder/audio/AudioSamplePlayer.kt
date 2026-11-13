@@ -106,11 +106,9 @@ class AudioSamplePlayer(private val context: Context) {
             _playingKind.value = "dua_after_azan"
             try {
                 val clipPath = "audio/azan/dua_after_azan.mp3"
-                if (assetExists(clipPath)) {
-                    playAssetFile(clipPath)
-                }
+                playAssetFile(clipPath)
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("AudioSamplePlayer", "Error playing dua sample", e)
             } finally {
                 _isPlaying.value = false
                 _currentTrack.value = null
@@ -121,31 +119,56 @@ class AudioSamplePlayer(private val context: Context) {
 
     private suspend fun playAssetFile(path: String) {
         var afd: AssetFileDescriptor? = null
+        var tempFile: java.io.File? = null
         try {
-            afd = context.assets.openFd(path)
             val mp = MediaPlayer().apply {
                 setAudioAttributes(
                     AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
                         .build()
                 )
-                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                prepare()
             }
+
+            try {
+                afd = context.assets.openFd(path)
+                mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                mp.prepare()
+            } catch (e: Exception) {
+                android.util.Log.w("AudioSamplePlayer", "openFd failed for $path ($e), extracting to temp cache file")
+                val safeName = "sample_" + path.replace("/", "_")
+                val target = java.io.File(context.cacheDir, safeName)
+                context.assets.open(path).use { input ->
+                    target.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                tempFile = target
+                mp.reset()
+                mp.setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
+                mp.setDataSource(target.absolutePath)
+                mp.prepare()
+            }
+
             mediaPlayer = mp
             val completionDeferred = CompletableDeferred<Unit>()
             mp.setOnCompletionListener {
                 completionDeferred.complete(Unit)
             }
-            mp.setOnErrorListener { _, _, _ ->
+            mp.setOnErrorListener { _, what, extra ->
+                android.util.Log.e("AudioSamplePlayer", "MediaPlayer error: what=$what extra=$extra")
                 completionDeferred.complete(Unit)
                 true
             }
             mp.start()
             completionDeferred.await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("AudioSamplePlayer", "Error playing asset: $path", e)
         } finally {
             try {
                 mediaPlayer?.release()
@@ -153,6 +176,9 @@ class AudioSamplePlayer(private val context: Context) {
             mediaPlayer = null
             try {
                 afd?.close()
+            } catch (_: Exception) {}
+            try {
+                tempFile?.delete()
             } catch (_: Exception) {}
         }
     }

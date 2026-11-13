@@ -139,10 +139,22 @@ class SettingsViewModel(
         10
     )
 
+    val remBeforeAzanOffsets: StateFlow<Set<Int>> = settingsRepository.remBeforeAzanOffsets.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        setOf(10)
+    )
+
     val remJumuahBeforeAzanMin: StateFlow<Int> = settingsRepository.remJumuahBeforeAzanMin.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         30
+    )
+
+    val remJumuahBeforeAzanOffsets: StateFlow<Set<Int>> = settingsRepository.remJumuahBeforeAzanOffsets.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        setOf(30)
     )
 
     val remAtAzan: StateFlow<Boolean> = settingsRepository.remAtAzan.stateIn(
@@ -155,6 +167,12 @@ class SettingsViewModel(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         5
+    )
+
+    val remBeforeJamaatOffsets: StateFlow<Set<Int>> = settingsRepository.remBeforeJamaatOffsets.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        setOf(5)
     )
 
     val reminderMatrix: StateFlow<Map<Pair<String, String>, Boolean>> = settingsRepository.reminderMatrix.stateIn(
@@ -269,6 +287,57 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsRepository.setRemBeforeJamaatMin(minutes)
             context?.let { AppRefresher.refreshAll(it, "before_jamaat_min_changed") }
+        }
+    }
+
+    fun toggleBeforeAzanOffset(minutes: Int) {
+        viewModelScope.launch {
+            if (minutes <= 0) {
+                settingsRepository.setRemBeforeAzanOffsets(emptySet())
+            } else {
+                val current = remBeforeAzanOffsets.value.toMutableSet()
+                if (current.contains(minutes)) {
+                    current.remove(minutes)
+                } else {
+                    current.add(minutes)
+                }
+                settingsRepository.setRemBeforeAzanOffsets(current)
+            }
+            context?.let { AppRefresher.refreshAll(it, "before_azan_offsets_changed") }
+        }
+    }
+
+    fun toggleBeforeJamaatOffset(minutes: Int) {
+        viewModelScope.launch {
+            if (minutes <= 0) {
+                settingsRepository.setRemBeforeJamaatOffsets(emptySet())
+            } else {
+                val current = remBeforeJamaatOffsets.value.toMutableSet()
+                if (current.contains(minutes)) {
+                    current.remove(minutes)
+                } else {
+                    current.add(minutes)
+                }
+                settingsRepository.setRemBeforeJamaatOffsets(current)
+            }
+            context?.let { AppRefresher.refreshAll(it, "before_jamaat_offsets_changed") }
+        }
+    }
+
+    fun toggleJumuahBeforeAzanOffset(minutes: Int) {
+        viewModelScope.launch {
+            if (minutes <= 0) {
+                settingsRepository.setRemJumuahBeforeAzanOffsets(emptySet())
+            } else {
+                val current = remJumuahBeforeAzanOffsets.value.toMutableSet()
+                if (current.contains(minutes)) {
+                    current.remove(minutes)
+                } else {
+                    current.add(minutes)
+                }
+                settingsRepository.setRemJumuahBeforeAzanOffsets(current)
+            }
+            context?.let { AppRefresher.refreshAll(it, "jumuah_offsets_changed") }
         }
     }
 

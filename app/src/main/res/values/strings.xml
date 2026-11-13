@@ -183,6 +183,13 @@
     <string name="widget_theme_gold">Warm Gold</string>
     <string name="widget_theme_system">Follow system</string>
     <string name="widget_slim_label">Prayer horizontal bar</string>
+    <string name="stop">Stop</string>
+    <string name="multiple_reminders_hint">Select one or more reminder intervals</string>
+    <string name="home_settings_desc">Reminders, Azan voices, font size, theme &amp; timetables</string>
+    <string name="appearance_theme">Appearance &amp; Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">Follow System</string>
 
     <string-array name="hijri_months">
         <item>Muharram</item><item>Safar</item><item>Rabi al-Awwal</item><item>Rabi al-Thani</item>

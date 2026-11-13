@@ -183,6 +183,13 @@
     <string name="widget_theme_gold">الذهبي الدافئ</string>
     <string name="widget_theme_system">تلقائي حسب النظام</string>
     <string name="widget_slim_label">شريط الصلاة الأفقي</string>
+    <string name="stop">إيقاف</string>
+    <string name="multiple_reminders_hint">اختر وقتًا أو أكثر للتنبيهات</string>
+    <string name="home_settings_desc">المنبهات، أصوات الأذان، حجم الخط، المظهر، والجداول</string>
+    <string name="appearance_theme">المظهر والسمة</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_system">تلقائي</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربيع الأول</item><item>ربيع الآخر</item>

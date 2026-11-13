@@ -26,6 +26,13 @@ class OcrEngine(private val context: Context) {
         recognizeFromBitmap(bitmap)
     }
 
+    fun loadBitmap(uri: Uri): Bitmap = loadAndPreprocessBitmap(uri)
+
+    fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {
+        val matrix = android.graphics.Matrix().apply { postRotate(degrees) }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
     suspend fun recognizeFromBitmap(bitmap: Bitmap): List<OcrToken> = suspendCancellableCoroutine { cont ->
         val inputImage = InputImage.fromBitmap(bitmap, 0)
         recognizer.process(inputImage)
@@ -96,6 +103,33 @@ class OcrEngine(private val context: Context) {
                     BitmapFactory.decodeStream(stream, null, options)
                 } ?: throw IllegalArgumentException("Could not decode bitmap from URI: ${e.message}")
             }
+        }
+
+        // Apply EXIF orientation from photo camera metadata
+        val rotationDegrees = try {
+            val inputStream = if (uri.scheme == "file" && uri.path != null) {
+                java.io.FileInputStream(java.io.File(uri.path!!))
+            } else {
+                context.contentResolver.openInputStream(uri)
+            }
+            inputStream?.use { stream ->
+                val exif = android.media.ExifInterface(stream)
+                when (exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL)) {
+                    android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                    android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                    android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                    else -> 0
+                }
+            } ?: 0
+        } catch (e: Exception) {
+            Log.w("OcrEngine", "Failed to read EXIF orientation", e)
+            0
+        }
+
+        if (rotationDegrees != 0) {
+            val matrix = android.graphics.Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+            bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
+            Log.d("OcrEngine", "Applied EXIF rotation: $rotationDegrees deg")
         }
 
         // Spec 6.3: If shortest side is under 1000 px, upscale x2 (bilinear)

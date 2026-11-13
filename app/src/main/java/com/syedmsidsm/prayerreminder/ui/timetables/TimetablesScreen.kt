@@ -48,7 +48,6 @@ fun TimetablesScreen(
     onBack: () -> Unit,
     onImportNew: () -> Unit,
     onManualEntry: () -> Unit,
-    onSendToFamily: (Timetable) -> Unit,
     onDeleteTimetable: (Timetable) -> Unit
 ) {
     val today = LocalDate.now()
@@ -104,7 +103,6 @@ fun TimetablesScreen(
                         timetable = activeTable,
                         isActive = true,
                         today = today,
-                        onSend = { onSendToFamily(activeTable) },
                         onDelete = { onDeleteTimetable(activeTable) }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -127,7 +125,6 @@ fun TimetablesScreen(
                         timetable = table,
                         isActive = false,
                         today = today,
-                        onSend = { onSendToFamily(table) },
                         onDelete = { onDeleteTimetable(table) }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -183,7 +180,6 @@ private fun TimetableCard(
     timetable: Timetable,
     isActive: Boolean,
     today: LocalDate,
-    onSend: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(

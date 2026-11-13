@@ -35,7 +35,10 @@ object AppRefresher {
                 remJumuahBeforeAzanMin = settingsRepo.remJumuahBeforeAzanMin.first(),
                 remAtAzan = settingsRepo.remAtAzan.first(),
                 remBeforeJamaatMin = settingsRepo.remBeforeJamaatMin.first(),
-                matrix = settingsRepo.reminderMatrix.first()
+                matrix = settingsRepo.reminderMatrix.first(),
+                remBeforeAzanOffsets = settingsRepo.remBeforeAzanOffsets.first(),
+                remBeforeJamaatOffsets = settingsRepo.remBeforeJamaatOffsets.first(),
+                remJumuahBeforeAzanOffsets = settingsRepo.remJumuahBeforeAzanOffsets.first()
             )
 
             val latestTimetable = timetables.firstOrNull()

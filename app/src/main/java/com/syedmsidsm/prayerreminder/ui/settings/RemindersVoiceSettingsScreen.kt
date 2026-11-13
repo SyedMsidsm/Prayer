@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
@@ -71,9 +72,12 @@ fun RemindersVoiceSettingsScreen(
     val voiceOnSilent by viewModel.voiceOnSilent.collectAsState()
 
     val beforeAzanMin by viewModel.remBeforeAzanMin.collectAsState()
+    val beforeAzanOffsets by viewModel.remBeforeAzanOffsets.collectAsState()
     val jumuahBeforeAzanMin by viewModel.remJumuahBeforeAzanMin.collectAsState()
+    val jumuahBeforeAzanOffsets by viewModel.remJumuahBeforeAzanOffsets.collectAsState()
     val atAzanEnabled by viewModel.remAtAzan.collectAsState()
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
+    val beforeJamaatOffsets by viewModel.remBeforeJamaatOffsets.collectAsState()
 
     val reminderMatrix by viewModel.reminderMatrix.collectAsState()
     val isPlaying by viewModel.audioPlayer.isPlaying.collectAsState()
@@ -236,8 +240,14 @@ fun RemindersVoiceSettingsScreen(
                     TimingSectionHeader(
                         title = stringResource(R.string.before_azan),
                         isPlaying = playingKind == "before_azan",
-                        onPlay = { viewModel.playSample("before_azan", beforeAzanMin) },
+                        onPlay = { viewModel.playSample("before_azan", beforeAzanOffsets.firstOrNull() ?: beforeAzanMin) },
                         onStop = { viewModel.stopSample() }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.multiple_reminders_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrayerReminderColors.Muted
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     FlowRow(
@@ -247,10 +257,11 @@ fun RemindersVoiceSettingsScreen(
                         val beforeAzanOptions = listOf(0, 5, 10, 15, 20, 30)
                         for (min in beforeAzanOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
+                            val isSel = if (min == 0) beforeAzanOffsets.isEmpty() else beforeAzanOffsets.contains(min)
                             ChoiceChip(
                                 label = label,
-                                isSelected = beforeAzanMin == min,
-                                onClick = { viewModel.setRemBeforeAzanMin(min) }
+                                isSelected = isSel,
+                                onClick = { viewModel.toggleBeforeAzanOffset(min) }
                             )
                         }
                     }
@@ -299,8 +310,14 @@ fun RemindersVoiceSettingsScreen(
                     TimingSectionHeader(
                         title = stringResource(R.string.before_jamaat),
                         isPlaying = playingKind == "before_jamaat",
-                        onPlay = { viewModel.playSample("before_jamaat", beforeJamaatMin) },
+                        onPlay = { viewModel.playSample("before_jamaat", beforeJamaatOffsets.firstOrNull() ?: beforeJamaatMin) },
                         onStop = { viewModel.stopSample() }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.multiple_reminders_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrayerReminderColors.Muted
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     FlowRow(
@@ -310,10 +327,11 @@ fun RemindersVoiceSettingsScreen(
                         val beforeJamaatOptions = listOf(0, 2, 5, 10, 15)
                         for (min in beforeJamaatOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
+                            val isSel = if (min == 0) beforeJamaatOffsets.isEmpty() else beforeJamaatOffsets.contains(min)
                             ChoiceChip(
                                 label = label,
-                                isSelected = beforeJamaatMin == min,
-                                onClick = { viewModel.setRemBeforeJamaatMin(min) }
+                                isSelected = isSel,
+                                onClick = { viewModel.toggleBeforeJamaatOffset(min) }
                             )
                         }
                     }
@@ -326,8 +344,14 @@ fun RemindersVoiceSettingsScreen(
                     TimingSectionHeader(
                         title = stringResource(R.string.jumuah_before_azan),
                         isPlaying = playingKind == "jumuah_before_azan",
-                        onPlay = { viewModel.playSample("jumuah_before_azan", jumuahBeforeAzanMin) },
+                        onPlay = { viewModel.playSample("jumuah_before_azan", jumuahBeforeAzanOffsets.firstOrNull() ?: jumuahBeforeAzanMin) },
                         onStop = { viewModel.stopSample() }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.multiple_reminders_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PrayerReminderColors.Muted
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     FlowRow(
@@ -337,10 +361,11 @@ fun RemindersVoiceSettingsScreen(
                         val jumuahOptions = listOf(0, 5, 10, 15, 20, 30)
                         for (min in jumuahOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
+                            val isSel = if (min == 0) jumuahBeforeAzanOffsets.isEmpty() else jumuahBeforeAzanOffsets.contains(min)
                             ChoiceChip(
                                 label = label,
-                                isSelected = jumuahBeforeAzanMin == min,
-                                onClick = { viewModel.setRemJumuahBeforeAzanMin(min) }
+                                isSelected = isSel,
+                                onClick = { viewModel.toggleJumuahBeforeAzanOffset(min) }
                             )
                         }
                     }
@@ -504,7 +529,7 @@ fun RemindersVoiceSettingsScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 SamplePlayButton(
-                                    isPlaying = currentTrack == "dua_after_azan",
+                                    isPlaying = currentTrack == "dua_after_azan" || playingKind == "dua_after_azan",
                                     onPlay = { viewModel.playDuaSample() },
                                     onStop = { viewModel.stopSample() }
                                 )
@@ -827,10 +852,20 @@ private fun ChoiceChip(
         color = if (isSelected) PrayerReminderColors.PrimaryBtnBg else PrayerReminderColors.Ivory,
         border = if (isSelected) null else BorderStroke(1.dp, PrayerReminderColors.Line)
     ) {
-        Box(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = PrayerReminderColors.PrimaryBtnText,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
             Text(
                 text = label,
                 color = if (isSelected) PrayerReminderColors.PrimaryBtnText else PrayerReminderColors.Ink,
