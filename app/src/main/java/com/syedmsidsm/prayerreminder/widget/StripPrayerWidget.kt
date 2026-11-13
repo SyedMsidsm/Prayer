@@ -19,16 +19,17 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
-import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
 class StripPrayerWidget : GlanceAppWidget() {
@@ -48,19 +49,15 @@ class StripPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun StripPrayerWidgetContent(state: WidgetState) {
-    val ivoryColor = ColorProvider(Color(0xFFF7F4EC))
-    val mutedColor = ColorProvider(Color(0xFFC8D2CF))
-    val pastColor = ColorProvider(Color(0xFF7B9390))
-    val darkTextOnGold = ColorProvider(Color(0xFF0F2A2E))
-    val groundColor = Color(0xFF0F2A2E)
-    val goldCapsuleBg = Color(0xFFD9AE5C)
+    val colors = WidgetThemeConfig.getColors(state.theme)
+    val darkTextOnGold = ColorProvider(Color(0xFF020617))
     val launchAction = actionStartActivity<MainActivity>()
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(22.dp)
-            .background(groundColor)
+            .background(colors.background)
             .clickable(launchAction)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
@@ -72,16 +69,16 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                 Text(
                     text = "📍 ${state.place}",
                     style = TextStyle(
-                        color = mutedColor,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
+                        color = colors.textPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 )
                 Spacer(modifier = GlanceModifier.defaultWeight())
                 Text(
                     text = state.hijriDate,
                     style = TextStyle(
-                        color = mutedColor,
+                        color = colors.textSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Normal
                     )
@@ -90,71 +87,49 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
 
             Spacer(modifier = GlanceModifier.height(4.dp))
 
-            val orderedRows = if (state.isRtl) state.rows.reversed() else state.rows
+            val fardRows = state.rows.filter { it.prayer != Prayer.SUNRISE }
+            val orderedRows = if (state.isRtl) fardRows.reversed() else fardRows
             Row(
                 modifier = GlanceModifier.fillMaxWidth().defaultWeight().clickable(launchAction),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 for (row in orderedRows) {
-                    val colColor = when {
-                        row.isNext -> darkTextOnGold
-                        row.isPast -> pastColor
-                        else -> ivoryColor
-                    }
-                    val subColor = when {
-                        row.isNext -> darkTextOnGold
-                        else -> mutedColor
-                    }
-
-                    val colModifier = GlanceModifier
-                        .defaultWeight()
-                        .fillMaxHeight()
-                        .padding(horizontal = 2.dp)
-                        .then(
-                            if (row.isNext) {
-                                GlanceModifier
-                                    .cornerRadius(12.dp)
-                                    .background(goldCapsuleBg)
-                                    .padding(vertical = 4.dp, horizontal = 2.dp)
-                            } else {
-                                GlanceModifier.padding(vertical = 4.dp, horizontal = 2.dp)
-                            }
-                        )
+                    val isNext = row.isNext
+                    val capsuleBg = if (isNext) Color(0xFFFBBF24) else colors.capsuleBackground
+                    val titleColor = if (isNext) darkTextOnGold else colors.textSecondary
+                    val timeColor = if (isNext) darkTextOnGold else colors.textPrimary
 
                     Column(
-                        modifier = colModifier,
+                        modifier = GlanceModifier
+                            .defaultWeight()
+                            .background(capsuleBg)
+                            .cornerRadius(10.dp)
+                            .padding(vertical = 4.dp, horizontal = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = row.prayerName,
                             style = TextStyle(
-                                color = colColor,
-                                fontSize = 11.sp,
-                                fontWeight = if (row.isNext) FontWeight.Bold else FontWeight.Medium,
+                                color = titleColor,
+                                fontSize = 9.sp,
+                                fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
                                 textAlign = TextAlign.Center
                             )
                         )
+                        Spacer(modifier = GlanceModifier.height(2.dp))
                         Text(
-                            text = row.azanShort,
+                            text = row.azanShort.ifEmpty { row.azanFormatted.take(5) },
                             style = TextStyle(
-                                color = colColor,
-                                fontSize = 14.sp,
+                                color = timeColor,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center
                             )
                         )
-                        if (row.isNext && state.countdownText.isNotEmpty()) {
-                            Text(
-                                text = state.countdownText,
-                                style = TextStyle(
-                                    color = subColor,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-                        }
+                    }
+                    if (row != orderedRows.last()) {
+                        Spacer(modifier = GlanceModifier.width(4.dp))
                     }
                 }
             }

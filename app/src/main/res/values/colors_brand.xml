@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#0F2A2E</color>
-    <color name="brand_ground">#0F2A2E</color>
-    <color name="brand_gold">#D9AE5C</color>
-    <color name="brand_ivory">#F7F4EC</color>
+    <color name="ic_launcher_background">#07131A</color>
+    <color name="brand_ground">#07131A</color>
+    <color name="brand_gold">#FBBF24</color>
+    <color name="brand_ivory">#F8FAFC</color>
 </resources>

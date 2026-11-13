@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.syedmsidsm.prayerreminder.data.SettingsRepository
 import com.syedmsidsm.prayerreminder.data.TimetableRepository
-import com.syedmsidsm.prayerreminder.domain.CityPresets
 import com.syedmsidsm.prayerreminder.domain.DayScheduleResolver
 import com.syedmsidsm.prayerreminder.domain.NextPrayerResolver
 import com.syedmsidsm.prayerreminder.domain.model.DaySchedule
@@ -30,7 +29,7 @@ import java.time.ZonedDateTime
 
 data class HomeUiState(
     val isReady: Boolean = false,
-    val place: String = "Bhatkal, IN",
+    val place: String = "Bhatkal",
     val activeTimetable: Timetable? = null,
     val selectedDate: LocalDate = LocalDate.now(ZoneId.of("Asia/Kolkata")),
     val schedule: DaySchedule? = null,
@@ -48,10 +47,7 @@ data class HomeUiState(
     val shortCountdown: String = "0m",
     val progressPct: Float = 0.15f,
     val alertModes: Map<Prayer, String> = emptyMap(),
-    val use24Hour: Boolean = false,
-    val selectedCityId: String = "bhatkal",
-    val calcMethod: String = "MWL",
-    val asrMethod: String = "Standard"
+    val use24Hour: Boolean = false
 )
 
 class HomeViewModel(
@@ -81,33 +77,23 @@ class HomeViewModel(
                 FiveSettings(tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin)
             }
 
-            val uiPrefsFlow = combine(
-                settingsRepository.selectedCityId,
-                settingsRepository.calcMethod,
-                settingsRepository.asrMethod,
-                settingsRepository.use24Hour,
-                settingsRepository.skyOverride
-            ) { cityId, calcMethod, asrMethod, use24h, skyOverride ->
-                UiPrefs(cityId, calcMethod, asrMethod, use24h, skyOverride)
-            }
-
             combine(
                 coreFlow,
-                uiPrefsFlow,
+                settingsRepository.use24Hour,
+                settingsRepository.skyOverride,
                 settingsRepository.prayerAlertModes
-            ) { core, prefs, alertModes ->
-                Triple(core, prefs, alertModes)
-            }.collectLatest { (core, prefs, alertModes) ->
+            ) { core, use24h, skyOverride, alertModes ->
                 updateStateWithRules(
                     tables = core.tables,
                     rules = core.rules,
                     voiceOn = core.voiceOn,
                     beforeAzanMin = core.beforeAzanMin,
                     beforeJamaatMin = core.beforeJamaatMin,
-                    prefs = prefs,
+                    use24h = use24h,
+                    skyOverride = skyOverride,
                     alertModes = alertModes
                 )
-            }
+            }.collectLatest {}
         }
 
         startCountdownLoop()
@@ -119,14 +105,6 @@ class HomeViewModel(
         val voiceOn: Boolean,
         val beforeAzanMin: Int,
         val beforeJamaatMin: Int
-    )
-
-    private data class UiPrefs(
-        val cityId: String = "bhatkal",
-        val calcMethod: String = "MWL",
-        val asrMethod: String = "Standard",
-        val use24h: Boolean = false,
-        val skyOverride: String = ""
     )
 
     private fun resolveCurrentSkyPrayer(currentTime: LocalTime, schedule: DaySchedule): Prayer {
@@ -191,13 +169,11 @@ class HomeViewModel(
         voiceOn: Boolean,
         beforeAzanMin: Int,
         beforeJamaatMin: Int,
-        prefs: UiPrefs = UiPrefs(),
+        use24h: Boolean = false,
+        skyOverride: String = "",
         alertModes: Map<Prayer, String> = emptyMap()
     ) {
-        val effectiveZone = runCatching {
-            ZoneId.of(CityPresets.findById(prefs.cityId).zoneId)
-        }.getOrDefault(zoneId)
-        val now = ZonedDateTime.now(effectiveZone)
+        val now = ZonedDateTime.now(zoneId)
         val today = now.toLocalDate()
 
         val isDemo = _uiState.value.isSimulatedDemoDate
@@ -206,25 +182,8 @@ class HomeViewModel(
         val activeTable = timetableRepository.getTimetableFor(displayDate)
             ?: tables.firstOrNull()
 
-        val baseToday = dayScheduleResolver.resolve(displayDate, tables, rules)
-        val baseTomorrow = dayScheduleResolver.resolve(displayDate.plusDays(1), tables, rules)
-
-        val todaySchedule = CityPresets.adjustScheduleForCityAndMethod(
-            baseSchedule = baseToday,
-            date = displayDate,
-            cityId = prefs.cityId,
-            calcMethod = prefs.calcMethod,
-            asrMethod = prefs.asrMethod,
-            jamaatRules = rules
-        )
-        val tomorrowSchedule = CityPresets.adjustScheduleForCityAndMethod(
-            baseSchedule = baseTomorrow,
-            date = displayDate.plusDays(1),
-            cityId = prefs.cityId,
-            calcMethod = prefs.calcMethod,
-            asrMethod = prefs.asrMethod,
-            jamaatRules = rules
-        )
+        val todaySchedule = dayScheduleResolver.resolve(displayDate, tables, rules)
+        val tomorrowSchedule = dayScheduleResolver.resolve(displayDate.plusDays(1), tables, rules)
 
         val currentTime = if (isDemo) {
             _uiState.value.currentTime
@@ -248,7 +207,7 @@ class HomeViewModel(
         }
 
         val currentSky = resolveCurrentSkyPrayer(currentTime, todaySchedule)
-        val overridePrayer = prefs.skyOverride.takeIf { it.isNotBlank() }?.let {
+        val overridePrayer = skyOverride.takeIf { it.isNotBlank() }?.let {
             runCatching { Prayer.valueOf(it) }.getOrNull()
         }
         val activeSky = overridePrayer ?: currentSky
@@ -258,12 +217,7 @@ class HomeViewModel(
         val shortCountdown = TimeFormatter.formatShortCountdown(dur)
         val progressPct = computeProgress(currentTime, todaySchedule, next)
 
-        val placeLabel = if (prefs.cityId == "bhatkal") {
-            val rawPlace = activeTable?.place?.ifBlank { "Bhatkal" } ?: "Bhatkal"
-            if (rawPlace == "Bhatkal") "Bhatkal, IN" else rawPlace
-        } else {
-            CityPresets.findById(prefs.cityId).displayName
-        }
+        val placeLabel = activeTable?.place?.ifBlank { "Bhatkal" } ?: "Bhatkal"
 
         _uiState.value = _uiState.value.copy(
             isReady = true,
@@ -278,16 +232,13 @@ class HomeViewModel(
             reminderStates = remStates,
             isSimulatedDemoDate = isDemo,
             currentPrayerSky = currentSky,
-            skyOverride = prefs.skyOverride,
+            skyOverride = skyOverride,
             activeSky = activeSky,
             countdownHms = countdownHms,
             shortCountdown = shortCountdown,
             progressPct = progressPct,
             alertModes = alertModes,
-            use24Hour = prefs.use24h,
-            selectedCityId = prefs.cityId,
-            calcMethod = prefs.calcMethod,
-            asrMethod = prefs.asrMethod
+            use24Hour = use24h
         )
         isReady.value = true
     }
@@ -298,15 +249,10 @@ class HomeViewModel(
         val voiceOn = settingsRepository.voiceEnabled.first()
         val beforeAzanMin = settingsRepository.remBeforeAzanMin.first()
         val beforeJamaatMin = settingsRepository.remBeforeJamaatMin.first()
-        val prefs = UiPrefs(
-            cityId = settingsRepository.selectedCityId.first(),
-            calcMethod = settingsRepository.calcMethod.first(),
-            asrMethod = settingsRepository.asrMethod.first(),
-            use24h = settingsRepository.use24Hour.first(),
-            skyOverride = settingsRepository.skyOverride.first()
-        )
+        val use24h = settingsRepository.use24Hour.first()
+        val skyOverride = settingsRepository.skyOverride.first()
         val alertModes = settingsRepository.prayerAlertModes.first()
-        updateStateWithRules(tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin, prefs, alertModes)
+        updateStateWithRules(tables, rules, voiceOn, beforeAzanMin, beforeJamaatMin, use24h, skyOverride, alertModes)
     }
 
     private fun startCountdownLoop() {
@@ -317,35 +263,15 @@ class HomeViewModel(
                 val tables = timetableRepository.timetables.value
                 val rules = settingsRepository.jamaatRules.first()
 
-                val effectiveZone = runCatching {
-                    ZoneId.of(CityPresets.findById(current.selectedCityId).zoneId)
-                }.getOrDefault(zoneId)
-                val now = ZonedDateTime.now(effectiveZone)
+                val now = ZonedDateTime.now(zoneId)
                 val effectiveDate = if (current.isSimulatedDemoDate) {
                     current.selectedDate
                 } else {
                     now.toLocalDate()
                 }
 
-                val baseToday = dayScheduleResolver.resolve(effectiveDate, tables, rules)
-                val todaySchedule = CityPresets.adjustScheduleForCityAndMethod(
-                    baseSchedule = baseToday,
-                    date = effectiveDate,
-                    cityId = current.selectedCityId,
-                    calcMethod = current.calcMethod,
-                    asrMethod = current.asrMethod,
-                    jamaatRules = rules
-                )
-
-                val baseTomorrow = dayScheduleResolver.resolve(effectiveDate.plusDays(1), tables, rules)
-                val tomorrowSchedule = CityPresets.adjustScheduleForCityAndMethod(
-                    baseSchedule = baseTomorrow,
-                    date = effectiveDate.plusDays(1),
-                    cityId = current.selectedCityId,
-                    calcMethod = current.calcMethod,
-                    asrMethod = current.asrMethod,
-                    jamaatRules = rules
-                )
+                val todaySchedule = dayScheduleResolver.resolve(effectiveDate, tables, rules)
+                val tomorrowSchedule = dayScheduleResolver.resolve(effectiveDate.plusDays(1), tables, rules)
 
                 val updatedTime = if (current.isSimulatedDemoDate) {
                     current.currentTime.plusSeconds(1)
@@ -364,7 +290,10 @@ class HomeViewModel(
                 val activeSky = overridePrayer ?: currentSky
                 val dur = next?.remainingDuration ?: Duration.ZERO
 
+                val placeLabel = activeTable?.place?.ifBlank { "Bhatkal" } ?: "Bhatkal"
+
                 _uiState.value = current.copy(
+                    place = placeLabel,
                     selectedDate = effectiveDate,
                     activeTimetable = activeTable,
                     schedule = todaySchedule,
@@ -414,7 +343,10 @@ class HomeViewModel(
             val next = nextPrayerResolver.resolve(simTime, todaySchedule, tomorrowSchedule)
             val activeTable = timetableRepository.getTimetableFor(date) ?: tables.firstOrNull()
 
+            val placeLabel = activeTable?.place?.ifBlank { "Bhatkal" } ?: "Bhatkal"
+
             _uiState.value = _uiState.value.copy(
+                place = placeLabel,
                 selectedDate = date,
                 activeTimetable = activeTable,
                 schedule = todaySchedule,

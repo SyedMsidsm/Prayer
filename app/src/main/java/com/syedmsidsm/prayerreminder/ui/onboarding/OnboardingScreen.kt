@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -39,18 +40,12 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -72,11 +68,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import com.syedmsidsm.prayerreminder.R
+import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.reliability.ReliabilityChecker
+import com.syedmsidsm.prayerreminder.ui.components.MosqueBackdrop
 import com.syedmsidsm.prayerreminder.ui.settings.SettingsViewModel
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val AmberAccent = Color(0xFFFBBF24)
+private val AmberTextDark = Color(0xFF020617)
+private val AmberGlowText = Color(0xFFFCD34D)
+private val SanctuaryDarkBg = Color(0xFF03080C)
+private val SanctuaryLightBg = Color(0xFFF6F1E6)
+
 @Composable
 fun OnboardingScreen(
     viewModel: SettingsViewModel,
@@ -113,299 +116,502 @@ fun OnboardingScreen(
         }
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+    val isDark = PrayerReminderColors.isDark
+    val surfaceBg = if (isDark) SanctuaryDarkBg else SanctuaryLightBg
+    val textPrimary = if (isDark) Color.White else Color(0xFF14262A)
+    val textMuted = if (isDark) Color(0xFFA8A29E) else Color(0xFF5E6D70)
+    val glassCardBg = if (isDark) Color(0xFF0B161E).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.94f)
+    val glassBorder = if (isDark) Color.White.copy(alpha = 0.11f) else Color(0xFFE4DCC7)
+    val chipUnselectedBg = if (isDark) Color.White.copy(alpha = 0.06f) else Color(0xFFF3EFE4)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(surfaceBg)
+    ) {
+        MosqueBackdrop(
+            activeSky = Prayer.ISHA,
+            surfaceFadeColor = surfaceBg
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            // Sanctuary Step Indicator Top Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (currentStep > 1) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.38f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
+                        modifier = Modifier.size(38.dp)
                     ) {
-                        for (step in 1..totalSteps) {
-                            val isActive = step == currentStep
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 4.dp)
-                                    .height(8.dp)
-                                    .width(if (isActive) 28.dp else 8.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(
-                                        if (isActive) PrayerReminderColors.Gold
-                                        else PrayerReminderColors.Line
-                                    )
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    if (currentStep > 1) {
                         IconButton(onClick = { currentStep-- }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = null,
-                                tint = PrayerReminderColors.Ink
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
-                    } else {
-                        Spacer(modifier = Modifier.width(48.dp))
                     }
-                },
-                actions = {
-                    TextButton(onClick = onFinished) {
-                        Text(
-                            text = stringResource(R.string.skip),
-                            color = PrayerReminderColors.Muted,
-                            fontWeight = FontWeight.Medium
+                } else {
+                    Spacer(modifier = Modifier.size(38.dp))
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    for (step in 1..totalSteps) {
+                        val isActive = step == currentStep
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .height(6.dp)
+                                .width(if (isActive) 26.dp else 7.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (isActive) AmberAccent else Color.White.copy(alpha = 0.25f))
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = PrayerReminderColors.Ivory)
-            )
-        },
-        containerColor = PrayerReminderColors.Ivory
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            when (currentStep) {
-                1 -> StepWelcomeAndLanguage(
-                    currentLang = currentLangTag,
-                    themeMode = themeMode,
-                    fontScale = fontScale,
-                    onSelectLanguage = { lang ->
-                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang))
-                        viewModel.setAppLanguage(lang)
-                        viewModel.setVoiceLanguage(lang)
-                    },
-                    onSelectTheme = { mode -> viewModel.setThemeMode(mode) },
-                    onSelectFontScale = { scale -> viewModel.setFontScale(scale) },
-                    onContinue = {
-                        viewModel.setAppLanguage(currentLangTag)
-                        currentStep = 2
-                    }
-                )
-                2 -> StepPrayerTimesSource(
-                    activeTimetablePlace = activeTimetable?.place ?: "Bhatkal",
-                    onPickImage = onPickImage,
-                    onContinue = { currentStep = 3 }
-                )
-                3 -> StepTurnOnReminders(
-                    refreshKey = refreshTrigger,
-                    onAllowAllAndFinish = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                            !ReliabilityChecker.isNotificationsAllowed(context)
-                        ) {
-                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            onFinished()
+                }
+
+                TextButton(onClick = onFinished) {
+                    Text(
+                        text = stringResource(R.string.skip),
+                        color = AmberGlowText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                when (currentStep) {
+                    1 -> StepWelcomeAndLanguageSanctuary(
+                        currentLang = currentLangTag,
+                        themeMode = themeMode,
+                        fontScale = fontScale,
+                        glassCardBg = glassCardBg,
+                        glassBorder = glassBorder,
+                        chipUnselectedBg = chipUnselectedBg,
+                        textPrimary = textPrimary,
+                        textMuted = textMuted,
+                        onSelectLanguage = { lang ->
+                            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang))
+                            viewModel.setAppLanguage(lang)
+                            viewModel.setVoiceLanguage(lang)
+                        },
+                        onSelectTheme = { mode -> viewModel.setThemeMode(mode) },
+                        onSelectFontScale = { scale -> viewModel.setFontScale(scale) },
+                        onContinue = {
+                            viewModel.setAppLanguage(currentLangTag)
+                            currentStep = 2
                         }
-                    },
-                    onSkip = onFinished,
-                    onRefresh = { refreshTrigger++ }
-                )
+                    )
+                    2 -> StepPrayerTimesSourceSanctuary(
+                        activeTimetablePlace = activeTimetable?.place ?: "Bhatkal",
+                        glassCardBg = glassCardBg,
+                        glassBorder = glassBorder,
+                        textPrimary = textPrimary,
+                        textMuted = textMuted,
+                        onPickImage = onPickImage,
+                        onContinue = { currentStep = 3 }
+                    )
+                    3 -> StepTurnOnRemindersSanctuary(
+                        refreshKey = refreshTrigger,
+                        glassCardBg = glassCardBg,
+                        glassBorder = glassBorder,
+                        textPrimary = textPrimary,
+                        textMuted = textMuted,
+                        onAllowAllAndFinish = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !ReliabilityChecker.isNotificationsAllowed(context)
+                            ) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                onFinished()
+                            }
+                        },
+                        onSkip = onFinished,
+                        onRefresh = { refreshTrigger++ }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StepWelcomeAndLanguage(
+private fun StepWelcomeAndLanguageSanctuary(
     currentLang: String,
     themeMode: String,
     fontScale: String,
+    glassCardBg: Color,
+    glassBorder: Color,
+    chipUnselectedBg: Color,
+    textPrimary: Color,
+    textMuted: Color,
     onSelectLanguage: (String) -> Unit,
     onSelectTheme: (String) -> Unit,
     onSelectFontScale: (String) -> Unit,
     onContinue: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
-    Box(
-        modifier = Modifier
-            .size(92.dp)
-            .clip(CircleShape)
-            .background(PrayerReminderColors.Ground),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.splash_icon_static),
-            contentDescription = null,
-            modifier = Modifier.size(64.dp)
-        )
-    }
+    // Mosque Emblem
+    Image(
+        painter = painterResource(id = R.drawable.splash_icon_static),
+        contentDescription = null,
+        modifier = Modifier.size(80.dp)
+    )
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(14.dp))
 
     Text(
         text = "Assalamu Alaikum",
-        style = MaterialTheme.typography.headlineLarge,
+        fontSize = 28.sp,
         fontWeight = FontWeight.Bold,
-        color = PrayerReminderColors.Ink,
+        color = Color.White,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(4.dp))
+
+    Text(
+        text = "Never miss an azan or a jamaat in Bhatkal.",
+        fontSize = 14.sp,
+        color = textMuted,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = glassCardBg,
+        border = BorderStroke(1.dp, glassBorder)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Language
+            Column {
+                Text(
+                    text = stringResource(R.string.language),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val langs = listOf(
+                        "en" to "English",
+                        "ar" to "العربية",
+                        "ur" to "اردو"
+                    )
+                    for ((code, label) in langs) {
+                        val selected = currentLang == code
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (selected) AmberAccent else chipUnselectedBg,
+                            border = BorderStroke(1.dp, if (selected) AmberGlowText else glassBorder),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onSelectLanguage(code) }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = label,
+                                    color = if (selected) AmberTextDark else textPrimary,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Theme Mode
+            Column {
+                val themeTitle = when (currentLang) {
+                    "ar" -> "المظهر"
+                    "ur" -> "تھیم"
+                    else -> "Appearance"
+                }
+                Text(
+                    text = themeTitle,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val themes = listOf(
+                        "light" to if (currentLang == "ar") "☀️ فاتح" else if (currentLang == "ur") "☀️ لائٹ" else "☀️ Light",
+                        "dark" to if (currentLang == "ar") "🌙 داكن" else if (currentLang == "ur") "🌙 ڈارک" else "🌙 Dark",
+                        "system" to if (currentLang == "ar") "تلقائي" else if (currentLang == "ur") "سسٹم" else "System"
+                    )
+                    for ((mode, label) in themes) {
+                        val selected = themeMode == mode
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (selected) AmberAccent else chipUnselectedBg,
+                            border = BorderStroke(1.dp, if (selected) AmberGlowText else glassBorder),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onSelectTheme(mode) }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = label,
+                                    color = if (selected) AmberTextDark else textPrimary,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Font Scale
+            Column {
+                Text(
+                    text = stringResource(R.string.font_size),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    val fontChoices = listOf(
+                        "small" to stringResource(R.string.font_small),
+                        "normal" to stringResource(R.string.font_normal),
+                        "large" to stringResource(R.string.font_large),
+                        "xl" to stringResource(R.string.font_xl)
+                    )
+                    for ((scaleKey, scaleLabel) in fontChoices) {
+                        val selected = fontScale == scaleKey
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (selected) AmberAccent else chipUnselectedBg,
+                            border = BorderStroke(1.dp, if (selected) AmberGlowText else glassBorder),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onSelectFontScale(scaleKey) }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = scaleLabel,
+                                    color = if (selected) AmberTextDark else textPrimary,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    Button(
+        onClick = onContinue,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AmberAccent,
+            contentColor = AmberTextDark
+        )
+    ) {
+        Text(
+            text = stringResource(R.string.continue_btn),
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun StepPrayerTimesSourceSanctuary(
+    activeTimetablePlace: String,
+    glassCardBg: Color,
+    glassBorder: Color,
+    textPrimary: Color,
+    textMuted: Color,
+    onPickImage: () -> Unit,
+    onContinue: () -> Unit
+) {
+    var selectedMode by remember { mutableStateOf("builtin") }
+
+    Spacer(modifier = Modifier.height(10.dp))
+
+    Text(
+        text = "Your prayer times",
+        fontSize = 28.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White,
         textAlign = TextAlign.Center
     )
 
     Spacer(modifier = Modifier.height(6.dp))
 
     Text(
-        text = "Never miss an azan or a jamaat in Bhatkal.",
-        style = MaterialTheme.typography.bodyLarge,
-        color = PrayerReminderColors.Muted,
+        text = "Choose how to get daily azan & jamaat times.",
+        fontSize = 14.sp,
+        color = textMuted,
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(26.dp))
+    Spacer(modifier = Modifier.height(24.dp))
 
-    Text(
-        text = stringResource(R.string.language),
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = PrayerReminderColors.Ink
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        val langs = listOf(
-            Pair("en", "English"),
-            Pair("ar", "العربية"),
-            Pair("ur", "اردو")
+    // Card A: Built-in Bhatkal schedule
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .clickable { selectedMode = "builtin" },
+        shape = RoundedCornerShape(22.dp),
+        color = glassCardBg,
+        border = BorderStroke(
+            1.5.dp,
+            if (selectedMode == "builtin") AmberAccent else glassBorder
         )
-        for ((code, label) in langs) {
-            val isSelected = currentLang == code
-            val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
-            val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
-            Surface(
+    ) {
+        Row(
+            modifier = Modifier.padding(18.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp)
-                    .clickable { onSelectLanguage(code) },
-                shape = RoundedCornerShape(14.dp),
-                color = if (isSelected) selectedBg else PrayerReminderColors.Surface,
-                border = BorderStroke(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
-                )
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (selectedMode == "builtin") AmberAccent else Color.White.copy(alpha = 0.08f)),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) selectedText else PrayerReminderColors.Ink
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    tint = if (selectedMode == "builtin") AmberTextDark else AmberAccent,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "$activeTimetablePlace times (built-in)",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Ready right now. Updates automatically every day and works 100% offline.",
+                    fontSize = 13.sp,
+                    color = textMuted
+                )
+            }
+            if (selectedMode == "builtin") {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = AmberAccent,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
 
-    Spacer(modifier = Modifier.height(22.dp))
+    Spacer(modifier = Modifier.height(14.dp))
 
-    val themeTitle = when (currentLang) {
-        "ar" -> "المظهر"
-        "ur" -> "تھیم"
-        else -> "Appearance"
-    }
-    Text(
-        text = themeTitle,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = PrayerReminderColors.Ink
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        val themes = listOf(
-            Pair("light", if (currentLang == "ar") "☀️ فاتح" else if (currentLang == "ur") "☀️ لائٹ" else "☀️ Light"),
-            Pair("dark", if (currentLang == "ar") "🌙 داكن" else if (currentLang == "ur") "🌙 ڈارک" else "🌙 Dark"),
-            Pair("system", if (currentLang == "ar") "تلقائي" else if (currentLang == "ur") "سسٹم" else "System")
+    // Card B: Scan masjid timetable
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .clickable {
+                selectedMode = "scan"
+                onPickImage()
+            },
+        shape = RoundedCornerShape(22.dp),
+        color = glassCardBg,
+        border = BorderStroke(
+            1.5.dp,
+            if (selectedMode == "scan") AmberAccent else glassBorder
         )
-        for ((mode, label) in themes) {
-            val isSelected = themeMode == mode
-            val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
-            val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
-            Surface(
+    ) {
+        Row(
+            modifier = Modifier.padding(18.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .clickable { onSelectTheme(mode) },
-                shape = RoundedCornerShape(14.dp),
-                color = if (isSelected) selectedBg else PrayerReminderColors.Surface,
-                border = BorderStroke(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
-                )
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (selectedMode == "scan") AmberAccent else Color.White.copy(alpha = 0.08f)),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) selectedText else PrayerReminderColors.Ink
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    tint = if (selectedMode == "scan") AmberTextDark else AmberAccent,
+                    modifier = Modifier.size(22.dp)
+                )
             }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(22.dp))
-
-    Text(
-        text = stringResource(R.string.font_size),
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = PrayerReminderColors.Ink
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        val fontChoices = listOf(
-            "small" to stringResource(R.string.font_small),
-            "normal" to stringResource(R.string.font_normal),
-            "large" to stringResource(R.string.font_large),
-            "xl" to stringResource(R.string.font_xl)
-        )
-        for ((scaleKey, scaleLabel) in fontChoices) {
-            val isSelected = fontScale == scaleKey
-            val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
-            val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .clickable { onSelectFontScale(scaleKey) },
-                shape = RoundedCornerShape(14.dp),
-                color = if (isSelected) selectedBg else PrayerReminderColors.Surface,
-                border = BorderStroke(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) PrayerReminderColors.Gold else PrayerReminderColors.Line
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Scan my masjid's timetable",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary
                 )
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 4.dp)) {
-                    Text(
-                        text = scaleLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) selectedText else PrayerReminderColors.Ink,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Select a photo of your monthly timetable — our local scanner reads and verifies it.",
+                    fontSize = 13.sp,
+                    color = textMuted
+                )
             }
         }
     }
@@ -416,196 +622,28 @@ private fun StepWelcomeAndLanguage(
         onClick = onContinue,
         modifier = Modifier
             .fillMaxWidth()
-            .height(54.dp),
+            .height(52.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground,
-            contentColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
+            containerColor = AmberAccent,
+            contentColor = AmberTextDark
         )
     ) {
         Text(
             text = stringResource(R.string.continue_btn),
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
 @Composable
-private fun StepPrayerTimesSource(
-    activeTimetablePlace: String,
-    onPickImage: () -> Unit,
-    onContinue: () -> Unit
-) {
-    var selectedMode by remember { mutableStateOf("builtin") }
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    Text(
-        text = "Your prayer times",
-        style = MaterialTheme.typography.headlineLarge,
-        fontWeight = FontWeight.Bold,
-        color = PrayerReminderColors.Ink,
-        textAlign = TextAlign.Center
-    )
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    Text(
-        text = "Pick how you want to get daily azan & jamaat times.",
-        style = MaterialTheme.typography.bodyLarge,
-        color = PrayerReminderColors.Muted,
-        textAlign = TextAlign.Center
-    )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    // Card A: Built-in Bhatkal schedule (Default Selected)
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { selectedMode = "builtin" },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
-        border = BorderStroke(
-            width = if (selectedMode == "builtin") 2.5.dp else 1.dp,
-            color = if (selectedMode == "builtin") PrayerReminderColors.Gold else PrayerReminderColors.Line
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(PrayerReminderColors.Ground),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = null,
-                    tint = PrayerReminderColors.Gold,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "$activeTimetablePlace times (built-in)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PrayerReminderColors.Ink
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Ready now. Updates automatically every day of the year and works 100% offline.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PrayerReminderColors.Muted
-                )
-            }
-            if (selectedMode == "builtin") {
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(PrayerReminderColors.Gold),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = PrayerReminderColors.Ground,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(14.dp))
-
-    // Card B: Scan masjid timetable
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                selectedMode = "scan"
-                onPickImage()
-            },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
-        border = BorderStroke(
-            width = if (selectedMode == "scan") 2.5.dp else 1.dp,
-            color = if (selectedMode == "scan") PrayerReminderColors.Gold else PrayerReminderColors.Line
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(PrayerReminderColors.Ivory),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = null,
-                    tint = PrayerReminderColors.Ink,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Scan my masjid's timetable",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PrayerReminderColors.Ink
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Pick a photo of your monthly timetable sheet — we read and verify it on your phone.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PrayerReminderColors.Muted
-                )
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(32.dp))
-
-    Button(
-        onClick = onContinue,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(54.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground,
-            contentColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
-        )
-    ) {
-        Text(
-            text = stringResource(R.string.continue_btn),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun StepTurnOnReminders(
+private fun StepTurnOnRemindersSanctuary(
     refreshKey: Int,
+    glassCardBg: Color,
+    glassBorder: Color,
+    textPrimary: Color,
+    textMuted: Color,
     onAllowAllAndFinish: () -> Unit,
     onSkip: () -> Unit,
     onRefresh: () -> Unit
@@ -615,57 +653,63 @@ private fun StepTurnOnReminders(
     val exactAllowed = remember(refreshKey) { ReliabilityChecker.canScheduleExactAlarms(context) }
     val batteryUnrestricted = remember(refreshKey) { ReliabilityChecker.isIgnoringBatteryOptimizations(context) }
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     Box(
         modifier = Modifier
-            .size(84.dp)
+            .size(76.dp)
             .clip(CircleShape)
-            .background(PrayerReminderColors.Gold.copy(alpha = 0.22f)),
+            .background(AmberAccent.copy(alpha = 0.18f)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Default.Notifications,
             contentDescription = null,
-            tint = PrayerReminderColors.GoldText,
-            modifier = Modifier.size(44.dp)
+            tint = AmberAccent,
+            modifier = Modifier.size(38.dp)
         )
     }
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(16.dp))
 
     Text(
         text = "Turn on reminders",
-        style = MaterialTheme.typography.headlineLarge,
+        fontSize = 28.sp,
         fontWeight = FontWeight.Bold,
-        color = PrayerReminderColors.Ink,
+        color = Color.White,
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     Text(
-        text = "We'll speak 10 min before azan and 5 min before jamaat.",
-        style = MaterialTheme.typography.bodyLarge,
-        color = PrayerReminderColors.Muted,
+        text = "We'll announce before azan and before jamaat.",
+        fontSize = 14.sp,
+        color = textMuted,
         textAlign = TextAlign.Center
     )
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(22.dp))
 
-    PermissionItemCard(
+    SanctuaryPermissionItem(
         icon = Icons.Default.Notifications,
         title = "Notifications",
         isGranted = notifAllowed,
+        glassCardBg = glassCardBg,
+        glassBorder = glassBorder,
+        textPrimary = textPrimary,
         onClick = onAllowAllAndFinish
     )
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    PermissionItemCard(
+    SanctuaryPermissionItem(
         icon = Icons.Default.AccessAlarm,
         title = "Exact alarms",
         isGranted = exactAllowed,
+        glassCardBg = glassCardBg,
+        glassBorder = glassBorder,
+        textPrimary = textPrimary,
         onClick = {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 runCatching {
@@ -681,10 +725,13 @@ private fun StepTurnOnReminders(
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    PermissionItemCard(
+    SanctuaryPermissionItem(
         icon = Icons.Default.BatteryChargingFull,
         title = "Run in background",
         isGranted = batteryUnrestricted,
+        glassCardBg = glassCardBg,
+        glassBorder = glassBorder,
+        textPrimary = textPrimary,
         onClick = {
             runCatching {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
@@ -696,22 +743,22 @@ private fun StepTurnOnReminders(
         }
     )
 
-    Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(26.dp))
 
     Button(
         onClick = onAllowAllAndFinish,
         modifier = Modifier
             .fillMaxWidth()
-            .height(54.dp),
+            .height(52.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground,
-            contentColor = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
+            containerColor = AmberAccent,
+            contentColor = AmberTextDark
         )
     ) {
         Text(
             text = "Allow all",
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold
         )
     }
@@ -721,70 +768,72 @@ private fun StepTurnOnReminders(
     TextButton(onClick = onSkip) {
         Text(
             text = "Not now",
-            style = MaterialTheme.typography.titleMedium,
-            color = PrayerReminderColors.Ink,
+            fontSize = 14.sp,
+            color = textMuted,
             fontWeight = FontWeight.Medium
         )
     }
 }
 
 @Composable
-private fun PermissionItemCard(
+private fun SanctuaryPermissionItem(
     icon: ImageVector,
     title: String,
     isGranted: Boolean,
+    glassCardBg: Color,
+    glassBorder: Color,
+    textPrimary: Color,
     onClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = PrayerReminderColors.Surface,
-        border = BorderStroke(1.dp, PrayerReminderColors.Line)
+        shape = RoundedCornerShape(18.dp),
+        color = glassCardBg,
+        border = BorderStroke(1.dp, glassBorder)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = PrayerReminderColors.Ink,
-                modifier = Modifier.size(24.dp)
+                tint = AmberAccent,
+                modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(14.dp))
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = PrayerReminderColors.Ink,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textPrimary,
                 modifier = Modifier.weight(1f)
             )
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = if (isGranted) PrayerReminderColors.OkBg else PrayerReminderColors.Ivory
+                shape = RoundedCornerShape(10.dp),
+                color = if (isGranted) Color(0xFF10B981).copy(alpha = 0.2f) else Color.White.copy(alpha = 0.1f)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isGranted) {
                         Icon(
-                            imageVector = Icons.Default.CheckCircle,
+                            imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = PrayerReminderColors.OkText,
-                            modifier = Modifier.size(16.dp)
+                            tint = Color(0xFF34D399),
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                     Text(
                         text = if (isGranted) "Allowed" else "Allow",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isGranted) PrayerReminderColors.OkText else PrayerReminderColors.Ink
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isGranted) Color(0xFF34D399) else textPrimary
                     )
                 }
             }

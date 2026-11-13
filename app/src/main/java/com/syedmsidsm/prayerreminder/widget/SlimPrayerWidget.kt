@@ -2,6 +2,7 @@ package com.syedmsidsm.prayerreminder.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -16,18 +17,17 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
-import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
-import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
 class SlimPrayerWidget : GlanceAppWidget() {
@@ -73,9 +73,9 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 )
                 Spacer(modifier = GlanceModifier.width(12.dp))
                 val importMsg = when (state.appLanguage) {
-                    "ar" -> "استورد الجدول الجديد"
-                    "ur" -> "نیا نظام الاوقات شامل کریں"
-                    else -> "Import the timetable"
+                    "ar" -> "استورد جدول المسجد"
+                    "ur" -> "ٹائم ٹیبل شامل کریں"
+                    else -> "Import timetable"
                 }
                 Text(
                     text = importMsg,
@@ -87,159 +87,53 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 )
             }
         } else {
-            val prayerUpper = state.prayerName.uppercase()
-            val jamaatLabel = when (state.appLanguage) {
-                "ar" -> "الإقامة"
-                "ur" -> "جماعت"
-                else -> "JAMAAT"
-            }
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left: Glowing amber dot + Prayer name + Adhan time
+                Box(
+                    modifier = GlanceModifier
+                        .size(8.dp)
+                        .cornerRadius(4.dp)
+                        .background(Color(0xFFFBBF24))
+                ) {}
 
-            if (state.isRtl) {
-                // RTL layout
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Timer Capsule on Left
-                    Box(
-                        modifier = GlanceModifier
-                            .background(colors.capsuleBackground)
-                            .cornerRadius(12.dp)
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val chronometerViews = WidgetThemeConfig.buildChronometer(
-                            context,
-                            state.countdownTargetEpochMillis,
-                            true,
-                            colors.chronometerTextColorInt
-                        )
-                        AndroidRemoteViews(remoteViews = chronometerViews)
-                    }
+                Spacer(modifier = GlanceModifier.width(10.dp))
 
-                    Spacer(modifier = GlanceModifier.defaultWeight())
+                Text(
+                    text = state.prayerName,
+                    style = TextStyle(
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
 
-                    // Jamaat Section
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = jamaatLabel,
-                            style = TextStyle(
-                                color = colors.textSecondary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.End
-                            )
-                        )
-                        Text(
-                            text = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) {
-                                state.secondaryTime.replace("Jamaat ", "").replace("الإقامة ", "").replace("جماعت ", "")
-                            } else {
-                                state.mainTime
-                            },
-                            style = TextStyle(
-                                color = colors.textPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.End
-                            )
-                        )
-                    }
+                Spacer(modifier = GlanceModifier.width(8.dp))
 
-                    Spacer(modifier = GlanceModifier.width(16.dp))
+                Text(
+                    text = state.mainTime,
+                    style = TextStyle(
+                        color = colors.textSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
 
-                    // Prayer Name & Azan Time
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = prayerUpper,
-                            style = TextStyle(
-                                color = colors.textAccent,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.End
-                            )
-                        )
-                        Text(
-                            text = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) state.mainTime else state.secondaryTime,
-                            style = TextStyle(
-                                color = colors.textPrimary,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.End
-                            )
-                        )
-                    }
-                }
-            } else {
-                // LTR layout
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Prayer Name & Azan Time
-                    Column(horizontalAlignment = Alignment.Start) {
-                        Text(
-                            text = prayerUpper,
-                            style = TextStyle(
-                                color = colors.textAccent,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) state.mainTime else state.secondaryTime,
-                            style = TextStyle(
-                                color = colors.textPrimary,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
+                Spacer(modifier = GlanceModifier.defaultWeight())
 
-                    Spacer(modifier = GlanceModifier.width(16.dp))
-
-                    // Jamaat Section
-                    Column(horizontalAlignment = Alignment.Start) {
-                        Text(
-                            text = jamaatLabel,
-                            style = TextStyle(
-                                color = colors.textSecondary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = if (state.phase == WidgetPrayerPhase.BEFORE_AZAN) {
-                                state.secondaryTime.replace("Jamaat ", "")
-                            } else {
-                                state.mainTime
-                            },
-                            style = TextStyle(
-                                color = colors.textPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = GlanceModifier.defaultWeight())
-
-                    // Timer Capsule on Right
-                    Box(
-                        modifier = GlanceModifier
-                            .background(colors.capsuleBackground)
-                            .cornerRadius(12.dp)
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val chronometerViews = WidgetThemeConfig.buildChronometer(
-                            context,
-                            state.countdownTargetEpochMillis,
-                            false,
-                            colors.chronometerTextColorInt
-                        )
-                        AndroidRemoteViews(remoteViews = chronometerViews)
-                    }
-                }
+                // Right: Countdown Chronometer in amber gold
+                val chronometerViews = WidgetThemeConfig.buildChronometer(
+                    context = context,
+                    targetEpochMillis = state.countdownTargetEpochMillis,
+                    isRtl = state.isRtl,
+                    textColorInt = colors.chronometerTextColorInt
+                )
+                AndroidRemoteViews(
+                    remoteViews = chronometerViews,
+                    modifier = GlanceModifier.height(18.dp)
+                )
             }
         }
     }

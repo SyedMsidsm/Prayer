@@ -1,12 +1,5 @@
 package com.syedmsidsm.prayerreminder.ui.home
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
-import android.os.Build
-import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,12 +29,10 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WbSunny
@@ -54,9 +45,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,18 +52,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
 import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.domain.HijriNames
-import com.syedmsidsm.prayerreminder.domain.model.DaySchedule
 import com.syedmsidsm.prayerreminder.domain.model.NextPrayer
 import com.syedmsidsm.prayerreminder.domain.model.NextPrayerPhase
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
@@ -86,9 +71,6 @@ import com.syedmsidsm.prayerreminder.ui.components.SanctuarySkyThemes
 import com.syedmsidsm.prayerreminder.ui.components.SanctuaryTab
 import com.syedmsidsm.prayerreminder.ui.format.TimeFormatter
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
-import com.syedmsidsm.prayerreminder.widget.SmallPrayerWidgetReceiver
-import com.syedmsidsm.prayerreminder.widget.StripPrayerWidgetReceiver
-import com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -103,6 +85,7 @@ private val EmeraldSoft = Color(0xFF6EE7B7)
 fun HomeScreen(
     viewModel: HomeViewModel,
     onSettingsClick: () -> Unit = {},
+    onNavigateToTimetables: () -> Unit = {},
     onToggleTheme: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -112,8 +95,6 @@ fun HomeScreen(
 
     val amMarker = stringResource(R.string.am_marker)
     val pmMarker = stringResource(R.string.pm_marker)
-
-    var showWidgetsModal by remember { mutableStateOf(false) }
 
     val isDark = PrayerReminderColors.isDark
     val surfaceColor = if (isDark) SanctuaryDarkSurface else SanctuaryLightSurface
@@ -148,15 +129,12 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left: Location & Hijri / Gregorian Subtitle
+                // Left: Place & Hijri / Timetable Subtitle
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable {
-                            showWidgetsModal = false
-                            onSettingsClick()
-                        }
+                        .clickable { onNavigateToTimetables() }
                         .padding(end = 8.dp, top = 2.dp, bottom = 2.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -170,7 +148,7 @@ fun HomeScreen(
                         Text(
                             text = uiState.place,
                             color = Color.White,
-                            fontSize = 15.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -193,7 +171,7 @@ fun HomeScreen(
                     )
                 }
 
-                // Right: Sky Vibe Switcher, Theme Toggle, Compact Widgets Modal Button
+                // Right: Sky Vibe Switcher & Theme Toggle Button ONLY
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -254,29 +232,6 @@ fun HomeScreen(
                             )
                         }
                     }
-
-                    // Widgets modal toggle button
-                    Surface(
-                        shape = CircleShape,
-                        color = if (showWidgetsModal) AmberBright else Color.Black.copy(alpha = 0.38f),
-                        border = BorderStroke(
-                            1.dp,
-                            if (showWidgetsModal) AmberSoft else Color.White.copy(alpha = 0.14f)
-                        ),
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .clickable { showWidgetsModal = !showWidgetsModal }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.GridView,
-                                contentDescription = stringResource(R.string.minimalist_widgets),
-                                tint = if (showWidgetsModal) Color(0xFF020617) else Color(0xFFE7E5E4),
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
                 }
             }
 
@@ -289,121 +244,102 @@ fun HomeScreen(
                     .padding(horizontal = 20.dp)
                     .padding(top = 6.dp, bottom = 104.dp)
             ) {
-                AnimatedVisibility(
-                    visible = showWidgetsModal,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    CompactMinimalistWidgetsSection(
-                        uiState = uiState,
+                // HERO NEXT PRAYER FOCUS
+                val next = uiState.nextPrayer
+                val schedule = uiState.schedule
+
+                if (next != null) {
+                    HeroNextPrayerSection(
+                        next = next,
+                        countdownHms = uiState.countdownHms,
+                        progressPct = uiState.progressPct,
+                        use24Hour = uiState.use24Hour,
                         amMarker = amMarker,
                         pmMarker = pmMarker,
-                        isDark = isDark,
-                        onClose = { showWidgetsModal = false }
+                        hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true
                     )
                 }
 
-                if (!showWidgetsModal) {
-                    // HERO NEXT PRAYER FOCUS (Positioned over Mosque Dome)
-                    val next = uiState.nextPrayer
-                    val schedule = uiState.schedule
+                // Status / Warning Banners
+                if (schedule != null && schedule.source.isEstimated) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    BannerPill(
+                        text = stringResource(R.string.banner_estimated),
+                        bg = PrayerReminderColors.WarnBg,
+                        textColor = PrayerReminderColors.WarnText
+                    )
+                } else if (schedule != null && schedule.source == ScheduleSource.NONE) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    BannerPill(
+                        text = stringResource(R.string.banner_no_timetable),
+                        bg = PrayerReminderColors.WarnBg,
+                        textColor = PrayerReminderColors.WarnText
+                    )
+                }
 
-                    if (next != null) {
-                        HeroNextPrayerSection(
-                            next = next,
-                            countdownHms = uiState.countdownHms,
-                            progressPct = uiState.progressPct,
-                            use24Hour = uiState.use24Hour,
-                            amMarker = amMarker,
-                            pmMarker = pmMarker,
-                            hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true
-                        )
-                    }
+                if (uiState.missedCount7d > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    BannerPill(
+                        text = stringResource(R.string.banner_missed),
+                        bg = PrayerReminderColors.WarnBg,
+                        textColor = PrayerReminderColors.WarnText
+                    )
+                }
 
-                    // Optional Status / Warning Banners
-                    if (schedule != null && schedule.source.isEstimated) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        BannerPill(
-                            text = stringResource(R.string.banner_estimated),
-                            bg = PrayerReminderColors.WarnBg,
-                            textColor = PrayerReminderColors.WarnText
-                        )
-                    } else if (schedule != null && schedule.source == ScheduleSource.NONE) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        BannerPill(
-                            text = stringResource(R.string.banner_no_timetable),
-                            bg = PrayerReminderColors.WarnBg,
-                            textColor = PrayerReminderColors.WarnText
-                        )
-                    }
+                Spacer(modifier = Modifier.height(18.dp))
 
-                    if (uiState.missedCount7d > 0) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        BannerPill(
-                            text = stringResource(R.string.banner_missed),
-                            bg = PrayerReminderColors.WarnBg,
-                            textColor = PrayerReminderColors.WarnText
-                        )
-                    }
+                // DAILY PRAYER LIST
+                if (schedule != null && schedule.source != ScheduleSource.NONE) {
+                    val prayers = listOf(
+                        Prayer.FAJR,
+                        Prayer.SUNRISE,
+                        Prayer.DHUHR,
+                        Prayer.ASR,
+                        Prayer.MAGHRIB,
+                        Prayer.ISHA
+                    )
 
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    // EFFORTLESS DAILY PRAYER LIST (LARGE 56dp+ ERGONOMIC GLASS ROWS)
-                    if (schedule != null && schedule.source != ScheduleSource.NONE) {
-                        val prayers = listOf(
-                            Prayer.FAJR,
-                            Prayer.SUNRISE,
-                            Prayer.DHUHR,
-                            Prayer.ASR,
-                            Prayer.MAGHRIB,
-                            Prayer.ISHA
-                        )
-
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            for (prayer in prayers) {
-                                val azan = schedule.azan[prayer] ?: continue
-                                val jamaat = schedule.jamaat[prayer]
-                                val isNext = next?.prayer == prayer && !next.isTomorrow
-                                val alertMode = uiState.alertModes[prayer] ?: if (prayer.hasReminders) {
-                                    if (uiState.reminderStates[prayer] != false) "sound" else "muted"
-                                } else {
-                                    "muted"
-                                }
-
-                                SanctuaryPrayerRow(
-                                    prayer = prayer,
-                                    isFriday = schedule.isFriday,
-                                    azanTime = azan,
-                                    jamaatTime = jamaat,
-                                    isNext = isNext,
-                                    use24Hour = uiState.use24Hour,
-                                    amMarker = amMarker,
-                                    pmMarker = pmMarker,
-                                    alertMode = alertMode,
-                                    isDark = isDark,
-                                    rowBgNormal = rowBgNormal,
-                                    rowBgNext = rowBgNext,
-                                    rowBorderNormal = rowBorderNormal,
-                                    cardTextPrimary = cardTextPrimary,
-                                    cardTextSecondary = cardTextSecondary,
-                                    hasWarning = schedule.fixedTimeBeforeAzanWarnings.contains(prayer),
-                                    onToggleAlert = { viewModel.cyclePrayerAlertMode(prayer) }
-                                )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for (prayer in prayers) {
+                            val azan = schedule.azan[prayer] ?: continue
+                            val jamaat = schedule.jamaat[prayer]
+                            val isNext = next?.prayer == prayer && !next.isTomorrow
+                            val alertMode = uiState.alertModes[prayer] ?: if (prayer.hasReminders) {
+                                if (uiState.reminderStates[prayer] != false) "sound" else "muted"
+                            } else {
+                                "muted"
                             }
+
+                            SanctuaryPrayerRow(
+                                prayer = prayer,
+                                isFriday = schedule.isFriday,
+                                azanTime = azan,
+                                jamaatTime = jamaat,
+                                isNext = isNext,
+                                use24Hour = uiState.use24Hour,
+                                amMarker = amMarker,
+                                pmMarker = pmMarker,
+                                alertMode = alertMode,
+                                isDark = isDark,
+                                rowBgNormal = rowBgNormal,
+                                rowBgNext = rowBgNext,
+                                rowBorderNormal = rowBorderNormal,
+                                cardTextPrimary = cardTextPrimary,
+                                cardTextSecondary = cardTextSecondary,
+                                hasWarning = schedule.fixedTimeBeforeAzanWarnings.contains(prayer),
+                                onToggleAlert = { viewModel.cyclePrayerAlertMode(prayer) }
+                            )
                         }
                     }
                 }
             }
         }
 
-        // 3. FLOATING BOTTOM PILL NAVIGATION (STRICTLY HOME & SETTINGS)
+        // 3. FLOATING BOTTOM PILL NAVIGATION (HOME & SETTINGS)
         SanctuaryBottomNavBar(
-            activeTab = if (showWidgetsModal) null else SanctuaryTab.HOME,
-            onHomeClick = { showWidgetsModal = false },
-            onSettingsClick = {
-                showWidgetsModal = false
-                onSettingsClick()
-            },
+            activeTab = SanctuaryTab.HOME,
+            onHomeClick = {},
+            onSettingsClick = onSettingsClick,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -773,388 +709,6 @@ private data class AlertBtnStyle(
     val tint: Color,
     val icon: ImageVector
 )
-
-@Composable
-private fun CompactMinimalistWidgetsSection(
-    uiState: HomeUiState,
-    amMarker: String,
-    pmMarker: String,
-    isDark: Boolean,
-    onClose: () -> Unit
-) {
-    val context = LocalContext.current
-    val next = uiState.nextPrayer
-    val schedule: DaySchedule? = uiState.schedule
-    val headerText = if (isDark) Color.White else Color.White // Over backdrop top, always crisp white
-
-    fun pinWidget(receiverClass: Class<*>) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val mgr = AppWidgetManager.getInstance(context)
-            if (mgr.isRequestPinAppWidgetSupported) {
-                mgr.requestPinAppWidget(ComponentName(context, receiverClass), null, null)
-            } else {
-                Toast.makeText(context, "Long-press home screen to add widgets", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    val panelBg = if (isDark) Color(0xFF0A161E).copy(alpha = 0.88f) else Color(0xFF0F252C).copy(alpha = 0.94f)
-    val cardBg = Color.White.copy(alpha = 0.07f)
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 6.dp),
-        shape = RoundedCornerShape(26.dp),
-        color = panelBg,
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f))
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Sheet Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.minimalist_widgets),
-                        color = headerText,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Clean, glanceable prayer widgets for Home & Lock Screen",
-                        color = Color(0xFFA8A29E),
-                        fontSize = 11.sp
-                    )
-                }
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = Color.White.copy(alpha = 0.12f),
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .clickable { onClose() }
-                ) {
-                    Text(
-                        text = stringResource(R.string.done),
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            if (next != null) {
-                val nextName = if (next.isJumuah) stringResource(R.string.prayer_jumuah) else getPrayerName(next.prayer)
-                val nextArabic = getPrayerArabic(next.prayer)
-                val nextAdhanShort = TimeFormatter.formatTimeParts(next.azanTime, uiState.use24Hour, amMarker, pmMarker).first
-                val nextAdhanFull = TimeFormatter.formatTime(next.azanTime, uiState.use24Hour, amMarker, pmMarker)
-                val nextJamaatShort = TimeFormatter.formatTimeParts(next.jamaatTime, uiState.use24Hour, amMarker, pmMarker).first
-
-                // 1. 4×1 MINIMAL HORIZONTAL PILL
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    WidgetPreviewHeader(
-                        label = "4×1 Minimal Horizontal Pill",
-                        onPinClick = { pinWidget(StripPrayerWidgetReceiver::class.java) }
-                    )
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        color = cardBg,
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(AmberBright)
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = nextName,
-                                    color = Color.White,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = nextAdhanFull,
-                                    color = Color(0xFFA8A29E),
-                                    fontSize = 12.sp
-                                )
-                            }
-                            Text(
-                                text = uiState.countdownHms,
-                                color = AmberSoft,
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-
-                // 2. 2×2 LOCK-SCREEN COUNTDOWN SQUARE & MASJID IQAMAH CARD
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    WidgetPreviewHeader(
-                        label = "2×2 Lock-Screen Countdown Square",
-                        onPinClick = { pinWidget(SmallPrayerWidgetReceiver::class.java) }
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(22.dp),
-                            color = Color.White.copy(alpha = 0.08f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(132.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(14.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = nextName,
-                                        color = Color(0xFFD6D3D1),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = nextArabic,
-                                        color = AmberSoft,
-                                        fontSize = 13.sp
-                                    )
-                                }
-                                Column {
-                                    Text(
-                                        text = nextAdhanShort,
-                                        color = Color.White,
-                                        fontSize = 24.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = uiState.countdownHms,
-                                        color = AmberSoft,
-                                        fontSize = 12.sp,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                }
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(22.dp),
-                            color = Color.White.copy(alpha = 0.05f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(132.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(14.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Masjid Iqamah",
-                                    color = Color(0xFFA8A29E),
-                                    fontSize = 12.sp
-                                )
-                                Column {
-                                    Text(
-                                        text = nextJamaatShort,
-                                        color = EmeraldSoft,
-                                        fontSize = 24.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = uiState.place,
-                                        color = Color(0xFFA8A29E),
-                                        fontSize = 11.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(4.dp)
-                                        .clip(RoundedCornerShape(50))
-                                        .background(Color.White.copy(alpha = 0.12f))
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth(uiState.progressPct.coerceIn(0.05f, 1f))
-                                            .fillMaxHeight()
-                                            .clip(RoundedCornerShape(50))
-                                            .background(AmberBright)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 3. 4×2 COMPACT 5-PRAYER STRIP WIDGET
-                if (schedule != null) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        WidgetPreviewHeader(
-                            label = "4×2 Compact 5-Prayer Strip",
-                            onPinClick = { pinWidget(WidePrayerWidgetReceiver::class.java) }
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(22.dp),
-                            color = cardBg,
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = uiState.place,
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = "${stringResource(R.string.next_tag)}: $nextName (${uiState.shortCountdown})",
-                                        color = AmberSoft,
-                                        fontSize = 12.sp,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    val fardPrayers = listOf(Prayer.FAJR, Prayer.DHUHR, Prayer.ASR, Prayer.MAGHRIB, Prayer.ISHA)
-                                    for (fp in fardPrayers) {
-                                        val isItemNext = fp == next.prayer
-                                        val pTime = schedule.azan[fp]
-                                        val shortT = pTime?.let {
-                                            TimeFormatter.formatTimeParts(it, uiState.use24Hour, amMarker, pmMarker).first
-                                        } ?: "--:--"
-                                        val pTitle = if (fp == Prayer.DHUHR && schedule.isFriday) {
-                                            stringResource(R.string.prayer_jumuah)
-                                        } else {
-                                            getPrayerName(fp)
-                                        }
-
-                                        Column(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(14.dp))
-                                                .background(if (isItemNext) AmberBright else Color.White.copy(alpha = 0.06f))
-                                                .padding(vertical = 9.dp, horizontal = 3.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Text(
-                                                text = pTitle,
-                                                color = if (isItemNext) Color(0xFF0F172A) else Color(0xFFA8A29E),
-                                                fontSize = 10.sp,
-                                                fontWeight = if (isItemNext) FontWeight.Bold else FontWeight.Normal,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                textAlign = TextAlign.Center
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = shortT,
-                                                color = if (isItemNext) Color(0xFF020617) else Color.White,
-                                                fontSize = 12.sp,
-                                                fontFamily = FontFamily.Monospace,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun WidgetPreviewHeader(
-    label: String,
-    onPinClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label.uppercase(Locale.US),
-            color = Color(0xFFA8A29E),
-            fontSize = 11.sp,
-            letterSpacing = 0.7.sp,
-            fontWeight = FontWeight.Medium
-        )
-        Surface(
-            shape = RoundedCornerShape(50),
-            color = AmberBright.copy(alpha = 0.18f),
-            border = BorderStroke(1.dp, AmberBright.copy(alpha = 0.45f)),
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .clickable { onPinClick() }
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PushPin,
-                    contentDescription = null,
-                    tint = AmberSoft,
-                    modifier = Modifier.size(12.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.pin_widget),
-                    color = AmberSoft,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun BannerPill(text: String, bg: Color, textColor: Color) {
