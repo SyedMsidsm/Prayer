@@ -57,6 +57,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -112,20 +118,20 @@ fun SettingsScreen(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
                         Triple(
-                            "Wide Card (4×2)",
+                            "🖼️  Wide Card (4×2)",
                             "Next prayer countdown + full 5-prayer table",
                             com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver::class.java
                         ),
                         Triple(
-                            "Circular Ring (2×2)",
+                            "⭕  Circular Ring (2×2)",
                             "Compact gold progress ring with live countdown",
                             com.syedmsidsm.prayerreminder.widget.SmallPrayerWidgetReceiver::class.java
                         ),
                         Triple(
-                            "Slim Strip (4×1)",
+                            "📏  Slim Strip (4×1)",
                             "Horizontal 5-prayer strip with Hijri date",
                             com.syedmsidsm.prayerreminder.widget.StripPrayerWidgetReceiver::class.java
                         )
@@ -149,9 +155,10 @@ fun SettingsScreen(
                                     }
                                 },
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Ivory)
+                            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Ivory),
+                            border = BorderStroke(1.dp, PrayerReminderColors.Gold.copy(alpha = 0.2f))
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
+                            Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     text = title,
                                     style = MaterialTheme.typography.titleSmall,
@@ -181,11 +188,14 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(R.string.settings),
-                        color = PrayerReminderColors.Ink,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.settings),
+                            color = PrayerReminderColors.Ink,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -208,32 +218,28 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // 1. Language Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Language,
-                            contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = stringResource(R.string.language),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = PrayerReminderColors.Ink,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+            // Gold accent line under header
+            Box(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(PrayerReminderColors.Gold)
+            )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 1. Language & Appearance Card
+            SettingsSectionCard {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    SectionHeader(
+                        icon = Icons.Default.Language,
+                        title = stringResource(R.string.language)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -271,32 +277,20 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
-                    HorizontalDivider(color = PrayerReminderColors.Line)
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line, thickness = 0.5.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.DarkMode,
-                            contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        val themeTitle = when (currentLangTag) {
+                    SectionHeader(
+                        icon = Icons.Default.DarkMode,
+                        title = when (currentLangTag) {
                             "ar" -> "المظهر (فاتح / داكن)"
                             "ur" -> "تھیم (لائٹ / ڈارک)"
-                            else -> "Appearance (Light / Dark)"
+                            else -> "Appearance"
                         }
-                        Text(
-                            text = themeTitle,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = PrayerReminderColors.Ink,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -337,27 +331,16 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
-                    HorizontalDivider(color = PrayerReminderColors.Line)
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.FormatSize,
-                            contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = stringResource(R.string.font_size),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = PrayerReminderColors.Ink,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line, thickness = 0.5.dp)
                     Spacer(modifier = Modifier.height(12.dp))
+
+                    SectionHeader(
+                        icon = Icons.Default.FormatSize,
+                        title = stringResource(R.string.font_size)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -381,30 +364,15 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 2. Timetable Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = stringResource(R.string.timetable),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = PrayerReminderColors.Ink,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+            SettingsSectionCard {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    SectionHeader(
+                        icon = Icons.Default.DateRange,
+                        title = stringResource(R.string.timetable)
+                    )
 
                     val today = LocalDate.now()
                     val currentTable = timetables.firstOrNull { table ->
@@ -421,7 +389,7 @@ fun SettingsScreen(
                             0
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         val statusLine = if (daysLeft > 0) {
                             "${currentTable.hijriMonthName} ${currentTable.hijriYear} · ${stringResource(R.string.days_left, daysLeft)}"
                         } else {
@@ -434,9 +402,9 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = PrayerReminderColors.Line)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = PrayerReminderColors.Line, thickness = 0.5.dp)
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     SettingsNavigationRow(
                         icon = Icons.Default.Upload,
@@ -452,15 +420,11 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 3. Navigation Cards: Jamaat times & Reminders & Voice
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(vertical = 6.dp)) {
+            SettingsSectionCard {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
                     SettingsItemRow(
                         icon = Icons.Default.AccessTime,
                         title = stringResource(R.string.jamaat_times),
@@ -470,6 +434,7 @@ fun SettingsScreen(
 
                     HorizontalDivider(
                         color = PrayerReminderColors.Line,
+                        thickness = 0.5.dp,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
@@ -487,15 +452,11 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 4. Widget & Reliability
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(vertical = 6.dp)) {
+            SettingsSectionCard {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
                     SettingsItemRow(
                         icon = Icons.Default.Widgets,
                         title = stringResource(R.string.widget),
@@ -505,6 +466,7 @@ fun SettingsScreen(
 
                     HorizontalDivider(
                         color = PrayerReminderColors.Line,
+                        thickness = 0.5.dp,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
@@ -519,7 +481,7 @@ fun SettingsScreen(
                             fontWeight = FontWeight.Bold,
                             color = PrayerReminderColors.Ink
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -550,6 +512,7 @@ fun SettingsScreen(
 
                     HorizontalDivider(
                         color = PrayerReminderColors.Line,
+                        thickness = 0.5.dp,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
@@ -562,23 +525,27 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 5. About Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+            SettingsSectionCard {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        // Decorative crescent moon accent
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(PrayerReminderColors.Gold.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "☪",
+                                fontSize = 14.sp,
+                                color = PrayerReminderColors.GoldText
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = stringResource(R.string.about),
                             style = MaterialTheme.typography.titleMedium,
@@ -588,12 +555,29 @@ fun SettingsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "${stringResource(R.string.app_name)} v1.0.0",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PrayerReminderColors.Ink
-                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrayerReminderColors.Ink
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Version pill
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = PrayerReminderColors.Gold.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "v1.0.0",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PrayerReminderColors.GoldText,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = stringResource(R.string.privacy_line),
@@ -608,6 +592,54 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * A section card with a subtle Gold left accent border.
+ */
+@Composable
+private fun SettingsSectionCard(
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                // Gold left accent border
+                drawRoundRect(
+                    color = PrayerReminderColors.Gold.copy(alpha = 0.4f),
+                    topLeft = Offset(0f, size.height * 0.1f),
+                    size = Size(2.5.dp.toPx(), size.height * 0.8f),
+                    cornerRadius = CornerRadius(1.dp.toPx())
+                )
+            },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
+    ) {
+        content()
+    }
+}
+
+/**
+ * Section header with icon and title.
+ */
+@Composable
+private fun SectionHeader(icon: ImageVector, title: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = PrayerReminderColors.GoldText,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = PrayerReminderColors.Ink,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
 @Composable
 private fun LanguageChoiceChip(
     label: String,
@@ -615,11 +647,11 @@ private fun LanguageChoiceChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val selectedBg = if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground
-    val selectedText = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.CardTextLight
+    val selectedBg = PrayerReminderColors.Gold
+    val selectedText = PrayerReminderColors.Ground
     Surface(
         modifier = modifier
-            .height(44.dp)
+            .height(40.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
         color = if (isSelected) selectedBg else PrayerReminderColors.Ivory,
@@ -633,7 +665,7 @@ private fun LanguageChoiceChip(
                 text = label,
                 color = if (isSelected) selectedText else PrayerReminderColors.Ink,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 14.sp
+                fontSize = 13.sp
             )
         }
     }
@@ -650,7 +682,7 @@ private fun SettingsNavigationRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
-            .padding(vertical = 12.dp, horizontal = 4.dp),
+            .padding(vertical = 11.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -670,7 +702,7 @@ private fun SettingsNavigationRow(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
             contentDescription = null,
-            tint = PrayerReminderColors.Muted,
+            tint = PrayerReminderColors.GoldText,
             modifier = Modifier.size(14.dp)
         )
     }
@@ -687,12 +719,12 @@ private fun SettingsItemRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(36.dp)
                 .background(PrayerReminderColors.Ivory, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -700,10 +732,10 @@ private fun SettingsItemRow(
                 imageVector = icon,
                 contentDescription = null,
                 tint = PrayerReminderColors.GoldText,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -711,7 +743,7 @@ private fun SettingsItemRow(
                 fontWeight = FontWeight.SemiBold,
                 color = PrayerReminderColors.Ink
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(1.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
@@ -722,8 +754,8 @@ private fun SettingsItemRow(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
             contentDescription = null,
-            tint = PrayerReminderColors.Muted,
-            modifier = Modifier.size(16.dp)
+            tint = PrayerReminderColors.GoldText,
+            modifier = Modifier.size(14.dp)
         )
     }
 }
@@ -738,7 +770,7 @@ private fun WidgetThemeChip(
 ) {
     Surface(
         modifier = modifier
-            .height(46.dp)
+            .height(40.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
         color = if (isSelected) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
@@ -753,16 +785,30 @@ private fun WidgetThemeChip(
         ) {
             Box(
                 modifier = Modifier
-                    .size(14.dp)
+                    .size(16.dp)
                     .clip(CircleShape)
                     .background(swatchColor)
                     .then(
                         if (swatchColor == androidx.compose.ui.graphics.Color(0xFFF7F4EB)) {
                             Modifier.border(1.dp, PrayerReminderColors.Line, CircleShape)
                         } else Modifier
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                // Checkmark on selected swatch
+                if (isSelected) {
+                    Text(
+                        text = "✓",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (swatchColor == androidx.compose.ui.graphics.Color(0xFFF7F4EB))
+                            PrayerReminderColors.Ink
+                        else
+                            PrayerReminderColors.CardTextLight
                     )
-            )
-            Spacer(modifier = Modifier.width(6.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = label,
                 color = if (isSelected) PrayerReminderColors.Ivory else PrayerReminderColors.Ink,

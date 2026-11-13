@@ -1,6 +1,7 @@
 package com.syedmsidsm.prayerreminder.ui.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -45,6 +47,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -79,15 +88,31 @@ fun HomeScreen(
 
     val scrollState = rememberScrollState()
 
+    // Mosque silhouette color
+    val mosqueColor = if (PrayerReminderColors.isDark) {
+        PrayerReminderColors.Gold.copy(alpha = 0.06f)
+    } else {
+        PrayerReminderColors.Ground.copy(alpha = 0.06f)
+    }
+
     Scaffold(
         containerColor = PrayerReminderColors.Ivory,
         topBar = {
+            // Refined top bar — no shadow, subtle bottom border
             Surface(
                 color = PrayerReminderColors.Ivory,
-                shadowElevation = 2.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
+                    .drawBehind {
+                        // Subtle bottom border instead of shadow
+                        drawLine(
+                            color = PrayerReminderColors.Line,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
             ) {
                 Row(
                     modifier = Modifier
@@ -104,7 +129,7 @@ fun HomeScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
                                 .background(PrayerReminderColors.Ground),
                             contentAlignment = Alignment.Center
@@ -113,7 +138,7 @@ fun HomeScreen(
                                 imageVector = Icons.Default.Place,
                                 contentDescription = null,
                                 tint = PrayerReminderColors.Gold,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
@@ -223,156 +248,301 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .navigationBarsPadding()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-
-        // 2. Warning Banners (if estimated or no table or missed reminders)
-        val schedule = uiState.schedule
-        if (schedule != null && schedule.source.isEstimated) {
-            Spacer(modifier = Modifier.height(12.dp))
-            BannerCard(
-                text = stringResource(R.string.banner_estimated),
-                bg = PrayerReminderColors.WarnBg,
-                textColor = PrayerReminderColors.WarnText
-            )
-        } else if (schedule != null && schedule.source == ScheduleSource.NONE) {
-            Spacer(modifier = Modifier.height(12.dp))
-            BannerCard(
-                text = stringResource(R.string.banner_no_timetable),
-                bg = PrayerReminderColors.WarnBg,
-                textColor = PrayerReminderColors.WarnText
-            )
-        }
-
-        if (uiState.missedCount7d > 0) {
-            Spacer(modifier = Modifier.height(12.dp))
-            BannerCard(
-                text = stringResource(R.string.banner_missed),
-                bg = PrayerReminderColors.WarnBg,
-                textColor = PrayerReminderColors.WarnText
-            )
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // 3. Date Block (Gregorian + Hijri from table)
-        val selectedDate = uiState.selectedDate
-        val gregorianDateText = selectedDate.format(
-            DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
-        )
-        Text(
-            text = gregorianDateText,
-            style = MaterialTheme.typography.titleLarge,
-            color = PrayerReminderColors.Ink,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        val hijri = schedule?.hijri
-        if (hijri != null) {
-            val hijriMonthName = HijriNames.getMonthName(hijri.month, languageCode)
-            val hijriSuffix = stringResource(R.string.hijri_suffix)
-            val hijriText = "${hijri.day} $hijriMonthName ${hijri.year} $hijriSuffix"
-            Text(
-                text = hijriText,
-                style = MaterialTheme.typography.bodyLarge,
-                color = PrayerReminderColors.GoldText,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 4. Next Prayer Card (Dark Ground #0F2A2E)
-        val next = uiState.nextPrayer
-        if (next != null) {
-            NextPrayerCard(
-                next = next,
-                hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true,
-                amMarker = amMarker,
-                pmMarker = pmMarker,
-                voiceSummary = uiState.voiceSummary,
-                voiceEnabled = uiState.voiceEnabled
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 5. Today's Prayers List
-        if (schedule != null && schedule.source != ScheduleSource.NONE) {
-            TodayPrayersList(
-                schedule = schedule,
-                nextPrayer = next,
-                currentTime = uiState.currentTime,
-                amMarker = amMarker,
-                pmMarker = pmMarker,
-                reminderStates = uiState.reminderStates,
-                onToggleReminder = { viewModel.togglePrayerReminder(it) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // 6. Direct Settings Card at Bottom of Home Page
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onSettingsClick() },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
-            border = BorderStroke(1.dp, PrayerReminderColors.Line)
-        ) {
-            Row(
+            // Mosque silhouette background — drawn at the top of the scrollable area
+            Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .height(260.dp)
+                    .align(Alignment.TopCenter)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null,
-                        tint = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.settings),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = PrayerReminderColors.Ink
-                    )
-                    Text(
-                        text = stringResource(R.string.home_settings_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = PrayerReminderColors.Muted
-                    )
-                }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = PrayerReminderColors.Muted,
-                    modifier = Modifier.size(18.dp)
+                drawMosqueSilhouette(mosqueColor)
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+
+            // 2. Warning Banners (if estimated or no table or missed reminders)
+            val schedule = uiState.schedule
+            if (schedule != null && schedule.source.isEstimated) {
+                Spacer(modifier = Modifier.height(12.dp))
+                BannerCard(
+                    text = stringResource(R.string.banner_estimated),
+                    bg = PrayerReminderColors.WarnBg,
+                    textColor = PrayerReminderColors.WarnText
+                )
+            } else if (schedule != null && schedule.source == ScheduleSource.NONE) {
+                Spacer(modifier = Modifier.height(12.dp))
+                BannerCard(
+                    text = stringResource(R.string.banner_no_timetable),
+                    bg = PrayerReminderColors.WarnBg,
+                    textColor = PrayerReminderColors.WarnText
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            if (uiState.missedCount7d > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                BannerCard(
+                    text = stringResource(R.string.banner_missed),
+                    bg = PrayerReminderColors.WarnBg,
+                    textColor = PrayerReminderColors.WarnText
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // 3. Date Block (Gregorian + Hijri from table)
+            val selectedDate = uiState.selectedDate
+            val gregorianDateText = selectedDate.format(
+                DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
+            )
+            Text(
+                text = gregorianDateText,
+                style = MaterialTheme.typography.titleLarge,
+                color = PrayerReminderColors.Ink,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            val hijri = schedule?.hijri
+            if (hijri != null) {
+                val hijriMonthName = HijriNames.getMonthName(hijri.month, languageCode)
+                val hijriSuffix = stringResource(R.string.hijri_suffix)
+                val hijriText = "${hijri.day} $hijriMonthName ${hijri.year} $hijriSuffix"
+                Text(
+                    text = hijriText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = PrayerReminderColors.GoldText,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 4. Next Prayer Card (Premium design)
+            val next = uiState.nextPrayer
+            if (next != null) {
+                NextPrayerCard(
+                    next = next,
+                    hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true,
+                    amMarker = amMarker,
+                    pmMarker = pmMarker,
+                    voiceSummary = uiState.voiceSummary,
+                    voiceEnabled = uiState.voiceEnabled
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 5. Today's Prayers List
+            if (schedule != null && schedule.source != ScheduleSource.NONE) {
+                TodayPrayersList(
+                    schedule = schedule,
+                    nextPrayer = next,
+                    currentTime = uiState.currentTime,
+                    amMarker = amMarker,
+                    pmMarker = pmMarker,
+                    reminderStates = uiState.reminderStates,
+                    onToggleReminder = { viewModel.togglePrayerReminder(it) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // 6. Direct Settings Card at Bottom of Home Page
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSettingsClick() },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface),
+                border = BorderStroke(1.dp, PrayerReminderColors.Line)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            // Subtle gradient overlay for premium feel
+                            drawRect(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        PrayerReminderColors.Gold.copy(alpha = 0.04f),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                        }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(if (PrayerReminderColors.isDark) PrayerReminderColors.Gold else PrayerReminderColors.Ground),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = if (PrayerReminderColors.isDark) PrayerReminderColors.Ground else PrayerReminderColors.Ivory,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PrayerReminderColors.Ink
+                        )
+                        Text(
+                            text = stringResource(R.string.home_settings_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PrayerReminderColors.Muted
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = PrayerReminderColors.GoldText,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        }
     }
 }
+
+/**
+ * Draws a subtle mosque silhouette at the top of the screen.
+ * Central dome with crescent, two minarets on each side.
+ */
+private fun DrawScope.drawMosqueSilhouette(color: Color) {
+    val w = size.width
+    val h = size.height
+    val cx = w / 2f
+
+    // Central dome
+    val domePath = Path().apply {
+        moveTo(cx - w * 0.22f, h)
+        // Dome arch
+        cubicTo(
+            cx - w * 0.22f, h * 0.45f,
+            cx - w * 0.08f, h * 0.25f,
+            cx, h * 0.22f
+        )
+        cubicTo(
+            cx + w * 0.08f, h * 0.25f,
+            cx + w * 0.22f, h * 0.45f,
+            cx + w * 0.22f, h
+        )
+        close()
+    }
+    drawPath(domePath, color, style = Fill)
+
+    // Crescent finial on top of dome
+    val crescentPath = Path().apply {
+        // Small crescent at the peak
+        val cy = h * 0.17f
+        val r = w * 0.018f
+        // Outer circle
+        moveTo(cx + r, cy)
+        cubicTo(cx + r, cy - r * 1.3f, cx - r, cy - r * 1.3f, cx - r, cy)
+        cubicTo(cx - r, cy + r * 1.3f, cx + r, cy + r * 1.3f, cx + r, cy)
+        // Inner cutout (shifted right for crescent shape)
+        moveTo(cx + r * 0.4f, cy)
+        cubicTo(cx + r * 0.4f, cy - r * 0.9f, cx - r * 0.6f, cy - r * 0.9f, cx - r * 0.6f, cy)
+        cubicTo(cx - r * 0.6f, cy + r * 0.9f, cx + r * 0.4f, cy + r * 0.9f, cx + r * 0.4f, cy)
+    }
+    drawPath(crescentPath, color, style = Fill)
+
+    // Spire above dome
+    drawLine(
+        color = color,
+        start = Offset(cx, h * 0.22f),
+        end = Offset(cx, h * 0.14f),
+        strokeWidth = w * 0.005f
+    )
+
+    // Left minaret
+    val lmX = cx - w * 0.30f
+    val minaretWidth = w * 0.028f
+    val leftMinaretPath = Path().apply {
+        moveTo(lmX - minaretWidth, h)
+        lineTo(lmX - minaretWidth, h * 0.40f)
+        lineTo(lmX - minaretWidth * 0.6f, h * 0.36f)
+        // Minaret cap (pointed)
+        lineTo(lmX, h * 0.28f)
+        lineTo(lmX + minaretWidth * 0.6f, h * 0.36f)
+        lineTo(lmX + minaretWidth, h * 0.40f)
+        lineTo(lmX + minaretWidth, h)
+        close()
+    }
+    drawPath(leftMinaretPath, color, style = Fill)
+
+    // Right minaret
+    val rmX = cx + w * 0.30f
+    val rightMinaretPath = Path().apply {
+        moveTo(rmX - minaretWidth, h)
+        lineTo(rmX - minaretWidth, h * 0.40f)
+        lineTo(rmX - minaretWidth * 0.6f, h * 0.36f)
+        lineTo(rmX, h * 0.28f)
+        lineTo(rmX + minaretWidth * 0.6f, h * 0.36f)
+        lineTo(rmX + minaretWidth, h * 0.40f)
+        lineTo(rmX + minaretWidth, h)
+        close()
+    }
+    drawPath(rightMinaretPath, color, style = Fill)
+
+    // Small side domes (left and right of main dome)
+    val smallDomeLeft = Path().apply {
+        val sdCx = cx - w * 0.16f
+        moveTo(sdCx - w * 0.06f, h)
+        cubicTo(
+            sdCx - w * 0.06f, h * 0.65f,
+            sdCx, h * 0.55f,
+            sdCx + w * 0.06f, h * 0.65f
+        )
+        lineTo(sdCx + w * 0.06f, h)
+        close()
+    }
+    drawPath(smallDomeLeft, color.copy(alpha = color.alpha * 0.7f), style = Fill)
+
+    val smallDomeRight = Path().apply {
+        val sdCx = cx + w * 0.16f
+        moveTo(sdCx - w * 0.06f, h)
+        cubicTo(
+            sdCx - w * 0.06f, h * 0.65f,
+            sdCx, h * 0.55f,
+            sdCx + w * 0.06f, h * 0.65f
+        )
+        lineTo(sdCx + w * 0.06f, h)
+        close()
+    }
+    drawPath(smallDomeRight, color.copy(alpha = color.alpha * 0.7f), style = Fill)
+
+    // Base wall connecting everything
+    val basePath = Path().apply {
+        moveTo(lmX - minaretWidth * 1.5f, h)
+        lineTo(lmX - minaretWidth * 1.5f, h * 0.75f)
+        lineTo(rmX + minaretWidth * 1.5f, h * 0.75f)
+        lineTo(rmX + minaretWidth * 1.5f, h)
+        close()
+    }
+    drawPath(basePath, color.copy(alpha = color.alpha * 0.5f), style = Fill)
 }
 
 @Composable
@@ -382,13 +552,24 @@ private fun BannerCard(text: String, bg: androidx.compose.ui.graphics.Color, tex
         shape = RoundedCornerShape(12.dp),
         color = bg
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = textColor,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(14.dp)
-        )
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = textColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -403,10 +584,26 @@ private fun NextPrayerCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Ground)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(
+            modifier = Modifier
+                .drawBehind {
+                    // Subtle radial gradient for premium depth
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                PrayerReminderColors.Gold.copy(alpha = 0.08f),
+                                Color.Transparent
+                            ),
+                            center = Offset(size.width * 0.8f, size.height * 0.2f),
+                            radius = size.width * 0.6f
+                        )
+                    )
+                }
+                .padding(20.dp)
+        ) {
             // Tag + Prayer Name
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -540,9 +737,9 @@ private fun NextPrayerCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Countdown line
+            // Countdown line — larger and more prominent
             val context = androidx.compose.ui.platform.LocalContext.current
             val resources = context.resources
             val countdownStr = TimeFormatter.formatDuration(
@@ -559,12 +756,50 @@ private fun NextPrayerCard(
             Text(
                 text = countdownLabel,
                 color = PrayerReminderColors.Gold,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
             )
 
             Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = PrayerReminderColors.NextRowBgDark)
+
+            // Decorative arabesque-style separator
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .drawBehind {
+                        // Center-fading gold line
+                        drawRect(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    PrayerReminderColors.Gold.copy(alpha = 0.3f),
+                                    PrayerReminderColors.Gold.copy(alpha = 0.5f),
+                                    PrayerReminderColors.Gold.copy(alpha = 0.3f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                    }
+            )
+            // Small gold diamond at center of separator
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .offset(y = (-4).dp)
+                    .size(7.dp)
+                    .drawBehind {
+                        val diamond = Path().apply {
+                            moveTo(size.width / 2f, 0f)
+                            lineTo(size.width, size.height / 2f)
+                            lineTo(size.width / 2f, size.height)
+                            lineTo(0f, size.height / 2f)
+                            close()
+                        }
+                        drawPath(diamond, PrayerReminderColors.Gold.copy(alpha = 0.5f))
+                    }
+            )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             // Voice info
@@ -610,12 +845,12 @@ private fun TodayPrayersList(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             // Header Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -643,7 +878,7 @@ private fun TodayPrayersList(
                 Spacer(modifier = Modifier.size(28.dp)) // space for bell
             }
 
-            HorizontalDivider(color = PrayerReminderColors.Line)
+            HorizontalDivider(color = PrayerReminderColors.Line, thickness = 0.5.dp)
 
             val prayers = listOf(
                 Prayer.FAJR,
@@ -718,7 +953,20 @@ private fun PrayerRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
+                .then(
+                    if (isNext) {
+                        // Gold left accent border for next prayer
+                        Modifier.drawBehind {
+                            drawRoundRect(
+                                color = PrayerReminderColors.Gold,
+                                topLeft = Offset(0f, size.height * 0.15f),
+                                size = androidx.compose.ui.geometry.Size(2.dp.toPx(), size.height * 0.7f),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(1.dp.toPx())
+                            )
+                        }
+                    } else Modifier
+                )
+                .padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -734,7 +982,7 @@ private fun PrayerRow(
                     fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium
                 )
                 if (isNext) {
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = PrayerReminderColors.TagBg
@@ -742,7 +990,7 @@ private fun PrayerRow(
                         Text(
                             text = stringResource(R.string.next_tag),
                             color = PrayerReminderColors.TagText,
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                         )
