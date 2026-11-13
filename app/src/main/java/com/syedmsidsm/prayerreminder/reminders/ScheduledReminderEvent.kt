@@ -7,6 +7,7 @@ enum class ReminderKind {
     BEFORE_AZAN,
     AT_AZAN,
     BEFORE_JAMAAT,
+    AFTER_PRAYER,
     TABLE_EXPIRING,
     MIDNIGHT,
     TEST,

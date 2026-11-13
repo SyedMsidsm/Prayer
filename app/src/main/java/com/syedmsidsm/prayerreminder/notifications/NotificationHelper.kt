@@ -180,6 +180,12 @@ class NotificationHelper(private val context: Context) {
                 if (event.isEstimated) body += " " + context.getString(R.string.estimated_suffix)
                 Pair(t, body)
             }
+            ReminderKind.AFTER_PRAYER -> {
+                val minStr = context.resources.getQuantityString(R.plurals.minutes, event.minutesOffset, event.minutesOffset)
+                val t = context.getString(R.string.notif_after_prayer, prayerName, minStr)
+                val body = context.getString(R.string.notif_after_prayer_body, prayerName)
+                Pair(t, body)
+            }
             ReminderKind.TABLE_EXPIRING -> {
                 val t = context.getString(R.string.notif_new_timetable_title)
                 val daysStr = context.resources.getQuantityString(R.plurals.minutes, event.daysUntilExpiry, event.daysUntilExpiry)

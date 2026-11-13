@@ -17,6 +17,7 @@ data class ReminderSettingsSnapshot(
     val matrix: Map<Pair<String, String>, Boolean> = emptyMap(),
     val remBeforeAzanOffsets: Set<Int> = emptySet(),
     val remBeforeJamaatOffsets: Set<Int> = emptySet(),
+    val remAfterPrayerOffsets: Set<Int> = emptySet(),
     val remJumuahBeforeAzanOffsets: Set<Int> = emptySet()
 ) {
     fun isEnabled(prayerKey: String, kind: ReminderKind): Boolean {
@@ -24,6 +25,7 @@ data class ReminderSettingsSnapshot(
             ReminderKind.BEFORE_AZAN -> "BEFORE_AZAN"
             ReminderKind.AT_AZAN -> "AT_AZAN"
             ReminderKind.BEFORE_JAMAAT -> "BEFORE_JAMAAT"
+            ReminderKind.AFTER_PRAYER -> "AFTER_PRAYER"
             else -> return true
         }
         return matrix[Pair(prayerKey, kindStr)] ?: true
@@ -155,7 +157,30 @@ class ReminderPlanner {
                     }
                 }
 
-                // 4. PHASE change at jamaat time (silent refresh for widgets and next prayer)
+                // 4. AFTER_PRAYER (Support multiple reminder intervals after prayer / jamaat)
+                for (offset in settings.remAfterPrayerOffsets) {
+                    if (offset > 0 && settings.isEnabled(prayerKey, ReminderKind.AFTER_PRAYER)) {
+                        val refTime = jamaat ?: azan
+                        val fireTime = day.date.atTime(refTime).plusMinutes(offset.toLong()).atZone(now.zone)
+                        if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
+                            events.add(
+                                ScheduledReminderEvent(
+                                    code = calculateCode(day.date, prayer, ReminderKind.AFTER_PRAYER, offset),
+                                    fireAtEpochSeconds = fireTime.toEpochSecond(),
+                                    prayer = prayer,
+                                    kind = ReminderKind.AFTER_PRAYER,
+                                    isJumuah = isJumuah,
+                                    minutesOffset = offset,
+                                    azanTimeIso = azan.toString(),
+                                    jamaatTimeIso = jamaat?.toString(),
+                                    isEstimated = day.source.isEstimated
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // 5. PHASE change at jamaat time (silent refresh for widgets and next prayer)
                 if (jamaat != null) {
                     val fireTime = day.date.atTime(jamaat).atZone(now.zone)
                     if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {

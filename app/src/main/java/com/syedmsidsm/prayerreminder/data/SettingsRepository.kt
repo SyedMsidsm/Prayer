@@ -36,6 +36,7 @@ class SettingsRepository(
         val KEY_REM_BEFORE_JAMAAT_MIN = intPreferencesKey("rem_before_jamaat_min")
         val KEY_REM_BEFORE_AZAN_OFFSETS = stringPreferencesKey("rem_before_azan_offsets")
         val KEY_REM_BEFORE_JAMAAT_OFFSETS = stringPreferencesKey("rem_before_jamaat_offsets")
+        val KEY_REM_AFTER_PRAYER_OFFSETS = stringPreferencesKey("rem_after_prayer_offsets")
         val KEY_REM_JUMUAH_BEFORE_AZAN_OFFSETS = stringPreferencesKey("rem_jumuah_before_azan_offsets")
 
         val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
@@ -262,6 +263,21 @@ class SettingsRepository(
         dataStore.edit {
             it[KEY_REM_BEFORE_JAMAAT_MIN] = minutes
             it[KEY_REM_BEFORE_JAMAAT_OFFSETS] = if (minutes > 0) minutes.toString() else ""
+        }
+    }
+
+    val remAfterPrayerOffsets: Flow<Set<Int>> = dataStore.data.map { prefs ->
+        val raw = prefs[KEY_REM_AFTER_PRAYER_OFFSETS]
+        if (raw.isNullOrBlank()) {
+            emptySet()
+        } else {
+            raw.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+        }
+    }
+
+    suspend fun setRemAfterPrayerOffsets(offsets: Set<Int>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REM_AFTER_PRAYER_OFFSETS] = offsets.sortedDescending().joinToString(",")
         }
     }
 

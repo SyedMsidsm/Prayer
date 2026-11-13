@@ -52,14 +52,15 @@ class WidePrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
     val colors = WidgetThemeConfig.getColors(state.theme)
     val darkTextOnGold = ColorProvider(Color(0xFF020617))
+    val launchAction = actionStartActivity<MainActivity>()
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .cornerRadius(24.dp)
+            .cornerRadius(26.dp)
             .background(colors.background)
-            .clickable(actionStartActivity<MainActivity>())
-            .padding(12.dp)
+            .clickable(launchAction)
+            .padding(14.dp)
     ) {
         if (!state.hasTable) {
             Column(
@@ -71,22 +72,23 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                     text = state.place,
                     style = TextStyle(
                         color = colors.textAccent,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
-                Spacer(modifier = GlanceModifier.height(8.dp))
+                Spacer(modifier = GlanceModifier.height(4.dp))
                 val importMsg = when (state.appLanguage) {
                     "ar" -> "استورد جدول المسجد"
-                    "ur" -> "مسجد کا نظام الاوقات شامل کریں"
-                    else -> "Import masjid timetable"
+                    "ur" -> "ٹائم ٹیبل شامل کریں"
+                    else -> "Tap to import mosque timetable"
                 }
                 Text(
                     text = importMsg,
                     style = TextStyle(
                         color = colors.textPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
                     )
                 )
             }
@@ -95,11 +97,11 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                 modifier = GlanceModifier.fillMaxSize(),
                 verticalAlignment = Alignment.Top
             ) {
-                // Header: Place on one side, Next prayer info on the other
-                val nextTag = when (state.appLanguage) {
-                    "ar" -> "التالي:"
-                    "ur" -> "اگلی نماز:"
-                    else -> "Next:"
+                // 1. Top Bar: Location & Hijri Date (Left) + Countdown Pill (Right)
+                val topInfoText = if (state.hijriDate.isNotEmpty()) {
+                    "${state.place} · ${state.hijriDate}"
+                } else {
+                    state.place
                 }
 
                 Row(
@@ -107,49 +109,102 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "📍 ${state.place}",
+                        text = topInfoText,
                         style = TextStyle(
-                            color = colors.textPrimary,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            color = colors.textSecondary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     )
+
                     Spacer(modifier = GlanceModifier.defaultWeight())
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    // Countdown Pill
+                    val chronometerViews = WidgetThemeConfig.buildChronometer(
+                        context = context,
+                        targetEpochMillis = state.countdownTargetEpochMillis,
+                        isRtl = state.isRtl,
+                        textColorInt = colors.chronometerTextColorInt
+                    )
+
+                    Box(
+                        modifier = GlanceModifier
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .cornerRadius(12.dp)
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "⏱ ",
+                                style = TextStyle(
+                                    color = colors.textAccent,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            AndroidRemoteViews(
+                                remoteViews = chronometerViews,
+                                modifier = GlanceModifier.height(16.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = GlanceModifier.defaultWeight())
+
+                // 2. Hero Middle Row: Next Prayer Name + Big Time (Left) & Jamaat Time (Right)
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
                         Text(
-                            text = "$nextTag ${state.prayerName} ",
+                            text = state.prayerName,
                             style = TextStyle(
                                 color = colors.textAccent,
-                                fontSize = 11.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
-                        val chronometerViews = WidgetThemeConfig.buildChronometer(
-                            context = context,
-                            targetEpochMillis = state.countdownTargetEpochMillis,
-                            isRtl = state.isRtl,
-                            textColorInt = colors.chronometerTextColorInt
+                        Spacer(modifier = GlanceModifier.height(1.dp))
+                        Text(
+                            text = state.mainTime,
+                            style = TextStyle(
+                                color = colors.textPrimary,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
-                        AndroidRemoteViews(
-                            remoteViews = chronometerViews,
-                            modifier = GlanceModifier.height(18.dp)
+                    }
+
+                    Spacer(modifier = GlanceModifier.defaultWeight())
+
+                    if (state.secondaryTime.isNotEmpty()) {
+                        Text(
+                            text = state.secondaryTime,
+                            style = TextStyle(
+                                color = colors.textSecondary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         )
                     }
                 }
 
-                Spacer(modifier = GlanceModifier.height(8.dp))
+                Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // 5-Column Prayer Strip for the 5 Fard Prayers
+                // 3. Bottom Row: Full 5 Fard Prayer Strip with Elevated Active Capsule
                 val fardRows = state.rows.filter { it.prayer != Prayer.SUNRISE }
                 val orderedRows = if (state.isRtl) fardRows.reversed() else fardRows
 
                 Row(
-                    modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+                    modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     for (row in orderedRows) {
                         val isNext = row.isNext
-                        val capsuleBg = if (isNext) Color(0xFFFBBF24) else colors.capsuleBackground
+                        val capsuleBg = if (isNext) Color(0xFFFBBF24) else Color.White.copy(alpha = 0.08f)
                         val titleColor = if (isNext) darkTextOnGold else colors.textSecondary
                         val timeColor = if (isNext) darkTextOnGold else colors.textPrimary
 
@@ -171,12 +226,12 @@ private fun WidePrayerWidgetContent(context: Context, state: WidgetState) {
                                     textAlign = TextAlign.Center
                                 )
                             )
-                            Spacer(modifier = GlanceModifier.height(3.dp))
+                            Spacer(modifier = GlanceModifier.height(2.dp))
                             Text(
                                 text = row.azanShort.ifEmpty { row.azanFormatted.take(5) },
                                 style = TextStyle(
                                     color = timeColor,
-                                    fontSize = 13.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
                                 )

@@ -1,12 +1,12 @@
 package com.syedmsidsm.prayerreminder.ui.reliability
 
-import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,19 +37,13 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -68,13 +63,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.syedmsidsm.prayerreminder.R
+import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.reliability.OemSettingsLauncher
 import com.syedmsidsm.prayerreminder.reliability.ReliabilityChecker
+import com.syedmsidsm.prayerreminder.ui.components.MosqueBackdrop
 import com.syedmsidsm.prayerreminder.ui.settings.SettingsViewModel
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+
+private val AmberAccent = Color(0xFFFBBF24)
+private val AmberTextDark = Color(0xFF020617)
+private val AmberGlowText = Color(0xFFFCD34D)
+private val SanctuaryDarkBg = Color(0xFF03080C)
+private val SanctuaryLightBg = Color(0xFFF6F1E6)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,7 +106,6 @@ fun ReliabilityScreen(
     }
 
     val notifAllowed = ReliabilityChecker.isNotificationsAllowed(context)
-    val channelsEnabled = ReliabilityChecker.areChannelsEnabled(context)
     val exactAlarmsAllowed = ReliabilityChecker.canScheduleExactAlarms(context)
     val batteryOptOff = ReliabilityChecker.isIgnoringBatteryOptimizations(context)
 
@@ -113,87 +115,117 @@ fun ReliabilityScreen(
         if (last != null) ChronoUnit.DAYS.between(LocalDate.now(), last).toInt().coerceAtLeast(0) else 0
     } else 0
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.reliability),
-                        color = PrayerReminderColors.Ink,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
+    val isDark = PrayerReminderColors.isDark
+    val surfaceBg = if (isDark) SanctuaryDarkBg else SanctuaryLightBg
+    val glassCardBg = if (isDark) Color(0xFF0B161E).copy(alpha = 0.88f) else Color.White.copy(alpha = 0.94f)
+    val glassBorder = if (isDark) Color.White.copy(alpha = 0.11f) else Color(0xFFE4DCC7)
+    val chipUnselectedBg = if (isDark) Color.White.copy(alpha = 0.06f) else Color(0xFFF3EFE4)
+    val textPrimary = if (isDark) Color.White else Color(0xFF14262A)
+    val textMuted = if (isDark) Color(0xFFA8A29E) else Color(0xFF5E6D70)
+    val selectedGoldText = if (isDark) AmberGlowText else Color(0xFF92400E)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(surfaceBg)
+    ) {
+        MosqueBackdrop(
+            activeSky = Prayer.ISHA,
+            surfaceFadeColor = surfaceBg
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            // Sanctuary Top Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.38f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
+                    modifier = Modifier.size(38.dp)
+                ) {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.cancel),
-                            tint = PrayerReminderColors.Ink
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = PrayerReminderColors.Ivory)
-            )
-        },
-        containerColor = PrayerReminderColors.Ivory
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            // Test Reminder Card (Prominent at top)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Ground)
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.reliability),
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 4.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                // 1. Test Reminder Card (Prominent at top)
+                SanctuaryGlassCard(bg = glassCardBg, border = glassBorder) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Send,
                             contentDescription = null,
-                            tint = PrayerReminderColors.Gold,
-                            modifier = Modifier.size(24.dp)
+                            tint = AmberAccent,
+                            modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = stringResource(R.string.send_test),
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrayerReminderColors.CardTextLight
+                            color = textPrimary
                         )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.onb_test),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PrayerReminderColors.OnDarkMuted
+                        fontSize = 12.sp,
+                        color = textMuted,
+                        lineHeight = 18.sp
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
                     if (isWaitingForTest) {
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = PrayerReminderColors.WarnBg,
+                            shape = RoundedCornerShape(12.dp),
+                            color = AmberAccent.copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, AmberAccent.copy(alpha = 0.4f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column(modifier = Modifier.padding(14.dp)) {
                                 Text(
                                     text = "Test arriving in $testCountdownSeconds seconds...",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = PrayerReminderColors.WarnText
+                                    color = selectedGoldText
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = stringResource(R.string.test_wait),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = PrayerReminderColors.WarnText
+                                    fontSize = 11.sp,
+                                    color = textMuted
                                 )
                             }
                         }
@@ -203,14 +235,17 @@ fun ReliabilityScreen(
                                 viewModel.scheduleTestReminder()
                                 isWaitingForTest = true
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.Gold),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AmberAccent,
+                                contentColor = AmberTextDark
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().height(46.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.send_test),
-                                color = PrayerReminderColors.Ground,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
                             )
                         }
                     }
@@ -219,37 +254,31 @@ fun ReliabilityScreen(
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = lastTestResult,
-                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
-                            color = PrayerReminderColors.Gold
+                            color = AmberGlowText
                         )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Checklist Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                // 2. System Permissions Checklist Card
+                SanctuaryGlassCard(bg = glassCardBg, border = glassBorder) {
                     Text(
                         text = "System Permissions Checklist",
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrayerReminderColors.Ink
+                        color = textPrimary
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
                     // 1. Notifications
-                    ChecklistItemRow(
+                    SanctuaryChecklistItemRow(
                         icon = Icons.Default.Notifications,
                         title = stringResource(R.string.reliability_notifications),
                         isOk = notifAllowed,
+                        textPrimary = textPrimary,
+                        border = glassBorder,
                         onFix = {
                             val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -258,13 +287,15 @@ fun ReliabilityScreen(
                         }
                     )
 
-                    HorizontalDivider(color = PrayerReminderColors.Line, modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(color = glassBorder, modifier = Modifier.padding(vertical = 10.dp))
 
                     // 2. Exact Alarms
-                    ChecklistItemRow(
+                    SanctuaryChecklistItemRow(
                         icon = Icons.Default.Alarm,
                         title = stringResource(R.string.reliability_alarms),
                         isOk = exactAlarmsAllowed,
+                        textPrimary = textPrimary,
+                        border = glassBorder,
                         onFix = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -275,13 +306,15 @@ fun ReliabilityScreen(
                         }
                     )
 
-                    HorizontalDivider(color = PrayerReminderColors.Line, modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(color = glassBorder, modifier = Modifier.padding(vertical = 10.dp))
 
                     // 3. Battery Optimization
-                    ChecklistItemRow(
+                    SanctuaryChecklistItemRow(
                         icon = Icons.Default.BatteryAlert,
                         title = stringResource(R.string.reliability_battery),
                         isOk = batteryOptOff,
+                        textPrimary = textPrimary,
+                        border = glassBorder,
                         onFix = {
                             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                                 data = Uri.parse("package:${context.packageName}")
@@ -290,57 +323,52 @@ fun ReliabilityScreen(
                         }
                     )
 
-                    HorizontalDivider(color = PrayerReminderColors.Line, modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(color = glassBorder, modifier = Modifier.padding(vertical = 10.dp))
 
                     // 4. Timetable
-                    ChecklistItemRow(
+                    SanctuaryChecklistItemRow(
                         icon = Icons.Default.DateRange,
                         title = "${stringResource(R.string.reliability_timetable)} (${daysLeft}d left)",
                         isOk = activeTimetable != null && daysLeft > 0,
+                        textPrimary = textPrimary,
+                        border = glassBorder,
                         onFix = onNavigateToTimetables
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Manufacturer Specific Guidance Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PrayerReminderColors.Surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                // 3. Manufacturer Specific Guidance Card
+                SanctuaryGlassCard(bg = glassCardBg, border = glassBorder) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.PhoneAndroid,
                             contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(22.dp)
+                            tint = AmberAccent,
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "${oemGuidance.brandName} Settings",
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrayerReminderColors.Ink
+                            color = textPrimary
                         )
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = stringResource(R.string.onb_phone_specific),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PrayerReminderColors.Muted
+                        fontSize = 12.sp,
+                        color = textMuted,
+                        lineHeight = 18.sp
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     for (step in oemGuidance.steps) {
                         Text(
-                            text = step,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "• $step",
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
-                            color = PrayerReminderColors.Ink,
+                            color = textPrimary,
                             modifier = Modifier.padding(vertical = 2.dp)
                         )
                     }
@@ -348,20 +376,25 @@ fun ReliabilityScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     Button(
                         onClick = { OemSettingsLauncher.openSettings(context) },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrayerReminderColors.PrimaryBtnBg),
-                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = chipUnselectedBg,
+                            contentColor = textPrimary
+                        ),
+                        border = BorderStroke(1.dp, glassBorder),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth().height(44.dp)
                     ) {
                         Text(
                             text = "Open phone settings",
-                            color = PrayerReminderColors.PrimaryBtnText,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable {
                                 val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://dontkillmyapp.com"))
                                 context.startActivity(browserIntent)
@@ -371,31 +404,31 @@ fun ReliabilityScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.dontkillmyapp_note),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PrayerReminderColors.GoldText,
+                            fontSize = 11.sp,
+                            color = selectedGoldText,
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                             contentDescription = null,
-                            tint = PrayerReminderColors.GoldText,
-                            modifier = Modifier.size(14.dp)
+                            tint = selectedGoldText,
+                            modifier = Modifier.size(13.dp)
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-private fun ChecklistItemRow(
+private fun SanctuaryChecklistItemRow(
     icon: ImageVector,
     title: String,
     isOk: Boolean,
+    textPrimary: Color,
+    border: Color,
     onFix: () -> Unit
 ) {
     Row(
@@ -410,22 +443,23 @@ private fun ChecklistItemRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = PrayerReminderColors.Ink,
-                modifier = Modifier.size(20.dp)
+                tint = AmberAccent,
+                modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = PrayerReminderColors.Ink
+                color = textPrimary
             )
         }
 
         if (isOk) {
             Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = PrayerReminderColors.OkBg
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFF10B981).copy(alpha = 0.18f),
+                border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.45f))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -434,44 +468,64 @@ private fun ChecklistItemRow(
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = PrayerReminderColors.OkText,
-                        modifier = Modifier.size(14.dp)
+                        tint = Color(0xFF34D399),
+                        modifier = Modifier.size(13.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "OK",
-                        style = MaterialTheme.typography.labelMedium,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrayerReminderColors.OkText
+                        color = Color(0xFF6EE7B7)
                     )
                 }
             }
         } else {
             Surface(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .clickable { onFix() },
-                color = PrayerReminderColors.WarnBg
+                shape = RoundedCornerShape(8.dp),
+                color = AmberAccent.copy(alpha = 0.18f),
+                border = BorderStroke(1.dp, AmberAccent)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.Error,
                         contentDescription = null,
-                        tint = PrayerReminderColors.WarnText,
-                        modifier = Modifier.size(14.dp)
+                        tint = AmberAccent,
+                        modifier = Modifier.size(13.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Fix",
-                        style = MaterialTheme.typography.labelMedium,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrayerReminderColors.WarnText
+                        color = AmberGlowText
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SanctuaryGlassCard(
+    bg: Color,
+    border: Color,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = bg,
+        border = BorderStroke(1.dp, border)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            content()
         }
     }
 }

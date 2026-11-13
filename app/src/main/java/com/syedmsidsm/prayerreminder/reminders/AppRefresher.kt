@@ -38,6 +38,7 @@ object AppRefresher {
                 matrix = settingsRepo.reminderMatrix.first(),
                 remBeforeAzanOffsets = settingsRepo.remBeforeAzanOffsets.first(),
                 remBeforeJamaatOffsets = settingsRepo.remBeforeJamaatOffsets.first(),
+                remAfterPrayerOffsets = settingsRepo.remAfterPrayerOffsets.first(),
                 remJumuahBeforeAzanOffsets = settingsRepo.remJumuahBeforeAzanOffsets.first()
             )
 

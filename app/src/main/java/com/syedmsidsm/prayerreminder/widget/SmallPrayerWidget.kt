@@ -24,6 +24,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -48,23 +49,14 @@ class SmallPrayerWidgetReceiver : GlanceAppWidgetReceiver() {
 @Composable
 private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
     val colors = WidgetThemeConfig.getColors(state.theme)
-
-    val arabicName = when (state.nextPrayerKey) {
-        "FAJR" -> "الفجر"
-        "SUNRISE" -> "الشروق"
-        "DHUHR" -> "الظهر"
-        "ASR" -> "العصر"
-        "MAGHRIB" -> "المغرب"
-        "ISHA" -> "العشاء"
-        else -> ""
-    }
+    val launchAction = actionStartActivity<MainActivity>()
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .cornerRadius(24.dp)
+            .cornerRadius(26.dp)
             .background(colors.background)
-            .clickable(actionStartActivity<MainActivity>())
+            .clickable(launchAction)
             .padding(14.dp)
     ) {
         if (!state.hasTable) {
@@ -77,22 +69,21 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                     text = state.place,
                     style = TextStyle(
                         color = colors.textAccent,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 )
-                Spacer(modifier = GlanceModifier.height(6.dp))
+                Spacer(modifier = GlanceModifier.height(4.dp))
                 val importMsg = when (state.appLanguage) {
                     "ar" -> "استورد جدول المسجد"
-                    "ur" -> "نیا ٹائم ٹیبل شامل کریں"
-                    else -> "Import timetable"
+                    "ur" -> "ٹائم ٹیبل شامل کریں"
+                    else -> "Tap to import"
                 }
                 Text(
                     text = importMsg,
                     style = TextStyle(
                         color = colors.textPrimary,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
@@ -103,86 +94,84 @@ private fun SmallPrayerWidgetContent(context: Context, state: WidgetState) {
                 modifier = GlanceModifier.fillMaxSize(),
                 verticalAlignment = Alignment.Top
             ) {
-                // Header: Prayer Name + Arabic
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = state.prayerName,
-                        style = TextStyle(
-                            color = colors.textPrimary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                // 1. Top Location Header
+                Text(
+                    text = state.place,
+                    style = TextStyle(
+                        color = colors.textSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
-                    Spacer(modifier = GlanceModifier.defaultWeight())
-                    if (arabicName.isNotEmpty()) {
-                        Text(
-                            text = arabicName,
-                            style = TextStyle(
-                                color = colors.textAccent,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                }
+                )
 
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // Center: Big Adhan Time + Live Chronometer directly underneath
+                // 2. Next Prayer Name (Amber) + Big Bold Adhan Time
                 Column {
+                    Text(
+                        text = state.prayerName,
+                        style = TextStyle(
+                            color = colors.textAccent,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Spacer(modifier = GlanceModifier.height(1.dp))
                     Text(
                         text = state.mainTime,
                         style = TextStyle(
                             color = colors.textPrimary,
-                            fontSize = 24.sp,
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.Bold
                         )
-                    )
-                    Spacer(modifier = GlanceModifier.height(2.dp))
-                    val chronometerViews = WidgetThemeConfig.buildChronometer(
-                        context = context,
-                        targetEpochMillis = state.countdownTargetEpochMillis,
-                        isRtl = state.isRtl,
-                        textColorInt = colors.chronometerTextColorInt
-                    )
-                    AndroidRemoteViews(
-                        remoteViews = chronometerViews,
-                        modifier = GlanceModifier.height(18.dp)
                     )
                 }
 
                 Spacer(modifier = GlanceModifier.defaultWeight())
 
-                // Bottom: Iqamah line + Place
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val subLabel = if (state.secondaryTime.isNotEmpty()) {
-                        "Iqamah ${state.secondaryTime}"
-                    } else {
-                        state.place
-                    }
+                // 3. Jamaat Time Line
+                if (state.secondaryTime.isNotEmpty()) {
                     Text(
-                        text = subLabel,
+                        text = state.secondaryTime,
                         style = TextStyle(
                             color = colors.textSecondary,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
                     )
-                    Spacer(modifier = GlanceModifier.defaultWeight())
-                    Text(
-                        text = state.place,
-                        style = TextStyle(
-                            color = colors.textSecondary,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Normal
+                }
+
+                Spacer(modifier = GlanceModifier.defaultWeight())
+
+                // 4. Bottom Countdown Chronometer Pill
+                val chronometerViews = WidgetThemeConfig.buildChronometer(
+                    context = context,
+                    targetEpochMillis = state.countdownTargetEpochMillis,
+                    isRtl = state.isRtl,
+                    textColorInt = colors.chronometerTextColorInt
+                )
+
+                Box(
+                    modifier = GlanceModifier
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .cornerRadius(12.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "⏱ ",
+                            style = TextStyle(
+                                color = colors.textAccent,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
-                    )
+                        AndroidRemoteViews(
+                            remoteViews = chronometerViews,
+                            modifier = GlanceModifier.height(18.dp)
+                        )
+                    }
                 }
             }
         }

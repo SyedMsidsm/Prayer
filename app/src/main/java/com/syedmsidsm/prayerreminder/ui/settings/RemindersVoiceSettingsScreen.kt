@@ -21,12 +21,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,15 +39,21 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +62,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.syedmsidsm.prayerreminder.R
@@ -83,6 +95,10 @@ fun RemindersVoiceSettingsScreen(
     val atAzanEnabled by viewModel.remAtAzan.collectAsState()
     val beforeJamaatMin by viewModel.remBeforeJamaatMin.collectAsState()
     val beforeJamaatOffsets by viewModel.remBeforeJamaatOffsets.collectAsState()
+    val afterPrayerOffsets by viewModel.remAfterPrayerOffsets.collectAsState()
+
+    var customDialogTarget by remember { mutableStateOf<String?>(null) }
+    var customMinuteInput by remember { mutableStateOf("") }
 
     val reminderMatrix by viewModel.reminderMatrix.collectAsState()
     val currentTrack by viewModel.audioPlayer.currentTrack.collectAsState()
@@ -268,7 +284,7 @@ fun RemindersVoiceSettingsScreen(
                     }
                 }
 
-                // Reminder Timings Card (Before Azan, At Azan, Before Jamaat, Jumu'ah)
+                // Reminder Timings Card (Before Azan, At Azan, Before Jamaat, After Prayer, Jumu'ah)
                 SanctuaryGlassCard(bg = glassCardBg, border = glassBorder) {
                     // Before Azan
                     TimingSectionHeader(
@@ -291,7 +307,7 @@ fun RemindersVoiceSettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val beforeAzanOptions = listOf(0, 5, 10, 15, 20, 30)
+                        val beforeAzanOptions = (listOf(0, 5, 10, 15, 20, 25, 30, 45, 60) + beforeAzanOffsets).distinct().sorted()
                         for (min in beforeAzanOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
                             val isSel = if (min == 0) beforeAzanOffsets.isEmpty() else beforeAzanOffsets.contains(min)
@@ -304,6 +320,17 @@ fun RemindersVoiceSettingsScreen(
                                 onClick = { viewModel.toggleBeforeAzanOffset(min) }
                             )
                         }
+                        SanctuaryChoiceChip(
+                            label = stringResource(R.string.custom_chip_label),
+                            isSelected = false,
+                            unselectedBg = chipUnselectedBg,
+                            border = glassBorder,
+                            textPrimary = selectedGoldText,
+                            onClick = {
+                                customDialogTarget = "before_azan"
+                                customMinuteInput = ""
+                            }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -370,7 +397,7 @@ fun RemindersVoiceSettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val beforeJamaatOptions = listOf(0, 2, 5, 10, 15)
+                        val beforeJamaatOptions = (listOf(0, 2, 5, 10, 15, 20, 25, 30) + beforeJamaatOffsets).distinct().sorted()
                         for (min in beforeJamaatOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
                             val isSel = if (min == 0) beforeJamaatOffsets.isEmpty() else beforeJamaatOffsets.contains(min)
@@ -383,6 +410,68 @@ fun RemindersVoiceSettingsScreen(
                                 onClick = { viewModel.toggleBeforeJamaatOffset(min) }
                             )
                         }
+                        SanctuaryChoiceChip(
+                            label = stringResource(R.string.custom_chip_label),
+                            isSelected = false,
+                            unselectedBg = chipUnselectedBg,
+                            border = glassBorder,
+                            textPrimary = selectedGoldText,
+                            onClick = {
+                                customDialogTarget = "before_jamaat"
+                                customMinuteInput = ""
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = glassBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // After Prayer / Jamaat
+                    TimingSectionHeader(
+                        title = stringResource(R.string.after_prayer),
+                        isPlaying = false,
+                        textColor = textPrimary,
+                        chipBg = chipUnselectedBg,
+                        border = glassBorder,
+                        onPlay = { viewModel.playSample("before_azan", afterPrayerOffsets.firstOrNull() ?: 10) },
+                        onStop = { viewModel.stopSample() }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.multiple_reminders_hint),
+                        fontSize = 11.sp,
+                        color = textMuted
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val afterOptions = (listOf(0, 5, 10, 15, 20, 30) + afterPrayerOffsets).distinct().sorted()
+                        for (min in afterOptions) {
+                            val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
+                            val isSel = if (min == 0) afterPrayerOffsets.isEmpty() else afterPrayerOffsets.contains(min)
+                            SanctuaryChoiceChip(
+                                label = label,
+                                isSelected = isSel,
+                                unselectedBg = chipUnselectedBg,
+                                border = glassBorder,
+                                textPrimary = textPrimary,
+                                onClick = { viewModel.toggleAfterPrayerOffset(min) }
+                            )
+                        }
+                        SanctuaryChoiceChip(
+                            label = stringResource(R.string.custom_chip_label),
+                            isSelected = false,
+                            unselectedBg = chipUnselectedBg,
+                            border = glassBorder,
+                            textPrimary = selectedGoldText,
+                            onClick = {
+                                customDialogTarget = "after_prayer"
+                                customMinuteInput = ""
+                            }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -410,7 +499,7 @@ fun RemindersVoiceSettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val jumuahOptions = listOf(0, 5, 10, 15, 20, 30)
+                        val jumuahOptions = (listOf(0, 15, 30, 45, 60) + jumuahBeforeAzanOffsets).distinct().sorted()
                         for (min in jumuahOptions) {
                             val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
                             val isSel = if (min == 0) jumuahBeforeAzanOffsets.isEmpty() else jumuahBeforeAzanOffsets.contains(min)
@@ -423,6 +512,17 @@ fun RemindersVoiceSettingsScreen(
                                 onClick = { viewModel.toggleJumuahBeforeAzanOffset(min) }
                             )
                         }
+                        SanctuaryChoiceChip(
+                            label = stringResource(R.string.custom_chip_label),
+                            isSelected = false,
+                            unselectedBg = chipUnselectedBg,
+                            border = glassBorder,
+                            textPrimary = selectedGoldText,
+                            onClick = {
+                                customDialogTarget = "jumuah"
+                                customMinuteInput = ""
+                            }
+                        )
                     }
                 }
 
@@ -640,27 +740,34 @@ fun RemindersVoiceSettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "", modifier = Modifier.weight(1.2f))
+                        Text(text = "", modifier = Modifier.weight(1.1f))
                         Text(
                             text = stringResource(R.string.before_azan),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textMuted,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = stringResource(R.string.at_azan),
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             color = textMuted,
                             modifier = Modifier.weight(0.9f)
                         )
                         Text(
-                            text = stringResource(R.string.before_jamaat),
-                            fontSize = 10.sp,
+                            text = stringResource(R.string.at_azan),
+                            fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             color = textMuted,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(0.8f)
+                        )
+                        Text(
+                            text = stringResource(R.string.before_jamaat),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textMuted,
+                            modifier = Modifier.weight(0.9f)
+                        )
+                        Text(
+                            text = stringResource(R.string.after_prayer),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textMuted,
+                            modifier = Modifier.weight(0.9f)
                         )
                     }
 
@@ -679,6 +786,7 @@ fun RemindersVoiceSettingsScreen(
                         val beforeAzanActive = reminderMatrix[Pair(key, "BEFORE_AZAN")] ?: true
                         val atAzanActive = reminderMatrix[Pair(key, "AT_AZAN")] ?: true
                         val beforeJamaatActive = reminderMatrix[Pair(key, "BEFORE_JAMAAT")] ?: true
+                        val afterPrayerActive = reminderMatrix[Pair(key, "AFTER_PRAYER")] ?: true
 
                         Row(
                             modifier = Modifier
@@ -688,13 +796,13 @@ fun RemindersVoiceSettingsScreen(
                         ) {
                             Text(
                                 text = stringResource(nameRes),
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = textPrimary,
-                                modifier = Modifier.weight(1.2f)
+                                modifier = Modifier.weight(1.1f)
                             )
 
-                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                            Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
                                 Checkbox(
                                     checked = beforeAzanActive,
                                     onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_AZAN", it) },
@@ -706,7 +814,7 @@ fun RemindersVoiceSettingsScreen(
                                 )
                             }
 
-                            Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
+                            Box(modifier = Modifier.weight(0.8f), contentAlignment = Alignment.CenterStart) {
                                 Checkbox(
                                     checked = atAzanActive,
                                     onCheckedChange = { viewModel.setReminderMatrixEntry(key, "AT_AZAN", it) },
@@ -718,10 +826,22 @@ fun RemindersVoiceSettingsScreen(
                                 )
                             }
 
-                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                            Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
                                 Checkbox(
                                     checked = beforeJamaatActive,
                                     onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_JAMAAT", it) },
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = AmberAccent,
+                                        checkmarkColor = AmberTextDark,
+                                        uncheckedColor = textMuted
+                                    )
+                                )
+                            }
+
+                            Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
+                                Checkbox(
+                                    checked = afterPrayerActive,
+                                    onCheckedChange = { viewModel.setReminderMatrixEntry(key, "AFTER_PRAYER", it) },
                                     colors = CheckboxDefaults.colors(
                                         checkedColor = AmberAccent,
                                         checkmarkColor = AmberTextDark,
@@ -802,6 +922,82 @@ fun RemindersVoiceSettingsScreen(
                     }
                 }
             }
+        }
+
+        if (customDialogTarget != null) {
+            AlertDialog(
+                onDismissRequest = { customDialogTarget = null },
+                title = {
+                    Text(
+                        text = stringResource(R.string.custom_reminder_title),
+                        color = textPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                },
+                text = {
+                    Column {
+                        val prompt = when (customDialogTarget) {
+                            "before_azan" -> "Enter minutes before Azan (1 - 180):"
+                            "before_jamaat" -> "Enter minutes before Jamaat (1 - 180):"
+                            "after_prayer" -> "Enter minutes after Prayer / Jamaat (1 - 180):"
+                            "jumuah" -> "Enter minutes before Jumu'ah (1 - 180):"
+                            else -> "Enter minutes:"
+                        }
+                        Text(
+                            text = prompt,
+                            fontSize = 13.sp,
+                            color = textMuted
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = customMinuteInput,
+                            onValueChange = { input ->
+                                customMinuteInput = input.filter { it.isDigit() }.take(3)
+                            },
+                            label = { Text(stringResource(R.string.custom_reminder_hint)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AmberAccent,
+                                focusedLabelColor = AmberAccent,
+                                cursorColor = AmberAccent,
+                                focusedTextColor = textPrimary,
+                                unfocusedTextColor = textPrimary
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val min = customMinuteInput.toIntOrNull() ?: 0
+                            if (min in 1..180) {
+                                when (customDialogTarget) {
+                                    "before_azan" -> viewModel.addCustomBeforeAzanOffset(min)
+                                    "before_jamaat" -> viewModel.addCustomBeforeJamaatOffset(min)
+                                    "after_prayer" -> viewModel.addCustomAfterPrayerOffset(min)
+                                    "jumuah" -> viewModel.addCustomJumuahOffset(min)
+                                }
+                            }
+                            customDialogTarget = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AmberAccent,
+                            contentColor = AmberTextDark
+                        )
+                    ) {
+                        Text(stringResource(R.string.add), fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { customDialogTarget = null }) {
+                        Text(stringResource(R.string.cancel), color = textMuted)
+                    }
+                },
+                containerColor = glassCardBg
+            )
         }
     }
 }

@@ -257,6 +257,12 @@ class SettingsViewModel(
         setOf(5)
     )
 
+    val remAfterPrayerOffsets: StateFlow<Set<Int>> = settingsRepository.remAfterPrayerOffsets.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptySet()
+    )
+
     val reminderMatrix: StateFlow<Map<Pair<String, String>, Boolean>> = settingsRepository.reminderMatrix.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -420,6 +426,63 @@ class SettingsViewModel(
                 settingsRepository.setRemJumuahBeforeAzanOffsets(current)
             }
             context?.let { AppRefresher.refreshAll(it, "jumuah_offsets_changed") }
+        }
+    }
+
+    fun toggleAfterPrayerOffset(minutes: Int) {
+        viewModelScope.launch {
+            if (minutes <= 0) {
+                settingsRepository.setRemAfterPrayerOffsets(emptySet())
+            } else {
+                val current = remAfterPrayerOffsets.value.toMutableSet()
+                if (current.contains(minutes)) {
+                    current.remove(minutes)
+                } else {
+                    current.add(minutes)
+                }
+                settingsRepository.setRemAfterPrayerOffsets(current)
+            }
+            context?.let { AppRefresher.refreshAll(it, "after_prayer_offsets_changed") }
+        }
+    }
+
+    fun addCustomBeforeAzanOffset(minutes: Int) {
+        if (minutes <= 0) return
+        viewModelScope.launch {
+            val current = remBeforeAzanOffsets.value.toMutableSet()
+            current.add(minutes)
+            settingsRepository.setRemBeforeAzanOffsets(current)
+            context?.let { AppRefresher.refreshAll(it, "custom_before_azan_added") }
+        }
+    }
+
+    fun addCustomBeforeJamaatOffset(minutes: Int) {
+        if (minutes <= 0) return
+        viewModelScope.launch {
+            val current = remBeforeJamaatOffsets.value.toMutableSet()
+            current.add(minutes)
+            settingsRepository.setRemBeforeJamaatOffsets(current)
+            context?.let { AppRefresher.refreshAll(it, "custom_before_jamaat_added") }
+        }
+    }
+
+    fun addCustomAfterPrayerOffset(minutes: Int) {
+        if (minutes <= 0) return
+        viewModelScope.launch {
+            val current = remAfterPrayerOffsets.value.toMutableSet()
+            current.add(minutes)
+            settingsRepository.setRemAfterPrayerOffsets(current)
+            context?.let { AppRefresher.refreshAll(it, "custom_after_prayer_added") }
+        }
+    }
+
+    fun addCustomJumuahOffset(minutes: Int) {
+        if (minutes <= 0) return
+        viewModelScope.launch {
+            val current = remJumuahBeforeAzanOffsets.value.toMutableSet()
+            current.add(minutes)
+            settingsRepository.setRemJumuahBeforeAzanOffsets(current)
+            context?.let { AppRefresher.refreshAll(it, "custom_jumuah_added") }
         }
     }
 

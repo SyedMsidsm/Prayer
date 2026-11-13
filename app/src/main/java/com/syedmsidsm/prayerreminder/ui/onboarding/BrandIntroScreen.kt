@@ -5,18 +5,23 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,10 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.syedmsidsm.prayerreminder.R
@@ -42,9 +44,9 @@ import kotlinx.coroutines.launch
 
 private val AmberGold = Color(0xFFFBBF24)
 private val DeepSanctuary = Color(0xFF03080C)
-private val CardTextLight = Color(0xFFF8FAFC)
-private val AmberTextSoft = Color(0xFFFCD34D)
-private val MutedText = Color(0xFFA8A29E)
+private val CardBackground = Color(0xFF07141C)
+private val CardBorderGold = Color(0xFFFBBF24).copy(alpha = 0.55f)
+private val MutedText = Color(0xFF94A3B8)
 
 @Composable
 fun BrandIntroScreen(
@@ -58,73 +60,54 @@ fun BrandIntroScreen(
     )
     val animationsEnabled = animatorDurationScale > 0f
 
-    val markScale = remember { Animatable(if (animationsEnabled) 0.6f else 0.85f) }
-    val markOffsetY = remember { Animatable(if (animationsEnabled) 0f else -45f) }
-    val markAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
+    val badgeScale = remember { Animatable(if (animationsEnabled) 0.7f else 1f) }
+    val badgeAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
     val glowAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
 
-    val englishAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
-    val arabicAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
-    val urduAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
+    val contentOffsetY = remember { Animatable(if (animationsEnabled) 0f else -30f) }
+    val titleAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
     val taglineAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
 
     LaunchedEffect(Unit) {
         if (!animationsEnabled) {
-            delay(1000)
+            delay(1200)
             onFinished()
             return@LaunchedEffect
         }
 
-        // 0 - 0.8s: Mosque Mark & Glow scale and fade in
+        // 0 - 0.8s: Badge & Ambient Glow scale and illuminate
         launch {
-            markAlpha.animateTo(1f, tween(400, easing = LinearEasing))
-            glowAlpha.animateTo(0.85f, tween(600, easing = LinearEasing))
+            badgeAlpha.animateTo(1f, tween(500, easing = LinearEasing))
+            glowAlpha.animateTo(0.9f, tween(700, easing = LinearEasing))
         }
         launch {
-            markScale.animateTo(1f, tween(900, easing = FastOutSlowInEasing))
-        }
-
-        delay(900)
-
-        // 0.9 - 1.5s: Mark shifts gently upward
-        launch {
-            markScale.animateTo(0.82f, tween(550, easing = FastOutSlowInEasing))
-        }
-        launch {
-            markOffsetY.animateTo(-45f, tween(550, easing = FastOutSlowInEasing))
-        }
-
-        delay(250)
-
-        // 1.15s: "PrayerReminder" appears
-        launch {
-            englishAlpha.animateTo(1f, tween(380))
-        }
-
-        delay(400)
-
-        // 1.55s: Arabic appears
-        launch {
-            arabicAlpha.animateTo(1f, tween(320))
-        }
-
-        delay(250)
-
-        // 1.8s: Urdu appears
-        launch {
-            urduAlpha.animateTo(1f, tween(320))
-        }
-
-        delay(350)
-
-        // 2.15s: Tagline appears
-        launch {
-            taglineAlpha.animateTo(1f, tween(380))
+            badgeScale.animateTo(1f, tween(900, easing = FastOutSlowInEasing))
         }
 
         delay(950)
 
-        // Transition into Onboarding
+        // 0.95 - 1.4s: Shift slightly up to make room for Title & Tagline
+        launch {
+            contentOffsetY.animateTo(-30f, tween(550, easing = FastOutSlowInEasing))
+        }
+
+        delay(200)
+
+        // 1.15s: "PrayerReminder" appears
+        launch {
+            titleAlpha.animateTo(1f, tween(400))
+        }
+
+        delay(350)
+
+        // 1.5s: Tagline appears: "100% Offline • Bhatkal Timetable • Adhan & Jamaat"
+        launch {
+            taglineAlpha.animateTo(1f, tween(450))
+        }
+
+        delay(1400)
+
+        // Transition smoothly to Onboarding / Home
         onFinished()
     }
 
@@ -134,8 +117,8 @@ fun BrandIntroScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF071E26),
-                        Color(0xFF040E14),
+                        Color(0xFF061A22),
+                        Color(0xFF030D13),
                         DeepSanctuary
                     )
                 )
@@ -146,16 +129,17 @@ fun BrandIntroScreen(
             ) { onFinished() },
         contentAlignment = Alignment.Center
     ) {
-        // Ambient Radial Glow behind Mosque Mark
+        // Horizontal Ambient Radial Glow behind the Badge
         Box(
             modifier = Modifier
-                .size(240.dp)
-                .offset(y = markOffsetY.value.dp)
+                .size(340.dp)
+                .offset(y = contentOffsetY.value.dp)
                 .alpha(glowAlpha.value)
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            AmberGold.copy(alpha = 0.28f),
+                            AmberGold.copy(alpha = 0.25f),
+                            Color(0xFF0E3242).copy(alpha = 0.15f),
                             Color.Transparent
                         )
                     )
@@ -164,75 +148,91 @@ fun BrandIntroScreen(
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier
+                .offset(y = contentOffsetY.value.dp)
+                .padding(24.dp)
         ) {
-            // Animated Mosque Sanctuary Mark
-            Image(
-                painter = painterResource(R.drawable.splash_icon_static),
-                contentDescription = null,
+            // Squircle App Icon Badge as in user's video animation
+            Surface(
                 modifier = Modifier
-                    .size(150.dp)
-                    .offset(y = markOffsetY.value.dp)
-                    .scale(markScale.value)
-                    .alpha(markAlpha.value)
-            )
+                    .size(160.dp)
+                    .scale(badgeScale.value)
+                    .alpha(badgeAlpha.value),
+                shape = RoundedCornerShape(38.dp),
+                color = CardBackground,
+                border = BorderStroke(1.8.dp, CardBorderGold),
+                shadowElevation = 18.dp
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.splash_icon_static),
+                        contentDescription = null,
+                        modifier = Modifier.size(126.dp)
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Brand Title: PrayerReminder
             Text(
-                text = buildAnnotatedString {
-                    withStyle(SpanStyle(color = CardTextLight)) {
-                        append("Prayer")
-                    }
-                    withStyle(SpanStyle(color = AmberGold)) {
-                        append("Reminder")
-                    }
-                },
+                text = "PrayerReminder",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp,
-                modifier = Modifier.alpha(englishAlpha.value)
+                color = Color.White,
+                letterSpacing = (-0.3).sp,
+                modifier = Modifier.alpha(titleAlpha.value)
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Arabic Title
-            Text(
-                text = "تذكير الصلاة",
-                fontSize = 22.sp,
-                color = AmberTextSoft,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.alpha(arabicAlpha.value)
-            )
+            // Exact Tagline from video
+            Row(
+                modifier = Modifier.alpha(taglineAlpha.value),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "100% Offline",
+                    fontSize = 12.sp,
+                    color = MutedText,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "•",
+                    fontSize = 12.sp,
+                    color = AmberGold,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Bhatkal Timetable",
+                    fontSize = 12.sp,
+                    color = MutedText,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "•",
+                    fontSize = 12.sp,
+                    color = AmberGold,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Adhan & Jamaat",
+                    fontSize = 12.sp,
+                    color = MutedText,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
-            Spacer(modifier = Modifier.height(3.dp))
-
-            // Urdu Title
-            Text(
-                text = "نماز کی یاد دہانی",
-                fontSize = 20.sp,
-                color = CardTextLight.copy(alpha = 0.88f),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.alpha(urduAlpha.value)
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // Tagline
-            Text(
-                text = stringResource(R.string.intro_tagline),
-                fontSize = 13.sp,
-                color = MutedText,
-                modifier = Modifier.alpha(taglineAlpha.value)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = stringResource(R.string.intro_skip),
-                fontSize = 12.sp,
-                color = AmberGold,
+                fontSize = 11.sp,
+                color = AmberGold.copy(alpha = 0.75f),
                 modifier = Modifier.alpha(taglineAlpha.value)
             )
         }

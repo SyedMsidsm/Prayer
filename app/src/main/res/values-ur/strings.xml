@@ -196,6 +196,14 @@
     <string name="auto_sky">خودکار آسمان</string>
     <string name="minimalist_widgets">مختصر ویجیٹس</string>
     <string name="pin_widget">پن کریں</string>
+    <string name="after_prayer">نماز / جماعت کے بعد</string>
+    <string name="notif_after_prayer">%1$s · نماز کے %2$s بعد</string>
+    <string name="notif_after_prayer_body">نماز کے بعد کے اذکار اور دعا کا وقت (%1$s)</string>
+    <string name="add_custom_reminder">اپنی مرضی کا وقت شامل کریں</string>
+    <string name="custom_reminder_title">اپنی مرضی کی یاد دہانی</string>
+    <string name="custom_reminder_hint">منٹ (مثلاً 12)</string>
+    <string name="custom_chip_label">+ کسٹم</string>
+    <string name="add">شامل کریں</string>
 
     <string-array name="hijri_months">
         <item>محرم</item><item>صفر</item><item>ربیع الاول</item><item>ربیع الثانی</item>

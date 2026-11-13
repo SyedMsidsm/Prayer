@@ -44,6 +44,7 @@ class AlarmScheduler(
             ReminderKind.BEFORE_AZAN,
             ReminderKind.AT_AZAN,
             ReminderKind.BEFORE_JAMAAT,
+            ReminderKind.AFTER_PRAYER,
             ReminderKind.TEST -> {
                 if (canScheduleExact) {
                     val showIntent = PendingIntent.getActivity(

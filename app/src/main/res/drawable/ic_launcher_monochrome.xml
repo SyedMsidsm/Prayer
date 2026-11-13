@@ -4,14 +4,65 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M30,84 C30,55 45,40 54,30 C63,40 78,55 78,84 Z" />
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="1.8"
-        android:pathData="M54,18 L54,30" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M56,12 A5,5 0 0,1 51,17 A5,5 0 1,0 55.5,10 A5,5 0 0,1 56,12 Z" />
+
+    <group
+        android:pivotX="54"
+        android:pivotY="52"
+        android:scaleX="0.66"
+        android:scaleY="0.66"
+        android:translateY="4">
+
+        <!-- Left Minaret -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M20,38 L24,38 L24,84 L20,84 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M20,38 L22,30 L24,38 Z" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.2"
+            android:strokeLineCap="round"
+            android:pathData="M22,25 L22,30" />
+
+        <!-- Right Minaret -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M84,38 L88,38 L88,84 L84,84 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M84,38 L86,30 L88,38 Z" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.2"
+            android:strokeLineCap="round"
+            android:pathData="M86,25 L86,30" />
+
+        <!-- Central Dome -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M30,84 C30,55 45,40 54,30 C63,40 78,55 78,84 Z" />
+
+        <!-- Dome Spire & Finial -->
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:pathData="M54,18 L54,30" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M54,22m-2,0a2,2 0 1,0 4,0a2,2 0 1,0 -4,0" />
+
+        <!-- Crescent Moon -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M56,12 A5,5 0 0,1 51,17 A5,5 0 1,0 55.5,10 A5,5 0 0,1 56,12 Z" />
+
+        <!-- Horizon Base -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M16,84 L92,84 L92,90 L16,90 Z" />
+
+    </group>
+
 </vector>

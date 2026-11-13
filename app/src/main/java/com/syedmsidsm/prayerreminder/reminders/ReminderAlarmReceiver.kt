@@ -121,6 +121,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             ReminderKind.BEFORE_AZAN -> "BEFORE_AZAN"
             ReminderKind.AT_AZAN -> "AT_AZAN"
             ReminderKind.BEFORE_JAMAAT -> "BEFORE_JAMAAT"
+            ReminderKind.AFTER_PRAYER -> "AFTER_PRAYER"
             else -> ""
         }
 
@@ -179,6 +180,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 ReminderKind.BEFORE_AZAN -> if (isJumuah) "jumuah_before_azan" else "before_azan"
                 ReminderKind.AT_AZAN -> "at_azan"
                 ReminderKind.BEFORE_JAMAAT -> "before_jamaat"
+                ReminderKind.AFTER_PRAYER -> "after_prayer"
                 else -> ""
             }
 
