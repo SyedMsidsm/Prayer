@@ -116,43 +116,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
-        val start = SystemClock.uptimeMillis()
 
         // Eagerly initialize ViewModels so state is ready immediately on cold start or widget click
         homeViewModel
         settingsViewModel
 
-        val animatorDurationScale = Settings.Global.getFloat(
-            contentResolver,
-            Settings.Global.ANIMATOR_DURATION_SCALE,
-            1.0f
-        )
-        val animationsEnabled = animatorDurationScale > 0f
-
-        splash.setKeepOnScreenCondition {
-            val dataReady = homeViewModel.isReady.value && settingsViewModel.isOnboardingDone.value != null
-            val elapsed = SystemClock.uptimeMillis() - start
-            if (!animationsEnabled) {
-                !dataReady && elapsed < 500
-            } else {
-                (!dataReady || elapsed < 650) && elapsed < 1100
-            }
-        }
-
+        // Dismiss system splash immediately - brand landing MP4 animation plays directly in BrandIntroScreen
+        splash.setKeepOnScreenCondition { false }
         splash.setOnExitAnimationListener { provider ->
-            runCatching {
-                provider.iconView.animate()
-                    .scaleX(0.85f)
-                    .scaleY(0.85f)
-                    .alpha(0f)
-                    .setDuration(250)
-                    .start()
-            }
-            provider.view.animate()
-                .alpha(0f)
-                .setDuration(320)
-                .withEndAction { provider.remove() }
-                .start()
+            provider.remove()
         }
 
         super.onCreate(savedInstanceState)
