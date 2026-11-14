@@ -8,19 +8,12 @@
     <group
         android:translateX="54"
         android:translateY="54"
-        android:scaleX="0.16"
-        android:scaleY="0.16">
+        android:scaleX="0.225"
+        android:scaleY="0.225">
 
         <group
             android:translateX="-400"
-            android:translateY="-335">
-
-            <!-- Squircle Golden Frame -->
-            <path
-                android:strokeColor="#FFFFFF"
-                android:strokeWidth="3.0"
-                android:fillColor="#00000000"
-                android:pathData="M 272,108 L 528,108 A 92,92 0 0,1 620,200 L 620,458 A 92,92 0 0,1 528,550 L 272,550 A 92,92 0 0,1 180,458 L 180,200 A 92,92 0 0,1 272,108 Z" />
+            android:translateY="-315">
 
             <!-- Base Platform -->
             <path
@@ -37,7 +30,7 @@
                 android:fillColor="#FFFFFF"
                 android:pathData="M 510,270 L 526,270 L 526,442 L 510,442 Z" />
 
-            <!-- Minaret Gold Balconies -->
+            <!-- Minaret Balconies -->
             <path
                 android:fillColor="#FFFFFF"
                 android:pathData="M 270,308 L 292,308 L 292,315 L 270,315 Z" />
@@ -45,7 +38,7 @@
                 android:fillColor="#FFFFFF"
                 android:pathData="M 507,308 L 529,308 L 529,315 L 507,315 Z" />
 
-            <!-- Minaret Gold Spires -->
+            <!-- Minaret Spires -->
             <path
                 android:fillColor="#FFFFFF"
                 android:pathData="M 274,270 L 281,243 L 288,270 Z" />
@@ -80,12 +73,12 @@
                 android:fillColor="#FFFFFF"
                 android:pathData="M 400,211 m -7,0 a 7,7 0 1,0 14,0 a 7,7 0 1,0 -14,0" />
 
-            <!-- Golden Crescent Moon -->
+            <!-- Crescent Moon -->
             <path
                 android:fillColor="#FFFFFF"
                 android:pathData="M 420.09,195.11 A 19,19 0 1,1 409.83,166.92 A 15,15 0 0,0 420.09,195.11 Z" />
 
-            <!-- Celestial Stars -->
+            <!-- Stars -->
             <path
                 android:fillColor="#FFFFFF"
                 android:pathData="M 348,188 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0" />

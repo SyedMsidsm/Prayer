@@ -95,8 +95,8 @@ fun BrandIntroScreen(
                         settings.apply {
                             javaScriptEnabled = true
                             domStorageEnabled = true
-                            useWideViewPort = true
-                            loadWithOverviewMode = true
+                            useWideViewPort = false
+                            loadWithOverviewMode = false
                             cacheMode = WebSettings.LOAD_DEFAULT
                             allowFileAccess = true
                         }

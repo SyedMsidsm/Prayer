@@ -30,7 +30,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
@@ -57,20 +56,12 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .cornerRadius(22.dp)
+            .cornerRadius(24.dp)
             .clickable(launchAction)
     ) {
-        // 1. Minimalist Theme Card Frame Background
+        // 1. Theme Card Frame Background
         Image(
             provider = ImageProvider(colors.cardBackgroundRes),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = GlanceModifier.fillMaxSize()
-        )
-
-        // 2. Glowing Golden Card Frame Border
-        Image(
-            provider = ImageProvider(R.drawable.widget_card_frame),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -122,8 +113,9 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                     Box(
                         modifier = GlanceModifier
                             .defaultWeight()
+                            .height(42.dp)
                             .background(ImageProvider(capsuleDrawable))
-                            .padding(vertical = 4.dp, horizontal = 2.dp),
+                            .padding(vertical = 3.dp, horizontal = 2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -139,21 +131,18 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
                                     textAlign = TextAlign.Center
                                 )
                             )
-                            Spacer(modifier = GlanceModifier.height(1.dp))
                             Text(
                                 text = row.azanShort.ifEmpty { row.azanFormatted.take(5) },
                                 style = TextStyle(
                                     color = timeColor,
-                                    fontSize = 11.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
                                 )
                             )
                         }
                     }
-                    if (row != orderedRows.last()) {
-                        Spacer(modifier = GlanceModifier.width(3.dp))
-                    }
+                    Spacer(modifier = GlanceModifier.width(3.dp))
                 }
             }
         }

@@ -54,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -350,55 +351,56 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     val previewCardGradient = when (widgetTheme) {
-                        "light_cream" -> Brush.verticalGradient(listOf(Color(0xFFFAF7F0), Color(0xFFF5F1E6), Color(0xFFECE5D4)))
-                        "warm_gold" -> Brush.verticalGradient(listOf(Color(0xFF201A12), Color(0xFF14100B), Color(0xFF0B0906)))
-                        else -> Brush.verticalGradient(listOf(Color(0xFF121F25), Color(0xFF07141A), Color(0xFF030A0E)))
+                        "light_cream" -> Brush.verticalGradient(listOf(Color(0xFFFBF4E2), Color(0xFFFBF4E2)))
+                        "warm_gold" -> Brush.linearGradient(listOf(Color(0xFFFFCB45), Color(0xFFF0A30C)))
+                        else -> Brush.verticalGradient(listOf(Color(0xFF0F2430), Color(0xFF0F2430)))
                     }
                     val previewCardBorder = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFE0D7C2)
-                        "warm_gold" -> Color(0x59D97706)
-                        else -> Color(0x44FBBF24)
+                        "light_cream" -> Color(0x33A35A00)
+                        "warm_gold" -> Color(0x33231700)
+                        else -> Color(0x33FFBF1F)
                     }
-                    val previewPillBorder = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFD4C7B0)
-                        "warm_gold" -> Color(0x66D97706)
-                        else -> Color(0x4DFBBF24)
-                    }
+                    val previewPillBorder = previewCardBorder
                     val activeCapsuleBg = when (widgetTheme) {
-                        "light_cream" -> Brush.verticalGradient(listOf(Color(0xFFE6C485), Color(0xFFC79E53)))
-                        "warm_gold" -> Brush.verticalGradient(listOf(Color(0xFFFBBF24), Color(0xFFD97706)))
-                        else -> Brush.verticalGradient(listOf(Color(0xFFFCD34D), Color(0xFFF59E0B)))
-                    }
-                    val activeCapsuleBorder = when (widgetTheme) {
-                        "light_cream" -> Color(0xFF8C6627)
-                        else -> Color(0xFFFDE68A)
+                        "light_cream" -> Color(0xFFF5B81F)
+                        "warm_gold" -> Color(0xFF231700)
+                        else -> Color(0xFFFFBF1F)
                     }
                     val inactiveCapsuleBg = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFEBE4D3)
-                        "warm_gold" -> Color(0x801F1810)
-                        else -> Color(0x730C1824)
+                        "light_cream" -> Color(0xFFF0E2BF)
+                        "warm_gold" -> Color(0x55FFFFFF)
+                        else -> Color(0xB31B3D4E)
                     }
-                    val inactiveCapsuleBorder = when (widgetTheme) {
-                        "light_cream" -> Color(0x40B3A68F)
-                        "warm_gold" -> Color(0x40D97706)
-                        else -> Color(0x26FFFFFF)
+                    val onActiveColor = when (widgetTheme) {
+                        "warm_gold" -> Color(0xFFFFD24D)
+                        "light_cream" -> Color(0xFF2B2108)
+                        else -> Color(0xFF1A1200)
                     }
                     val pPrimary = when (widgetTheme) {
-                        "light_cream" -> Color(0xFF0F172A)
-                        "warm_gold" -> Color(0xFFFFFBEB)
-                        else -> Color.White
+                        "light_cream" -> Color(0xFF2B2108)
+                        "warm_gold" -> Color(0xFF231700)
+                        else -> Color(0xFFF4F8F9)
                     }
                     val pMuted = when (widgetTheme) {
-                        "light_cream" -> Color(0xFF64748B)
-                        "warm_gold" -> Color(0xFFD4C7B0)
-                        else -> Color(0xFF94A3B8)
+                        "light_cream" -> Color(0xFF6E5F3A)
+                        "warm_gold" -> Color(0xFF4D3500)
+                        else -> Color(0xFFA3B7C3)
                     }
                     val pGold = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFB45309)
-                        "warm_gold" -> Color(0xFFFBBF24)
-                        else -> Color(0xFFFCD34D)
+                        "light_cream" -> Color(0xFFA35A00)
+                        "warm_gold" -> Color(0xFF231700)
+                        else -> Color(0xFFFFBF1F)
                     }
-                    val previewBackdropRes = if (widgetTheme == "dark_teal") R.drawable.widget_sanctuary_bg else R.drawable.widget_mosque_silhouette
+                    val pillDotRes = when (widgetTheme) {
+                        "light_cream" -> R.drawable.widget_pill_dot_cream
+                        "warm_gold" -> R.drawable.widget_pill_dot_gold
+                        else -> R.drawable.widget_pill_dot_teal
+                    }
+                    val pillButtonRes = when (widgetTheme) {
+                        "light_cream" -> R.drawable.widget_pill_button_cream
+                        "warm_gold" -> R.drawable.widget_pill_button_gold
+                        else -> R.drawable.widget_pill_button_teal
+                    }
 
                     // 1) 4x2 Compact 5-Prayer Strip Widget Preview & Pin
                     WidgetPreviewCard(
@@ -409,49 +411,60 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(130.dp)
-                                    .background(previewCardGradient, RoundedCornerShape(18.dp))
-                                    .border(1.dp, previewCardBorder, RoundedCornerShape(18.dp))
-                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(previewCardGradient, RoundedCornerShape(20.dp))
+                                    .border(1.dp, previewCardBorder, RoundedCornerShape(20.dp))
+                                    .clip(RoundedCornerShape(20.dp))
                             ) {
-                                Image(
-                                    painter = painterResource(previewBackdropRes),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.BottomCenter
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.widget_mosque_silhouette),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier.fillMaxWidth().height(65.dp).alpha(0.18f)
+                                    )
+                                }
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(10.dp),
+                                        .padding(12.dp),
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.Bottom
                                     ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Image(
-                                                painter = painterResource(R.drawable.widget_pin_red),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(11.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(3.dp))
+                                        Column {
                                             val rawTown = activePlace.split(',').first().trim()
                                             val townName = when {
                                                 rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ar" -> "باتكال"
                                                 rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ur" -> "بھٹکل"
                                                 else -> rawTown
                                             }
-                                            Text(townName, color = pPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            val nextPrefix = when (currentLangTag) {
+                                                "ar" -> "$townName · الصلاة القادمة"
+                                                "ur" -> "$townName · اگلی نماز"
+                                                else -> "$townName · NEXT PRAYER"
+                                            }
+                                            Text(nextPrefix.uppercase(), color = pMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text("${stringResource(R.string.prayer_fajr)} ", color = pPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                                Text("05:15", color = pGold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                            }
                                         }
-                                        val fajrLabel = stringResource(R.string.prayer_fajr)
-                                        val nextPrefix = when (currentLangTag) {
-                                            "ar" -> "التالي: "
-                                            "ur" -> "اگلی: "
-                                            else -> "Next: "
+
+                                        val startsInLabel = when (currentLangTag) {
+                                            "ar" -> "يبدأ خلال"
+                                            "ur" -> "باقی وقت"
+                                            else -> "STARTS IN"
                                         }
-                                        Text("$nextPrefix$fajrLabel 02:45:10", color = pGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(startsInLabel, color = pMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                            Text("02:45:10", color = pGold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        }
                                     }
 
                                     Row(
@@ -470,18 +483,8 @@ fun SettingsScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .weight(1f)
-                                                    .then(
-                                                        if (isNext) {
-                                                            Modifier
-                                                                .background(activeCapsuleBg, RoundedCornerShape(8.dp))
-                                                                .border(1.dp, activeCapsuleBorder, RoundedCornerShape(8.dp))
-                                                        } else {
-                                                            Modifier
-                                                                .background(inactiveCapsuleBg, RoundedCornerShape(8.dp))
-                                                                .border(1.dp, inactiveCapsuleBorder, RoundedCornerShape(8.dp))
-                                                        }
-                                                    )
-                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(if (isNext) activeCapsuleBg else inactiveCapsuleBg, RoundedCornerShape(10.dp))
+                                                    .clip(RoundedCornerShape(10.dp))
                                             ) {
                                                 Column(
                                                     modifier = Modifier
@@ -489,8 +492,8 @@ fun SettingsScreen(
                                                         .padding(vertical = 5.dp),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
-                                                    Text(pName, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) Color(0xFF1E1B18) else pMuted)
-                                                    Text(pTime, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = if (isNext) Color(0xFF1E1B18) else pPrimary)
+                                                    Text(pName, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) onActiveColor else pMuted)
+                                                    Text(pTime, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) onActiveColor else pPrimary)
                                                 }
                                             }
                                         }
@@ -517,20 +520,25 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(130.dp)
-                                    .background(previewCardGradient, RoundedCornerShape(18.dp))
-                                    .border(1.dp, previewCardBorder, RoundedCornerShape(18.dp))
-                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(previewCardGradient, RoundedCornerShape(20.dp))
+                                    .border(1.dp, previewCardBorder, RoundedCornerShape(20.dp))
+                                    .clip(RoundedCornerShape(20.dp))
                             ) {
-                                Image(
-                                    painter = painterResource(previewBackdropRes),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.BottomCenter
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.widget_mosque_silhouette),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier.fillMaxWidth().height(65.dp).alpha(0.18f)
+                                    )
+                                }
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(10.dp),
+                                        .padding(12.dp),
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
@@ -538,15 +546,32 @@ fun SettingsScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(stringResource(R.string.prayer_fajr), color = pPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                        Text("الفجر", color = pGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("NEXT · ${stringResource(R.string.prayer_fajr).uppercase()}", color = pMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        Text("الفجر", color = pGold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                     }
                                     Column(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text("05:15 ${stringResource(R.string.am_marker)}", color = pPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                        Text("02:45:10", color = pGold, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                                        Text("05:15 ${stringResource(R.string.am_marker)}", color = pPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(999.dp),
+                                            color = activeCapsuleBg
+                                        ) {
+                                            val inLabel = when (currentLangTag) {
+                                                "ar" -> "خلال 02:45:10"
+                                                "ur" -> "باقی 02:45:10"
+                                                else -> "in 02:45:10"
+                                            }
+                                            Text(
+                                                text = inLabel,
+                                                color = onActiveColor,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -583,45 +608,60 @@ fun SettingsScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp)
-                                    .background(previewCardGradient, RoundedCornerShape(25.dp))
-                                    .border(1.2.dp, previewPillBorder, RoundedCornerShape(25.dp))
-                                    .clip(RoundedCornerShape(25.dp))
+                                    .height(58.dp)
+                                    .background(previewCardGradient, RoundedCornerShape(29.dp))
+                                    .border(1.2.dp, previewPillBorder, RoundedCornerShape(29.dp))
+                                    .clip(RoundedCornerShape(29.dp))
                             ) {
-                                Image(
-                                    painter = painterResource(previewBackdropRes),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
                                 Row(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(horizontal = 14.dp),
+                                        .padding(start = 14.dp, end = 8.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
                                         Image(
-                                            painter = painterResource(R.drawable.widget_sun_dot),
+                                            painter = painterResource(pillDotRes),
                                             contentDescription = null,
-                                            modifier = Modifier.size(10.dp)
+                                            modifier = Modifier.size(16.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("${stringResource(R.string.prayer_fajr)} 05:15 ${stringResource(R.string.am_marker)}", color = pPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column {
+                                            val rawTown = activePlace.split(',').first().trim()
+                                            Text(
+                                                "${stringResource(R.string.prayer_fajr).uppercase()} · ${rawTown.uppercase()}",
+                                                color = pMuted,
+                                                fontSize = 8.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                "05:15 ${stringResource(R.string.am_marker)}",
+                                                color = pPrimary,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
+
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         val nextInLabel = when (currentLangTag) {
-                                            "ar" -> "متبقي "
-                                            "ur" -> "باقی "
-                                            else -> "Next in "
+                                            "ar" -> "خلال"
+                                            "ur" -> "باقی وقت"
+                                            else -> "NEXT IN"
                                         }
-                                        Text("$nextInLabel 02:45:10", color = pGold, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.width(5.dp))
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(nextInLabel, color = pMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                            Text("02:45:10", color = pGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Image(
-                                            painter = painterResource(R.drawable.widget_crescent_gold),
+                                            painter = painterResource(pillButtonRes),
                                             contentDescription = null,
-                                            modifier = Modifier.size(13.dp)
+                                            modifier = Modifier.size(36.dp)
                                         )
                                     }
                                 }

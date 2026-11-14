@@ -22,6 +22,7 @@ import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
@@ -29,7 +30,6 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.MainActivity
 
 class SlimPrayerWidget : GlanceAppWidget() {
@@ -55,20 +55,12 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .cornerRadius(32.dp)
+            .cornerRadius(40.dp)
             .clickable(launchAction)
     ) {
-        // 1. Minimalist Theme Pill Frame Background
+        // 1. Pill Background Frame
         Image(
             provider = ImageProvider(colors.pillBackgroundRes),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = GlanceModifier.fillMaxSize()
-        )
-
-        // 2. Glowing Golden Capsule Stroke Border
-        Image(
-            provider = ImageProvider(R.drawable.widget_pill_frame),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -78,7 +70,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
             Row(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -105,83 +97,88 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 )
             }
         } else {
-            // Left Content: Glowing amber sun/prayer dot + Prayer Name & Time
-            Box(
+            Row(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                contentAlignment = if (state.isRtl) Alignment.CenterEnd else Alignment.CenterStart
+                    .padding(start = 18.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = GlanceModifier.clickable(launchAction)
+                // Left: Glowing Dot with Halo (22dp)
+                Image(
+                    provider = ImageProvider(colors.pillDotRes),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(22.dp)
+                )
+
+                Spacer(modifier = GlanceModifier.width(12.dp))
+
+                // Middle Left: Subtitle (Prayer · Place) & Big Time
+                Column(
+                    modifier = GlanceModifier.defaultWeight(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        provider = ImageProvider(R.drawable.widget_sun_dot),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(10.dp)
-                    )
-                    Spacer(modifier = GlanceModifier.width(8.dp))
+                    val placeTag = state.place.split(',').first().trim()
+                    val subtitle = "${state.prayerName.uppercase()} · ${placeTag.uppercase()}"
                     Text(
-                        text = "${state.prayerName} ${state.mainTime}",
+                        text = subtitle,
+                        style = TextStyle(
+                            color = colors.textSecondary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1
+                    )
+                    Text(
+                        text = state.mainTime,
                         style = TextStyle(
                             color = colors.textPrimary,
-                            fontSize = 14.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
                 }
-            }
 
-            // Right Content: "Next in" above countdown chronometer + golden crescent moon
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                contentAlignment = if (state.isRtl) Alignment.CenterStart else Alignment.CenterEnd
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = GlanceModifier.clickable(launchAction)
+                Spacer(modifier = GlanceModifier.width(8.dp))
+
+                // Middle Right: Next In + Live Countdown
+                val nextInLabel = when (state.appLanguage) {
+                    "ar" -> "خلال"
+                    "ur" -> "باقی وقت"
+                    else -> "NEXT IN"
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val nextInLabel = when (state.appLanguage) {
-                        "ar" -> "خلال"
-                        "ur" -> "باقی وقت"
-                        else -> "Next in"
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = nextInLabel,
-                            style = TextStyle(
-                                color = colors.textAccent,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                    Text(
+                        text = nextInLabel,
+                        style = TextStyle(
+                            color = colors.textSecondary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                        val chronometerViews = WidgetThemeConfig.buildChronometer(
-                            context = context,
-                            targetEpochMillis = state.countdownTargetEpochMillis,
-                            isRtl = state.isRtl,
-                            textColorInt = colors.chronometerTextColorInt
-                        )
-                        AndroidRemoteViews(
-                            remoteViews = chronometerViews,
-                            modifier = GlanceModifier.height(16.dp)
-                        )
-                    }
-
-                    Spacer(modifier = GlanceModifier.width(6.dp))
-
-                    Image(
-                        provider = ImageProvider(R.drawable.widget_crescent_gold),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(16.dp)
+                    )
+                    val chronometerViews = WidgetThemeConfig.buildChronometer(
+                        context = context,
+                        targetEpochMillis = state.countdownTargetEpochMillis,
+                        isRtl = state.isRtl,
+                        textColorInt = colors.chronometerTextColorInt
+                    )
+                    AndroidRemoteViews(
+                        remoteViews = chronometerViews,
+                        modifier = GlanceModifier.height(18.dp)
                     )
                 }
+
+                Spacer(modifier = GlanceModifier.width(10.dp))
+
+                // Right: 44dp Circle Button with Crescent Moon
+                Image(
+                    provider = ImageProvider(colors.pillButtonRes),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(44.dp)
+                )
             }
         }
     }
