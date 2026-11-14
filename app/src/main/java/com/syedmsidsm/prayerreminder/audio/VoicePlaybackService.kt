@@ -289,7 +289,7 @@ class VoicePlaybackService : Service() {
             }
 
             if (prayer.equals("sunrise", ignoreCase = true)) {
-                SunriseVoiceAnnouncer.speakSunrise(this, language, usage)
+                SunriseVoiceAnnouncer.speakSunrise(this, language, gender, usage)
             } else {
                 val clipPath = resolveClipPath(language, gender, kind, prayer, minutes)
                 if (clipPath != null) {
@@ -411,11 +411,11 @@ class VoicePlaybackService : Service() {
         val min = when (kind) {
             "before_azan", "jumuah_before_azan" -> {
                 val supported = listOf(30, 20, 15, 10, 5)
-                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 10
+                supported.firstOrNull { it <= minutes } ?: 5
             }
             "before_jamaat" -> {
                 val supported = listOf(15, 10, 5, 2)
-                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 5
+                supported.firstOrNull { it <= minutes } ?: 2
             }
             else -> null
         }
@@ -427,25 +427,22 @@ class VoicePlaybackService : Service() {
             else -> "before_azan_${prayerName}_10.mp3"
         }
 
-        if (gender.lowercase() == "female") {
-            val femalePackPath = "audio/voice-pack-female/$lang/$filename"
-            if (assetExists(femalePackPath)) {
-                return femalePackPath
-            }
-            val femaleFallbackPrayer = "audio/voice-pack-female/$lang/at_azan_${prayerName}.mp3"
-            if (assetExists(femaleFallbackPrayer)) {
-                return femaleFallbackPrayer
-            }
+        val isFemale = gender.lowercase() == "female"
+        val folder = if (isFemale) "voice-pack-female" else "voice-pack-preview"
+
+        val packPath = "audio/$folder/$lang/$filename"
+        if (assetExists(packPath)) {
+            return packPath
         }
 
-        // Male preview pack
-        val assetPath = "audio/voice-pack-preview/$lang/$filename"
-        if (assetExists(assetPath)) {
-            return assetPath
+        val defaultMinute = if (kind == "before_jamaat") 5 else 10
+        val fallbackMinutePath = "audio/$folder/$lang/${if (kind == "before_jamaat") "before_jamaat_${prayerName}_$defaultMinute.mp3" else "before_azan_${prayerName}_$defaultMinute.mp3"}"
+        if (assetExists(fallbackMinutePath)) {
+            return fallbackMinutePath
         }
 
         // Safe prayer-specific fallback (never announce wrong prayer like Asr for Jumuah)
-        val prayerFallback = "audio/voice-pack-preview/$lang/at_azan_${prayerName}.mp3"
+        val prayerFallback = "audio/$folder/$lang/at_azan_${prayerName}.mp3"
         if (assetExists(prayerFallback)) {
             return prayerFallback
         }

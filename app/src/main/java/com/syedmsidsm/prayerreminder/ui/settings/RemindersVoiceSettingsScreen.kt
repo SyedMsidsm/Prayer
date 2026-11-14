@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -103,6 +104,7 @@ fun RemindersVoiceSettingsScreen(
     var customMinuteInput by remember { mutableStateOf("") }
 
     val reminderMatrix by viewModel.reminderMatrix.collectAsState()
+    val isPlaying by viewModel.audioPlayer.isPlaying.collectAsState()
     val currentTrack by viewModel.audioPlayer.currentTrack.collectAsState()
     val playingKind by viewModel.audioPlayer.playingKind.collectAsState()
 
@@ -269,7 +271,7 @@ fun RemindersVoiceSettingsScreen(
                             border = glassBorder,
                             textPrimary = textPrimary,
                             modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setVoiceLanguage("ur") }
+                            onClick = { viewModel.setVoiceLanguage("ur", playPreview = true) }
                         )
                         VoiceOptionChip(
                             label = "العربية",
@@ -278,7 +280,7 @@ fun RemindersVoiceSettingsScreen(
                             border = glassBorder,
                             textPrimary = textPrimary,
                             modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setVoiceLanguage("ar") }
+                            onClick = { viewModel.setVoiceLanguage("ar", playPreview = true) }
                         )
                         VoiceOptionChip(
                             label = "English",
@@ -287,7 +289,7 @@ fun RemindersVoiceSettingsScreen(
                             border = glassBorder,
                             textPrimary = textPrimary,
                             modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setVoiceLanguage("en") }
+                            onClick = { viewModel.setVoiceLanguage("en", playPreview = true) }
                         )
                     }
 
@@ -309,20 +311,34 @@ fun RemindersVoiceSettingsScreen(
                         VoiceOptionChip(
                             label = stringResource(R.string.voice_male),
                             isSelected = voiceGender.lowercase() == "male",
+                            isPlaying = isPlaying && playingKind == "voice_male",
                             unselectedBg = chipUnselectedBg,
                             border = glassBorder,
                             textPrimary = textPrimary,
                             modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setVoiceGender("male") }
+                            onClick = {
+                                if (isPlaying && playingKind == "voice_male") {
+                                    viewModel.stopSample()
+                                } else {
+                                    viewModel.setVoiceGender("male", playPreview = true)
+                                }
+                            }
                         )
                         VoiceOptionChip(
                             label = stringResource(R.string.voice_female),
                             isSelected = voiceGender.lowercase() == "female",
+                            isPlaying = isPlaying && playingKind == "voice_female",
                             unselectedBg = chipUnselectedBg,
                             border = glassBorder,
                             textPrimary = textPrimary,
                             modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setVoiceGender("female") }
+                            onClick = {
+                                if (isPlaying && playingKind == "voice_female") {
+                                    viewModel.stopSample()
+                                } else {
+                                    viewModel.setVoiceGender("female", playPreview = true)
+                                }
+                            }
                         )
                     }
                 }
@@ -1178,6 +1194,7 @@ private fun SamplePlayButton(
 private fun VoiceOptionChip(
     label: String,
     isSelected: Boolean,
+    isPlaying: Boolean = false,
     unselectedBg: Color,
     border: Color,
     textPrimary: Color,
@@ -1186,14 +1203,29 @@ private fun VoiceOptionChip(
 ) {
     Surface(
         modifier = modifier
-            .height(40.dp)
+            .height(42.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
         color = if (isSelected) AmberAccent else unselectedBg,
         border = BorderStroke(1.dp, if (isSelected) AmberGlowText else border)
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isPlaying) {
+                Icon(
+                    imageVector = Icons.Default.VolumeUp,
+                    contentDescription = null,
+                    tint = if (isSelected) AmberTextDark else AmberAccent,
+                    modifier = Modifier.size(17.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+            }
             Text(
                 text = label,
                 color = if (isSelected) AmberTextDark else textPrimary,

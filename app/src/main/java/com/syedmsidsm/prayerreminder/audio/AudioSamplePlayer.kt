@@ -61,7 +61,7 @@ class AudioSamplePlayer(private val context: Context) {
                 }
 
                 if (kind.contains("sunrise")) {
-                    SunriseVoiceAnnouncer.speakSunrise(context, language)
+                    SunriseVoiceAnnouncer.speakSunrise(context, language, gender)
                 } else {
                     val clipPath = resolveClipPath(language, gender, kind, minutes)
                     if (clipPath != null) {
@@ -70,6 +70,40 @@ class AudioSamplePlayer(private val context: Context) {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                _isPlaying.value = false
+                _currentTrack.value = null
+                _playingKind.value = null
+            }
+        }
+    }
+
+    fun playVoicePreview(
+        language: String,
+        gender: String
+    ) {
+        val targetKind = "voice_${gender.lowercase()}"
+        if (_isPlaying.value && _playingKind.value == targetKind) {
+            stop()
+            return
+        }
+        stop()
+        playJob = scope.launch {
+            _isPlaying.value = true
+            _currentTrack.value = targetKind
+            _playingKind.value = targetKind
+            try {
+                val clipPath = resolveClipPath(
+                    language = language,
+                    gender = gender,
+                    kind = "before_azan",
+                    minutes = 10
+                )
+                if (clipPath != null) {
+                    playAssetFile(clipPath)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AudioSamplePlayer", "Error playing voice preview for $gender", e)
             } finally {
                 _isPlaying.value = false
                 _currentTrack.value = null
@@ -212,11 +246,11 @@ class AudioSamplePlayer(private val context: Context) {
         val min = when (kind) {
             "before_azan", "jumuah_before_azan" -> {
                 val supported = listOf(30, 20, 15, 10, 5)
-                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 10
+                supported.firstOrNull { it <= minutes } ?: 5
             }
             "before_jamaat" -> {
                 val supported = listOf(15, 10, 5, 2)
-                supported.firstOrNull { it <= minutes } ?: if (minutes > 0) minutes else 5
+                supported.firstOrNull { it <= minutes } ?: 2
             }
             else -> null
         }
@@ -228,24 +262,21 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "before_azan_${prayer}_10.mp3"
         }
 
-        if (gender.lowercase() == "female") {
-            val femalePackPath = "audio/voice-pack-female/$lang/$filename"
-            if (assetExists(femalePackPath)) {
-                return femalePackPath
-            }
-            val femaleFallbackPrayer = "audio/voice-pack-female/$lang/at_azan_${prayer}.mp3"
-            if (assetExists(femaleFallbackPrayer)) {
-                return femaleFallbackPrayer
-            }
+        val isFemale = gender.lowercase() == "female"
+        val folder = if (isFemale) "voice-pack-female" else "voice-pack-preview"
+
+        val packPath = "audio/$folder/$lang/$filename"
+        if (assetExists(packPath)) {
+            return packPath
         }
 
-        // Male preview pack
-        val assetPath = "audio/voice-pack-preview/$lang/$filename"
-        if (assetExists(assetPath)) {
-            return assetPath
+        val defaultMinute = if (kind == "before_jamaat") 5 else 10
+        val fallbackMinutePath = "audio/$folder/$lang/${if (kind == "before_jamaat") "before_jamaat_${prayer}_$defaultMinute.mp3" else "before_azan_${prayer}_$defaultMinute.mp3"}"
+        if (assetExists(fallbackMinutePath)) {
+            return fallbackMinutePath
         }
 
-        val prayerFallback = "audio/voice-pack-preview/$lang/at_azan_${prayer}.mp3"
+        val prayerFallback = "audio/$folder/$lang/at_azan_${prayer}.mp3"
         if (assetExists(prayerFallback)) {
             return prayerFallback
         }
@@ -258,7 +289,12 @@ class AudioSamplePlayer(private val context: Context) {
             context.assets.openFd(path).close()
             true
         } catch (_: Exception) {
-            false
+            try {
+                context.assets.open(path).close()
+                true
+            } catch (_: Exception) {
+                false
+            }
         }
     }
 }

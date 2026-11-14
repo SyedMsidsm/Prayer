@@ -23,6 +23,7 @@ object SunriseVoiceAnnouncer {
     suspend fun speakSunrise(
         context: Context,
         language: String,
+        gender: String = "male",
         usage: Int = AudioAttributes.USAGE_MEDIA
     ) {
         val ttsDeferred = CompletableDeferred<TextToSpeech?>()
@@ -47,6 +48,26 @@ object SunriseVoiceAnnouncer {
             } else {
                 tts.language = Locale.ENGLISH
             }
+
+            try {
+                val isFemale = gender.lowercase() == "female"
+                val matchingVoice = tts.voices?.firstOrNull { voice ->
+                    val isTargetLocale = voice.locale.language == targetLocale.language
+                    val isGenderMatch = if (isFemale) {
+                        voice.name.contains("female", ignoreCase = true) ||
+                        voice.features?.any { it.contains("female", ignoreCase = true) } == true
+                    } else {
+                        voice.name.contains("male", ignoreCase = true) ||
+                        voice.features?.any { it.contains("male", ignoreCase = true) } == true
+                    }
+                    isTargetLocale && isGenderMatch
+                } ?: tts.voices?.firstOrNull { it.locale.language == targetLocale.language }
+
+                if (matchingVoice != null) {
+                    tts.voice = matchingVoice
+                }
+                tts.setPitch(if (isFemale) 1.12f else 0.90f)
+            } catch (_: Exception) {}
 
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)

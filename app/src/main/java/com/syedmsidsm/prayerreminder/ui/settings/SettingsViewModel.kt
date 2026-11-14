@@ -341,18 +341,31 @@ class SettingsViewModel(
         }
     }
 
-    fun setVoiceLanguage(lang: String) {
+    fun setVoiceLanguage(lang: String, playPreview: Boolean = false) {
         viewModelScope.launch {
             settingsRepository.setVoiceLanguage(lang)
             context?.let { AppRefresher.refreshAll(it, "voice_language_changed") }
         }
+        if (playPreview) {
+            val gender = voiceGender.value
+            audioPlayer.playVoicePreview(lang, gender)
+        }
     }
 
-    fun setVoiceGender(gender: String) {
+    fun setVoiceGender(gender: String, playPreview: Boolean = true) {
         viewModelScope.launch {
             settingsRepository.setVoiceGender(gender)
             context?.let { AppRefresher.refreshAll(it, "voice_gender_changed") }
         }
+        if (playPreview) {
+            val lang = voiceLanguage.value
+            audioPlayer.playVoicePreview(lang, gender)
+        }
+    }
+
+    fun playVoicePreview(gender: String) {
+        val lang = voiceLanguage.value
+        audioPlayer.playVoicePreview(lang, gender)
     }
 
     fun setVoiceChime(enabled: Boolean) {
