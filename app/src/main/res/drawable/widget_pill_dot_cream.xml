@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 5dp Halo -->
-    <item>
-        <shape android:shape="oval">
-            <size android:width="22dp" android:height="22dp" />
-            <solid android:color="#F0E2BF" />
-        </shape>
-    </item>
-    <!-- 12dp Dot -->
-    <item android:top="5dp" android:bottom="5dp" android:left="5dp" android:right="5dp">
-        <shape android:shape="oval">
-            <size android:width="12dp" android:height="12dp" />
-            <solid android:color="#F5B81F" />
-        </shape>
-    </item>
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="22dp"
+    android:height="22dp"
+    android:viewportWidth="22"
+    android:viewportHeight="22">
+    <!-- Halo -->
+    <path
+        android:fillColor="#F0E2BF"
+        android:pathData="M 11,11 m -11,0 a 11,11 0 1,0 22,0 a 11,11 0 1,0 -22,0" />
+    <!-- Center Dot -->
+    <path
+        android:fillColor="#A35A00"
+        android:pathData="M 11,11 m -6,0 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0" />
+</vector>

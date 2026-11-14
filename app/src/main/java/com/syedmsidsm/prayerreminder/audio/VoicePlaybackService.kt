@@ -290,6 +290,8 @@ class VoicePlaybackService : Service() {
 
             if (prayer.equals("sunrise", ignoreCase = true)) {
                 SunriseVoiceAnnouncer.speakSunrise(this, language, gender, usage)
+            } else if (kind == "after_prayer") {
+                PostPrayerVoiceAnnouncer.speakPostPrayer(this, language, gender, minutes, usage)
             } else {
                 val clipPath = resolveClipPath(language, gender, kind, prayer, minutes)
                 if (clipPath != null) {
@@ -399,8 +401,8 @@ class VoicePlaybackService : Service() {
         }
 
         val isSunrise = prayer.equals("sunrise", ignoreCase = true)
-        if (isSunrise) {
-            return "audio/samples/chime.mp3"
+        if (isSunrise || kind == "after_prayer") {
+            return null
         }
 
         val prayerName = when {

@@ -66,8 +66,8 @@ fun BrandIntroScreen(
             finishOnce()
             return@LaunchedEffect
         }
-        // Safety timeout fallback: if device animation runs longer or lags, ensure advance at 6.5s
-        delay(6500)
+        // Safety timeout fallback: transition at 3.5s if not already skipped
+        delay(3500)
         finishOnce()
     }
 

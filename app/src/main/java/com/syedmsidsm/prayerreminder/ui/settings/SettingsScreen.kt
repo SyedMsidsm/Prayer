@@ -391,11 +391,6 @@ fun SettingsScreen(
                         "warm_gold" -> Color(0xFF231700)
                         else -> Color(0xFFFFBF1F)
                     }
-                    val pillDotRes = when (widgetTheme) {
-                        "light_cream" -> R.drawable.widget_pill_dot_cream
-                        "warm_gold" -> R.drawable.widget_pill_dot_gold
-                        else -> R.drawable.widget_pill_dot_teal
-                    }
                     val pillButtonRes = when (widgetTheme) {
                         "light_cream" -> R.drawable.widget_pill_button_cream
                         "warm_gold" -> R.drawable.widget_pill_button_gold
@@ -624,11 +619,18 @@ fun SettingsScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Image(
-                                            painter = painterResource(pillDotRes),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .background(inactiveCapsuleBg, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(7.dp)
+                                                    .background(pGold, CircleShape)
+                                            )
+                                        }
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
                                             val rawTown = activePlace.split(',').first().trim()

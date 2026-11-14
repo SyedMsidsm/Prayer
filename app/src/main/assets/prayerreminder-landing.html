@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>PrayerReminder – Sanctuary Mosque Edition</title>
+<title>Prayer Reminder – Sanctuary Mosque Edition</title>
 <style>
 :root{
   color-scheme:dark;
@@ -12,11 +12,9 @@
   --deep:#0f2430;
   --gold:#ffbf1f;
   --pale:#ffe58a;
-  --text:#fff;
+  --text:#ffffff;
   --muted:#8fa3b0;
   box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:inherit}
 html,body{
@@ -26,7 +24,7 @@ html,body{
   height:100%;
   background:var(--bg);
   color:var(--text);
-  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   user-select:none;
   -webkit-user-select:none;
   -webkit-tap-highlight-color:transparent;
@@ -43,7 +41,7 @@ html,body{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:16px 20px;
+  padding:16px;
   position:relative;
   text-align:center;
   box-sizing:border-box;
@@ -52,125 +50,136 @@ html,body{
   position:fixed;
   inset:0;
   pointer-events:none;
-  background:radial-gradient(ellipse at 50% 38%,rgba(255,191,31,.0) 0,rgba(255,191,31,0) 60%);
+  background:radial-gradient(circle at 50% 40%, rgba(255,191,31,.10) 0%, rgba(20,48,60,.12) 35%, rgba(3,10,14,0) 70%);
   opacity:0;
 }
-.go .sky{animation:dawn 3s 1.1s ease-out forwards}
+.go .sky{animation:dawn 1.8s .2s ease-out forwards}
 @keyframes dawn{
   to{
     opacity:1;
-    background:radial-gradient(ellipse 60% 45% at 50% 38%,rgba(255,191,31,.13),rgba(20,48,60,.25) 45%,rgba(3,10,14,0) 75%);
   }
 }
 svg{
-  width:min(76vw,380px);
+  width:min(68vw,280px);
+  max-height:36vh;
   height:auto;
   overflow:visible;
   position:relative;
 }
 svg *{transform-box:fill-box}
 .frame{
-  fill:rgba(20,48,60,.35);
+  fill:rgba(20,48,60,.4);
   stroke:url(#fg);
   stroke-width:3;
   stroke-dasharray:1;
   stroke-dashoffset:1;
   opacity:0;
 }
-.go .frame{animation:draw 1.6s .1s cubic-bezier(.6,0,.2,1) forwards}
+.go .frame{animation:draw 1.0s .1s cubic-bezier(.6,0,.2,1) forwards}
 @keyframes draw{to{stroke-dashoffset:0;opacity:1}}
-.glow{opacity:0;transform:scale(.4);transform-origin:center}
-.go .glow{animation:glow 2.4s 1s ease-out forwards,breathe 5s 3.6s ease-in-out infinite}
+.glow{opacity:0;transform:scale(.5);transform-origin:center}
+.go .glow{animation:glow 1.4s .4s ease-out forwards,breathe 4s 1.8s ease-in-out infinite}
 @keyframes glow{to{opacity:1;transform:scale(1)}}
-@keyframes breathe{50%{opacity:.7;transform:scale(1.06)}}
+@keyframes breathe{50%{opacity:.65;transform:scale(1.05)}}
 .base{opacity:0;transform:scaleX(.2)}
-.go .base{animation:grow .8s .8s ease-out forwards}
+.go .base{animation:grow .5s .4s ease-out forwards}
 @keyframes grow{to{opacity:1;transform:scaleX(1)}}
 .rise{transform:scaleY(0);transform-origin:50% 100%}
-.go .dome{animation:up 1.3s 1.1s cubic-bezier(.2,.8,.2,1) forwards}
-.go .min.l{animation:up 1s 1.5s cubic-bezier(.2,.8,.2,1) forwards}
-.go .min.r{animation:up 1s 1.7s cubic-bezier(.2,.8,.2,1) forwards}
+.go .dome{animation:up .7s .5s cubic-bezier(.2,.8,.2,1) forwards}
+.go .min.l{animation:up .6s .6s cubic-bezier(.2,.8,.2,1) forwards}
+.go .min.r{animation:up .6s .7s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes up{to{transform:scaleY(1)}}
-.drop{opacity:0;transform:translateY(-14px)}
-.go .drop{animation:drop .7s var(--d,2.4s) ease-out forwards}
+.drop{opacity:0;transform:translateY(-10px)}
+.go .drop{animation:drop .4s var(--d,1.0s) ease-out forwards}
 @keyframes drop{to{opacity:1;transform:none}}
-.crescent{opacity:0;transform:rotate(-50deg) scale(.5);transform-origin:50% 60%}
-.go .crescent{animation:moon 1.3s 2.5s cubic-bezier(.2,.9,.3,1.2) forwards}
+.crescent{opacity:0;transform:rotate(-45deg) scale(.6);transform-origin:50% 60%}
+.go .crescent{animation:moon .6s 1.0s cubic-bezier(.2,.9,.3,1.2) forwards}
 @keyframes moon{to{opacity:1;transform:none}}
 .star{opacity:0}
-.go .star{animation:pop .5s var(--d) ease-out forwards,tw 3s calc(var(--d) + .5s) ease-in-out infinite}
+.go .star{animation:pop .4s var(--d) ease-out forwards,tw 2.5s calc(var(--d) + .4s) ease-in-out infinite}
 @keyframes pop{from{transform:scale(0)}to{opacity:1;transform:scale(1)}}
-@keyframes tw{50%{opacity:.3}}
+@keyframes tw{50%{opacity:.35}}
 .win{opacity:0}
-.go .win{animation:lit 1.2s 3.2s ease-out forwards,flick 4s 4.6s ease-in-out infinite}
-@keyframes lit{0%{opacity:0}30%{opacity:.4}45%{opacity:.2}100%{opacity:1}}
-@keyframes flick{50%{opacity:.82}}
+.go .win{animation:lit .6s 1.1s ease-out forwards}
+@keyframes lit{0%{opacity:0}40%{opacity:.3}60%{opacity:.15}100%{opacity:1}}
 .winhalo{opacity:0}
-.go .winhalo{animation:lit 1.6s 3.2s ease-out forwards}
+.go .winhalo{animation:lit .8s 1.1s ease-out forwards}
+
 h1{
-  font-size:clamp(24px,6vw,38px);
-  font-weight:700;
-  letter-spacing:-.01em;
-  margin:20px 0 14px;
+  font-size:clamp(22px,6vw,32px);
+  font-weight:800;
+  letter-spacing:0.02em;
+  margin:18px 0 6px;
   display:flex;
   justify-content:center;
   align-items:center;
+  gap:10px;
   white-space:nowrap;
-  overflow:visible;
-  padding:0 8px;
 }
-h1 span{display:inline-block;transform:translateY(110%);opacity:0;will-change:transform,opacity}
-.go h1 span{animation:letter .7s calc(3.3s + var(--i)*.045s) cubic-bezier(.2,.8,.2,1) forwards}
-@keyframes letter{to{transform:none;opacity:1}}
-.edition{
-  color:var(--gold);
-  font-weight:700;
-  font-size:clamp(13px,2.2vw,16px);
-  letter-spacing:.18em;
-  text-transform:uppercase;
-  margin:0 0 16px;
+h1 .brand-prayer{
+  color:#ffffff;
   opacity:0;
-  clip-path:inset(0 50% 0 50%);
+  transform:translateY(16px);
 }
-.go .edition{animation:wipe 1s 4.2s ease-out forwards}
-@keyframes wipe{to{opacity:1;clip-path:inset(0 0 0 0)}}
+h1 .brand-reminder{
+  color:var(--gold);
+  opacity:0;
+  transform:translateY(16px);
+}
+.go h1 .brand-prayer{animation:fadeUp .5s 1.2s cubic-bezier(.2,.8,.2,1) forwards}
+.go h1 .brand-reminder{animation:fadeUp .5s 1.35s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+
+.edition{
+  color:var(--pale);
+  font-weight:600;
+  font-size:clamp(11px,2.6vw,13px);
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin:0 0 14px;
+  opacity:0;
+}
+.go .edition{animation:fadeUp .5s 1.5s ease-out forwards}
+
 .features{
   list-style:none;
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:10px 22px;
+  gap:8px 18px;
   padding:0;
   margin:0;
   color:var(--muted);
-  font-size:14px;
+  font-size:13px;
 }
-.features li{opacity:0;transform:translateY(8px)}
-.go .features li{animation:drop .7s calc(4.7s + var(--k)*.15s) ease-out forwards}
+.features li{opacity:0;transform:translateY(6px)}
+.go .features li{animation:fadeUp .4s calc(1.65s + var(--k)*.1s) ease-out forwards}
 .features li+li::before{
   content:"";
   display:inline-block;
-  width:4px;
-  height:4px;
+  width:3px;
+  height:3px;
   border-radius:50%;
   background:var(--gold);
-  margin-right:22px;
+  margin-right:18px;
   vertical-align:middle;
   opacity:.7;
 }
-@media(max-width:520px){.features li+li::before{display:none}}
+@media(max-width:400px){.features li+li::before{display:none}}
+
 .skip-hint{
-  margin-top:28px;
-  font-size:12px;
+  margin-top:22px;
+  font-size:11px;
   letter-spacing:.08em;
-  color:rgba(255,255,255,.35);
+  color:rgba(255,255,255,.3);
   text-transform:uppercase;
   opacity:0;
 }
-.go .skip-hint{animation:drop .6s 4.8s ease-out forwards}
+.go .skip-hint{animation:fadeUp .4s 1.9s ease-out forwards}
+
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
-  .frame{stroke-dashoffset:0;opacity:1}.glow,.base,.drop,.crescent,.star,.win,.winhalo,.edition,.features li,.skip-hint,h1 span,.sky{opacity:1!important;transform:none!important;clip-path:none!important}
+  .frame{stroke-dashoffset:0;opacity:1}.glow,.base,.drop,.crescent,.star,.win,.winhalo,.edition,.features li,.skip-hint,h1 .brand-prayer,h1 .brand-reminder,.sky{opacity:1!important;transform:none!important}
   .rise{transform:none}
 }
 </style>
@@ -181,7 +190,7 @@ h1 span{display:inline-block;transform:translateY(110%);opacity:0;will-change:tr
   <svg viewBox="170 100 460 470" role="img" aria-label="Mosque dome with two minarets, a crescent moon and stars">
     <defs>
       <linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a227"/><stop offset=".5" stop-color="#5d6a70"/><stop offset="1" stop-color="#b8962a"/></linearGradient>
-      <radialGradient id="gl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffbf1f" stop-opacity=".38"/><stop offset=".6" stop-color="#ffbf1f" stop-opacity=".08"/><stop offset="1" stop-color="#ffbf1f" stop-opacity="0"/></radialGradient>
+      <radialGradient id="gl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffbf1f" stop-opacity=".35"/><stop offset=".6" stop-color="#ffbf1f" stop-opacity=".08"/><stop offset="1" stop-color="#ffbf1f" stop-opacity="0"/></radialGradient>
       <radialGradient id="wh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffe58a" stop-opacity=".55"/><stop offset="1" stop-color="#ffe58a" stop-opacity="0"/></radialGradient>
       <mask id="cm"><rect x="380" y="150" width="70" height="70" fill="#fff"/><circle cx="415" cy="181" r="15" fill="#000"/></mask>
     </defs>
@@ -190,40 +199,41 @@ h1 span{display:inline-block;transform:translateY(110%);opacity:0;will-change:tr
     <rect class="base" x="258" y="441" width="284" height="22" fill="#0c1a22"/>
     <g class="rise min l"><rect x="274" y="270" width="16" height="172" fill="#0f2430"/></g>
     <g class="rise min r"><rect x="510" y="270" width="16" height="172" fill="#0f2430"/></g>
-    <rect class="drop" style="--d:2.2s" x="270" y="308" width="22" height="7" fill="#ffbf1f"/>
-    <rect class="drop" style="--d:2.3s" x="507" y="308" width="22" height="7" fill="#ffbf1f"/>
-    <g class="drop" style="--d:2.3s" fill="#ffbf1f"><path d="M274 270L281 243L288 270Z"/><rect x="279" y="221" width="4" height="22"/></g>
-    <g class="drop" style="--d:2.4s" fill="#ffbf1f"><path d="M511 270L518 243L526 270Z"/><rect x="516" y="221" width="4" height="22"/></g>
+    <rect class="drop" style="--d:.9s" x="270" y="308" width="22" height="7" fill="#ffbf1f"/>
+    <rect class="drop" style="--d:1.0s" x="507" y="308" width="22" height="7" fill="#ffbf1f"/>
+    <g class="drop" style="--d:1.0s" fill="#ffbf1f"><path d="M274 270L281 243L288 270Z"/><rect x="279" y="221" width="4" height="22"/></g>
+    <g class="drop" style="--d:1.1s" fill="#ffbf1f"><path d="M511 270L518 243L526 270Z"/><rect x="516" y="221" width="4" height="22"/></g>
     <g class="rise dome"><path d="M310 441C310 340 360 282 400 243C440 282 490 340 490 441Z" fill="#14303c" stroke="#1f5368" stroke-width="1.5"/></g>
     <circle class="winhalo" cx="400" cy="392" r="46" fill="url(#wh)"/>
     <path class="win" d="M389 411V384A11 11 0 0 1 411 384V411Z" fill="#ffe58a"/>
-    <g class="drop" style="--d:2.3s" fill="#ffbf1f"><rect x="396" y="215" width="8" height="28"/><circle cx="400" cy="211" r="7"/></g>
+    <g class="drop" style="--d:1.0s" fill="#ffbf1f"><rect x="396" y="215" width="8" height="28"/><circle cx="400" cy="211" r="7"/></g>
     <g class="crescent"><circle cx="404" cy="185" r="19" fill="#ffbf1f" mask="url(#cm)"/></g>
-    <circle class="star" style="--d:3s" cx="348" cy="188" r="3" fill="#fff"/>
-    <circle class="star" style="--d:3.2s" cx="329" cy="226" r="3.5" fill="#fff"/>
-    <circle class="star" style="--d:3.4s" cx="451" cy="181" r="4" fill="#ffe58a"/>
-    <circle class="star" style="--d:3.6s" cx="470" cy="211" r="5" fill="#ffe58a"/>
+    <circle class="star" style="--d:1.2s" cx="348" cy="188" r="3" fill="#fff"/>
+    <circle class="star" style="--d:1.3s" cx="329" cy="226" r="3.5" fill="#fff"/>
+    <circle class="star" style="--d:1.4s" cx="451" cy="181" r="4" fill="#ffe58a"/>
+    <circle class="star" style="--d:1.5s" cx="470" cy="211" r="5" fill="#ffe58a"/>
   </svg>
-  <h1 id="title" aria-label="PrayerReminder"></h1>
+  <h1 id="title" aria-label="Prayer Reminder">
+    <span class="brand-prayer">Prayer</span>
+    <span class="brand-reminder">Reminder</span>
+  </h1>
+  <div class="edition">Bhatkal Timetable Edition</div>
   <ul class="features">
     <li style="--k:0">100% Offline</li>
-    <li style="--k:1">Bhatkal Timetable</li>
-    <li style="--k:2">Adhan &amp; Jamaat</li>
+    <li style="--k:1">Azan &amp; Jamaat</li>
+    <li style="--k:2">Live Widgets</li>
   </ul>
-  <div class="skip-hint">Tap anywhere to continue</div>
+  <div class="skip-hint">Tap anywhere to enter</div>
 </main>
 <script>
 (function(){
-  var t=document.getElementById('title'),s='PrayerReminder';
-  t.innerHTML=s.split('').map(function(c,i){return '<span aria-hidden="true" style="--i:'+i+'">'+c+'</span>'}).join('');
   var h=document.getElementById('hero');
-  function play(){h.classList.remove('go');void h.offsetWidth;h.classList.add('go')}
-  play();
+  h.classList.add('go');
 
-  // Auto transition to app after animation finishes (~5.8s)
+  // Auto transition to app after animation finishes (~2.8s)
   setTimeout(function(){
     finishIntro();
-  }, 5800);
+  }, 2800);
 })();
 
 function handleClick() {

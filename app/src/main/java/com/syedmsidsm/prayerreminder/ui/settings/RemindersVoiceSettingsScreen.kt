@@ -489,11 +489,11 @@ fun RemindersVoiceSettingsScreen(
                     // After Prayer / Jamaat
                     TimingSectionHeader(
                         title = stringResource(R.string.after_prayer),
-                        isPlaying = false,
+                        isPlaying = playingKind == "after_prayer",
                         textColor = textPrimary,
                         chipBg = chipUnselectedBg,
                         border = glassBorder,
-                        onPlay = { viewModel.playSample("before_azan", afterPrayerOffsets.firstOrNull() ?: 10) },
+                        onPlay = { viewModel.playSample("after_prayer", afterPrayerOffsets.firstOrNull() ?: 10) },
                         onStop = { viewModel.stopSample() }
                     )
                     Spacer(modifier = Modifier.height(4.dp))

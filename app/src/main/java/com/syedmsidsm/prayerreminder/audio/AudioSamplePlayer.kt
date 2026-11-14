@@ -62,6 +62,8 @@ class AudioSamplePlayer(private val context: Context) {
 
                 if (kind.contains("sunrise")) {
                     SunriseVoiceAnnouncer.speakSunrise(context, language, gender)
+                } else if (kind == "after_prayer") {
+                    PostPrayerVoiceAnnouncer.speakPostPrayer(context, language, gender, minutes)
                 } else {
                     val clipPath = resolveClipPath(language, gender, kind, minutes)
                     if (clipPath != null) {
@@ -239,8 +241,8 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "asr"
         }
 
-        if (prayer == "sunrise") {
-            return "audio/samples/chime.mp3"
+        if (prayer == "sunrise" || kind == "after_prayer") {
+            return null
         }
 
         val min = when (kind) {

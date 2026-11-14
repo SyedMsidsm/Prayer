@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -170,7 +171,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private fun MainAppNavigation() {
         val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
-        var currentScreen by rememberSaveable {
+        var currentScreen by remember {
             mutableStateOf(Screen.BRAND_INTRO)
         }
 
@@ -267,6 +268,7 @@ class MainActivity : AppCompatActivity() {
                 Screen.SETTINGS -> Screen.HOME
                 Screen.ONBOARDING, Screen.BRAND_INTRO -> Screen.HOME
                 Screen.HOME -> Screen.HOME
+                else -> Screen.HOME
             }
         }
 
