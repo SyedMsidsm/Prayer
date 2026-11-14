@@ -892,15 +892,19 @@ fun RemindersVoiceSettingsScreen(
                             )
 
                             Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.CenterStart) {
-                                Checkbox(
-                                    checked = beforeAzanActive,
-                                    onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_AZAN", it) },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = AmberAccent,
-                                        checkmarkColor = AmberTextDark,
-                                        uncheckedColor = textMuted
+                                if (key == "SUNRISE") {
+                                    Text("—", color = textMuted, fontSize = 14.sp, modifier = Modifier.padding(start = 12.dp))
+                                } else {
+                                    Checkbox(
+                                        checked = beforeAzanActive,
+                                        onCheckedChange = { viewModel.setReminderMatrixEntry(key, "BEFORE_AZAN", it) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = AmberAccent,
+                                            checkmarkColor = AmberTextDark,
+                                            uncheckedColor = textMuted
+                                        )
                                     )
-                                )
+                                }
                             }
 
                             Box(modifier = Modifier.weight(0.8f), contentAlignment = Alignment.CenterStart) {
