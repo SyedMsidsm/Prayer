@@ -226,13 +226,13 @@
     <string name="reminders_summary_line">Before Azan: %1$s • Before Jamaat: %2$s</string>
     <string name="sunrise_notification">Sunrise notification with sound</string>
     <string name="sunrise_notification_desc">Sound notification when sunrise time arrives</string>
-    <string name="notif_sunrise_body">Sunrise time has arrived</string>
+    <string name="notif_sunrise_body">It\'s time for sunrise</string>
     <string name="notif_before_sunrise">Sunrise in %1$s</string>
     <string name="notif_sunrise_time_is">Sunrise is at %1$s</string>
-    <string name="sunrise_reminders_title">Sunrise Reminders</string>
-    <string name="sunrise_reminders_desc">Alerts before and at sunrise time. (No post-sunrise reminders)</string>
+    <string name="sunrise_reminders_title">Sunrise Reminder</string>
+    <string name="sunrise_reminders_desc">Alert at the exact time of sunrise with voice announcement</string>
     <string name="time_left_until_sunrise">Time left until sunrise</string>
-    <string name="time_of_sunrise">Time of sunrise</string>
+    <string name="time_of_sunrise">Announce at sunrise time</string>
     <string name="manual_place">Place Name</string>
     <string name="manual_month">Hijri Month (1-12)</string>
     <string name="manual_year">Hijri Year</string>

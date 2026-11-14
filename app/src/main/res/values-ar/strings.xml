@@ -229,10 +229,10 @@
     <string name="notif_sunrise_body">دخل وقت الشروق</string>
     <string name="notif_before_sunrise">الشروق خلال %1$s</string>
     <string name="notif_sunrise_time_is">وقت شروق الشمس هو %1$s</string>
-    <string name="sunrise_reminders_title">تذكيرات الشروق</string>
-    <string name="sunrise_reminders_desc">تنبيه قبل الشروق وعند وقت الشروق. (بدون تذكيرات بعد الشروق)</string>
+    <string name="sunrise_reminders_title">تذكير الشروق</string>
+    <string name="sunrise_reminders_desc">تنبيه صوتي عند حلول وقت الشروق بالضبط</string>
     <string name="time_left_until_sunrise">الوقت المتبقي حتى الشروق</string>
-    <string name="time_of_sunrise">وقت الشروق</string>
+    <string name="time_of_sunrise">تنبيه عند وقت الشروق</string>
     <string name="manual_place">اسم المكان / المدينة</string>
     <string name="manual_month">الشهر الهجري (1-12)</string>
     <string name="manual_year">السنة الهجرية</string>

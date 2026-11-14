@@ -24,7 +24,7 @@ data class ReminderSettingsSnapshot(
 ) {
     fun isEnabled(prayerKey: String, kind: ReminderKind): Boolean {
         if (prayerKey == "SUNRISE") {
-            if (kind == ReminderKind.BEFORE_AZAN) return matrix[Pair("SUNRISE", "BEFORE_AZAN")] ?: true
+            if (kind == ReminderKind.BEFORE_AZAN) return false // No before-sunrise (time left) reminders
             if (kind == ReminderKind.AT_AZAN) return remSunriseAt && (matrix[Pair("SUNRISE", "AT_AZAN")] ?: true)
             return false // Statically false for BEFORE_JAMAAT and AFTER_PRAYER!
         }
@@ -92,8 +92,7 @@ class ReminderPlanner {
                         else setOf(beforeAzanMin).filter { it > 0 }.toSet()
                     }
                     isSunrise -> {
-                        if (settings.remSunriseBeforeOffsets.isNotEmpty()) settings.remSunriseBeforeOffsets
-                        else setOf(15)
+                        emptySet() // No before-sunrise (time left) reminders
                     }
                     else -> {
                         if (settings.remBeforeAzanOffsets.isNotEmpty()) settings.remBeforeAzanOffsets

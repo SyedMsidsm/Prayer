@@ -229,10 +229,10 @@
     <string name="notif_sunrise_body">طلوع آفتاب کا وقت ہو گیا ہے</string>
     <string name="notif_before_sunrise">طلوع آفتاب میں %1$s باقی</string>
     <string name="notif_sunrise_time_is">طلوع آفتاب کا وقت %1$s ہے</string>
-    <string name="sunrise_reminders_title">طلوع آفتاب کے تذکیرات</string>
-    <string name="sunrise_reminders_desc">طلوع آفتاب سے قبل اور وقت پر تنبیہ۔ (طلوع کے بعد کوئی تذکیر نہیں)</string>
+    <string name="sunrise_reminders_title">طلوعِ آفتاب کی یاد دہانی</string>
+    <string name="sunrise_reminders_desc">طلوع آفتاب کے وقت پر صوتی تنبیہ</string>
     <string name="time_left_until_sunrise">طلوع آفتاب تک باقی وقت</string>
-    <string name="time_of_sunrise">طلوع آفتاب کا وقت</string>
+    <string name="time_of_sunrise">طلوع آفتاب کے وقت پر تنبیہ</string>
     <string name="manual_place">مقام / شہر کا نام</string>
     <string name="manual_month">ہجری مہینہ (1-12)</string>
     <string name="manual_year">ہجری سال</string>

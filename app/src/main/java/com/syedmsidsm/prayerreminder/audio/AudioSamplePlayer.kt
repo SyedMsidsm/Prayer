@@ -60,9 +60,13 @@ class AudioSamplePlayer(private val context: Context) {
                     delay(250)
                 }
 
-                val clipPath = resolveClipPath(language, gender, kind, minutes)
-                if (clipPath != null) {
-                    playAssetFile(clipPath)
+                if (kind.contains("sunrise")) {
+                    SunriseVoiceAnnouncer.speakSunrise(context, language)
+                } else {
+                    val clipPath = resolveClipPath(language, gender, kind, minutes)
+                    if (clipPath != null) {
+                        playAssetFile(clipPath)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

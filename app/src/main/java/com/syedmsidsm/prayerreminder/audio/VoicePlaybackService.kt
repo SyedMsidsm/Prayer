@@ -288,9 +288,13 @@ class VoicePlaybackService : Service() {
                 delay(250)
             }
 
-            val clipPath = resolveClipPath(language, gender, kind, prayer, minutes)
-            if (clipPath != null) {
-                playAssetFile(clipPath, audioAttributes)
+            if (prayer.equals("sunrise", ignoreCase = true)) {
+                SunriseVoiceAnnouncer.speakSunrise(this, language, usage)
+            } else {
+                val clipPath = resolveClipPath(language, gender, kind, prayer, minutes)
+                if (clipPath != null) {
+                    playAssetFile(clipPath, audioAttributes)
+                }
             }
         } finally {
             abandonAudioFocus(audioManager)

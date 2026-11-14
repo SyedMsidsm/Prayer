@@ -572,14 +572,14 @@ fun RemindersVoiceSettingsScreen(
                     HorizontalDivider(color = glassBorder)
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Sunrise Reminders (Countdown before & at sunrise time, never after)
+                    // Sunrise Reminder (Announces that it's time for sunrise at that exact time)
                     TimingSectionHeader(
                         title = stringResource(R.string.sunrise_reminders_title),
                         isPlaying = playingKind == "sunrise",
                         textColor = textPrimary,
                         chipBg = chipUnselectedBg,
                         border = glassBorder,
-                        onPlay = { viewModel.playSample("sunrise", sunriseBeforeOffsets.firstOrNull() ?: 15) },
+                        onPlay = { viewModel.playSample("sunrise", 0) },
                         onStop = { viewModel.stopSample() }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -588,45 +588,6 @@ fun RemindersVoiceSettingsScreen(
                         fontSize = 11.sp,
                         color = textMuted
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = stringResource(R.string.time_left_until_sunrise),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val sunriseOptions = (listOf(0, 5, 10, 15, 20, 30) + sunriseBeforeOffsets).distinct().sorted()
-                        for (min in sunriseOptions) {
-                            val label = if (min == 0) stringResource(R.string.off) else stringResource(R.string.min_short, min)
-                            val isSel = if (min == 0) sunriseBeforeOffsets.isEmpty() else sunriseBeforeOffsets.contains(min)
-                            SanctuaryChoiceChip(
-                                label = label,
-                                isSelected = isSel,
-                                unselectedBg = chipUnselectedBg,
-                                border = glassBorder,
-                                textPrimary = textPrimary,
-                                onClick = { viewModel.toggleSunriseBeforeOffset(min) }
-                            )
-                        }
-                        SanctuaryChoiceChip(
-                            label = stringResource(R.string.custom_chip_label),
-                            isSelected = false,
-                            unselectedBg = chipUnselectedBg,
-                            border = glassBorder,
-                            textPrimary = selectedGoldText,
-                            onClick = {
-                                customDialogTarget = "sunrise"
-                                customMinuteInput = ""
-                            }
-                        )
-                    }
-
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
