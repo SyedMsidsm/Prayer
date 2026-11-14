@@ -66,9 +66,9 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
             modifier = GlanceModifier.fillMaxSize()
         )
 
-        // 2. Subtle Minimalist Mosque Silhouette Watermark
+        // 2. Glowing Golden Capsule Stroke Border
         Image(
-            provider = ImageProvider(R.drawable.widget_mosque_silhouette),
+            provider = ImageProvider(R.drawable.widget_pill_frame),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()
@@ -105,13 +105,13 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                 )
             }
         } else {
-            Row(
+            // Left Content: Glowing amber sun/prayer dot + Prayer Name & Time
+            Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                contentAlignment = if (state.isRtl) Alignment.CenterEnd else Alignment.CenterStart
             ) {
-                // Left: Glowing amber sun/prayer dot + Prayer Name & Time
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = GlanceModifier.clickable(launchAction)
@@ -131,11 +131,15 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                         )
                     )
                 }
+            }
 
-                // Center Spacer shows the subtle silhouette
-                Spacer(modifier = GlanceModifier.defaultWeight())
-
-                // Right: "Next in" above countdown chronometer + golden crescent moon
+            // Right Content: "Next in" above countdown chronometer + golden crescent moon
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                contentAlignment = if (state.isRtl) Alignment.CenterStart else Alignment.CenterEnd
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = GlanceModifier.clickable(launchAction)
@@ -153,7 +157,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                         Text(
                             text = nextInLabel,
                             style = TextStyle(
-                                color = colors.textSecondary,
+                                color = colors.textAccent,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -175,7 +179,7 @@ private fun SlimPrayerWidgetContent(context: Context, state: WidgetState) {
                     Image(
                         provider = ImageProvider(R.drawable.widget_crescent_gold),
                         contentDescription = null,
-                        modifier = GlanceModifier.size(15.dp)
+                        modifier = GlanceModifier.size(16.dp)
                     )
                 }
             }

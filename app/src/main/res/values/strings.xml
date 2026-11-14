@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PrayerReminder</string>
+    <string name="app_name">Prayer Reminder</string>
     <string name="prayer_fajr">Fajr</string>
     <string name="prayer_sunrise">Sunrise</string>
     <string name="prayer_dhuhr">Dhuhr</string>
@@ -168,7 +168,7 @@
     <string name="azan_type_azan_only">Azan recitation only</string>
     <string name="azan_type_speech_only">Default speech only</string>
     <string name="reciter">Muezzin / Reciter</string>
-    <string name="reciter_ali_mala">Ali Ibn Ahmad Mala</string>
+    <string name="reciter_ali_mala">Ali Ibn Ahmad Mala 🇸🇦</string>
     <string name="reciter_ali_mala_country">Saudi Arabia</string>
     <string name="reciter_nurdin_hamza">NurDin Hamza Al Maghriby</string>
     <string name="reciter_nurdin_hamza_country">Morocco</string>

@@ -46,9 +46,9 @@ object WidgetThemeConfig {
                 textOnActiveCapsule = ColorProvider(Color(0xFF1E1B18)),
                 chronometerTextColorInt = 0xFFFBBF24.toInt()
             )
-            else -> WidgetColors( // "dark_teal" Sanctuary Dark default
-                cardBackgroundRes = R.drawable.widget_bg_dark_teal,
-                pillBackgroundRes = R.drawable.widget_pill_bg_dark_teal,
+            else -> WidgetColors( // "dark_teal" Sanctuary Dark default (matches Sanctuary design)
+                cardBackgroundRes = R.drawable.widget_sanctuary_bg,
+                pillBackgroundRes = R.drawable.widget_sanctuary_bg,
                 activeCapsuleRes = R.drawable.widget_capsule_active,
                 inactiveCapsuleRes = R.drawable.widget_capsule_inactive,
                 textPrimary = ColorProvider(Color.White),

@@ -63,8 +63,12 @@ object WidgetStateBuilder {
         val app = context.applicationContext as? PrayerReminderApp
         val container = app?.container ?: AppContainer(context.applicationContext)
 
+        val savedLang = runBlocking {
+            container.settingsRepository.appLanguage.firstOrNull()
+        }
         val locales = AppCompatDelegate.getApplicationLocales()
-        val lang = if (!locales.isEmpty) locales.get(0)?.language ?: "en" else "en"
+        val lang = savedLang?.ifEmpty { null }
+            ?: (if (!locales.isEmpty) locales.get(0)?.language ?: "en" else "en")
 
         val rawTheme = runBlocking {
             container.settingsRepository.widgetTheme.firstOrNull()
@@ -326,9 +330,9 @@ object WidgetStateBuilder {
     }
 
     fun getLocalizedPlace(place: String, lang: String): String {
-        return if (place.equals("Bhatkal", ignoreCase = true)) {
+        return if (place.contains("Bhatkal", ignoreCase = true)) {
             when (lang) {
-                "ar" -> "بهتكل"
+                "ar" -> "باتكال"
                 "ur" -> "بھٹکل"
                 else -> "Bhatkal"
             }

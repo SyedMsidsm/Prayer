@@ -68,9 +68,9 @@ private fun StripPrayerWidgetContent(state: WidgetState) {
             modifier = GlanceModifier.fillMaxSize()
         )
 
-        // 2. Subtle Minimalist Mosque Silhouette Watermark
+        // 2. Glowing Golden Card Frame Border
         Image(
-            provider = ImageProvider(R.drawable.widget_mosque_silhouette),
+            provider = ImageProvider(R.drawable.widget_card_frame),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = GlanceModifier.fillMaxSize()

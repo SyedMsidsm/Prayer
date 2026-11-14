@@ -55,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -348,25 +349,39 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val previewCardBgRes = when (widgetTheme) {
-                        "light_cream" -> R.drawable.widget_bg_light_cream
-                        "warm_gold" -> R.drawable.widget_bg_warm_gold
-                        else -> R.drawable.widget_bg_dark_teal
+                    val previewCardGradient = when (widgetTheme) {
+                        "light_cream" -> Brush.verticalGradient(listOf(Color(0xFFFAF7F0), Color(0xFFF5F1E6), Color(0xFFECE5D4)))
+                        "warm_gold" -> Brush.verticalGradient(listOf(Color(0xFF201A12), Color(0xFF14100B), Color(0xFF0B0906)))
+                        else -> Brush.verticalGradient(listOf(Color(0xFF121F25), Color(0xFF07141A), Color(0xFF030A0E)))
                     }
-                    val previewPillBgRes = when (widgetTheme) {
-                        "light_cream" -> R.drawable.widget_pill_bg_light_cream
-                        "warm_gold" -> R.drawable.widget_pill_bg_warm_gold
-                        else -> R.drawable.widget_pill_bg_dark_teal
+                    val previewCardBorder = when (widgetTheme) {
+                        "light_cream" -> Color(0xFFE0D7C2)
+                        "warm_gold" -> Color(0x59D97706)
+                        else -> Color(0x44FBBF24)
                     }
-                    val previewActiveCapsule = when (widgetTheme) {
-                        "light_cream" -> R.drawable.widget_capsule_active_cream
-                        "warm_gold" -> R.drawable.widget_capsule_active_gold
-                        else -> R.drawable.widget_capsule_active
+                    val previewPillBorder = when (widgetTheme) {
+                        "light_cream" -> Color(0xFFD4C7B0)
+                        "warm_gold" -> Color(0x66D97706)
+                        else -> Color(0x4DFBBF24)
                     }
-                    val previewInactiveCapsule = when (widgetTheme) {
-                        "light_cream" -> R.drawable.widget_capsule_inactive_cream
-                        "warm_gold" -> R.drawable.widget_capsule_inactive_gold
-                        else -> R.drawable.widget_capsule_inactive
+                    val activeCapsuleBg = when (widgetTheme) {
+                        "light_cream" -> Brush.verticalGradient(listOf(Color(0xFFE6C485), Color(0xFFC79E53)))
+                        "warm_gold" -> Brush.verticalGradient(listOf(Color(0xFFFBBF24), Color(0xFFD97706)))
+                        else -> Brush.verticalGradient(listOf(Color(0xFFFCD34D), Color(0xFFF59E0B)))
+                    }
+                    val activeCapsuleBorder = when (widgetTheme) {
+                        "light_cream" -> Color(0xFF8C6627)
+                        else -> Color(0xFFFDE68A)
+                    }
+                    val inactiveCapsuleBg = when (widgetTheme) {
+                        "light_cream" -> Color(0xFFEBE4D3)
+                        "warm_gold" -> Color(0x801F1810)
+                        else -> Color(0x730C1824)
+                    }
+                    val inactiveCapsuleBorder = when (widgetTheme) {
+                        "light_cream" -> Color(0x40B3A68F)
+                        "warm_gold" -> Color(0x40D97706)
+                        else -> Color(0x26FFFFFF)
                     }
                     val pPrimary = when (widgetTheme) {
                         "light_cream" -> Color(0xFF0F172A)
@@ -383,6 +398,7 @@ fun SettingsScreen(
                         "warm_gold" -> Color(0xFFFBBF24)
                         else -> Color(0xFFFCD34D)
                     }
+                    val previewBackdropRes = if (widgetTheme == "dark_teal") R.drawable.widget_sanctuary_bg else R.drawable.widget_mosque_silhouette
 
                     // 1) 4x2 Compact 5-Prayer Strip Widget Preview & Pin
                     WidgetPreviewCard(
@@ -393,16 +409,12 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(130.dp)
+                                    .background(previewCardGradient, RoundedCornerShape(18.dp))
+                                    .border(1.dp, previewCardBorder, RoundedCornerShape(18.dp))
                                     .clip(RoundedCornerShape(18.dp))
                             ) {
                                 Image(
-                                    painter = painterResource(previewCardBgRes),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.widget_mosque_silhouette),
+                                    painter = painterResource(previewBackdropRes),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
@@ -425,7 +437,12 @@ fun SettingsScreen(
                                                 modifier = Modifier.size(11.dp)
                                             )
                                             Spacer(modifier = Modifier.width(3.dp))
-                                            val townName = activePlace.split(',').first().trim()
+                                            val rawTown = activePlace.split(',').first().trim()
+                                            val townName = when {
+                                                rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ar" -> "باتكال"
+                                                rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ur" -> "بھٹکل"
+                                                else -> rawTown
+                                            }
                                             Text(townName, color = pPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                         }
                                         val fajrLabel = stringResource(R.string.prayer_fajr)
@@ -453,14 +470,19 @@ fun SettingsScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .weight(1f)
+                                                    .then(
+                                                        if (isNext) {
+                                                            Modifier
+                                                                .background(activeCapsuleBg, RoundedCornerShape(8.dp))
+                                                                .border(1.dp, activeCapsuleBorder, RoundedCornerShape(8.dp))
+                                                        } else {
+                                                            Modifier
+                                                                .background(inactiveCapsuleBg, RoundedCornerShape(8.dp))
+                                                                .border(1.dp, inactiveCapsuleBorder, RoundedCornerShape(8.dp))
+                                                        }
+                                                    )
                                                     .clip(RoundedCornerShape(8.dp))
                                             ) {
-                                                Image(
-                                                    painter = painterResource(if (isNext) previewActiveCapsule else previewInactiveCapsule),
-                                                    contentDescription = null,
-                                                    contentScale = ContentScale.FillBounds,
-                                                    modifier = Modifier.matchParentSize()
-                                                )
                                                 Column(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
@@ -495,16 +517,12 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(130.dp)
+                                    .background(previewCardGradient, RoundedCornerShape(18.dp))
+                                    .border(1.dp, previewCardBorder, RoundedCornerShape(18.dp))
                                     .clip(RoundedCornerShape(18.dp))
                             ) {
                                 Image(
-                                    painter = painterResource(previewCardBgRes),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.widget_mosque_silhouette),
+                                    painter = painterResource(previewBackdropRes),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
@@ -535,7 +553,12 @@ fun SettingsScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        val townName = activePlace.split(',').first().trim()
+                                        val rawTown = activePlace.split(',').first().trim()
+                                        val townName = when {
+                                            rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ar" -> "باتكال"
+                                            rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ur" -> "بھٹکل"
+                                            else -> rawTown
+                                        }
                                         Text("${stringResource(R.string.jamaat)} 05:40", color = pMuted, fontSize = 9.sp)
                                         Text(townName, color = pMuted, fontSize = 9.sp)
                                     }
@@ -561,16 +584,12 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(50.dp)
+                                    .background(previewCardGradient, RoundedCornerShape(25.dp))
+                                    .border(1.2.dp, previewPillBorder, RoundedCornerShape(25.dp))
                                     .clip(RoundedCornerShape(25.dp))
                             ) {
                                 Image(
-                                    painter = painterResource(previewPillBgRes),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.widget_mosque_silhouette),
+                                    painter = painterResource(previewBackdropRes),
                                     contentDescription = null,
                                     contentScale = ContentScale.FillBounds,
                                     modifier = Modifier.fillMaxSize()
