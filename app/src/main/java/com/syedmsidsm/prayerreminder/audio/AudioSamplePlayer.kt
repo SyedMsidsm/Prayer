@@ -59,15 +59,11 @@ class AudioSamplePlayer(private val context: Context) {
                     delay(250)
                 }
 
-                if (kind.contains("sunrise")) {
+                val clipPath = resolveClipPath(language, kind, minutes)
+                if (clipPath != null) {
+                    playAssetFile(clipPath)
+                } else if (kind.contains("sunrise")) {
                     SunriseVoiceAnnouncer.speakSunrise(context, language)
-                } else if (kind == "after_prayer") {
-                    PostPrayerVoiceAnnouncer.speakPostPrayer(context, language, minutes)
-                } else {
-                    val clipPath = resolveClipPath(language, kind, minutes)
-                    if (clipPath != null) {
-                        playAssetFile(clipPath)
-                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -237,7 +233,7 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "asr"
         }
 
-        if (prayer == "sunrise" || kind == "after_prayer") {
+        if (kind == "after_prayer") {
             return null
         }
 
@@ -253,10 +249,11 @@ class AudioSamplePlayer(private val context: Context) {
             else -> null
         }
 
-        val filename = when (kind) {
-            "before_azan", "jumuah_before_azan" -> "before_azan_${prayer}_${min}.mp3"
-            "at_azan" -> "at_azan_${prayer}.mp3"
-            "before_jamaat" -> "before_jamaat_${prayer}_${min}.mp3"
+        val filename = when {
+            prayer == "sunrise" -> "at_azan_sunrise.mp3"
+            kind == "before_azan" || kind == "jumuah_before_azan" -> "before_azan_${prayer}_${min}.mp3"
+            kind == "at_azan" -> "at_azan_${prayer}.mp3"
+            kind == "before_jamaat" -> "before_jamaat_${prayer}_${min}.mp3"
             else -> "before_azan_${prayer}_10.mp3"
         }
 

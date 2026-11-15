@@ -111,7 +111,6 @@ fun SettingsScreen(
     val playDua by viewModel.playDuaAfterAzan.collectAsState()
 
     val use24Hour by viewModel.use24Hour.collectAsState()
-    val widgetTheme by viewModel.widgetTheme.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val fontScale by viewModel.fontScale.collectAsState()
 
@@ -350,52 +349,16 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val previewCardGradient = when (widgetTheme) {
-                        "light_cream" -> Brush.verticalGradient(listOf(Color(0xFFFBF4E2), Color(0xFFFBF4E2)))
-                        "warm_gold" -> Brush.linearGradient(listOf(Color(0xFFFFCB45), Color(0xFFF0A30C)))
-                        else -> Brush.verticalGradient(listOf(Color(0xFF0F2430), Color(0xFF0F2430)))
-                    }
-                    val previewCardBorder = when (widgetTheme) {
-                        "light_cream" -> Color(0x33A35A00)
-                        "warm_gold" -> Color(0x33231700)
-                        else -> Color(0x33FFBF1F)
-                    }
+                    val previewCardGradient = Brush.verticalGradient(listOf(Color(0xFF0F2430), Color(0xFF0F2430)))
+                    val previewCardBorder = Color(0x33FFBF1F)
                     val previewPillBorder = previewCardBorder
-                    val activeCapsuleBg = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFF5B81F)
-                        "warm_gold" -> Color(0xFF231700)
-                        else -> Color(0xFFFFBF1F)
-                    }
-                    val inactiveCapsuleBg = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFF0E2BF)
-                        "warm_gold" -> Color(0x55FFFFFF)
-                        else -> Color(0xB31B3D4E)
-                    }
-                    val onActiveColor = when (widgetTheme) {
-                        "warm_gold" -> Color(0xFFFFD24D)
-                        "light_cream" -> Color(0xFF2B2108)
-                        else -> Color(0xFF1A1200)
-                    }
-                    val pPrimary = when (widgetTheme) {
-                        "light_cream" -> Color(0xFF2B2108)
-                        "warm_gold" -> Color(0xFF231700)
-                        else -> Color(0xFFF4F8F9)
-                    }
-                    val pMuted = when (widgetTheme) {
-                        "light_cream" -> Color(0xFF6E5F3A)
-                        "warm_gold" -> Color(0xFF4D3500)
-                        else -> Color(0xFFA3B7C3)
-                    }
-                    val pGold = when (widgetTheme) {
-                        "light_cream" -> Color(0xFFA35A00)
-                        "warm_gold" -> Color(0xFF231700)
-                        else -> Color(0xFFFFBF1F)
-                    }
-                    val pillButtonRes = when (widgetTheme) {
-                        "light_cream" -> R.drawable.widget_pill_button_cream
-                        "warm_gold" -> R.drawable.widget_pill_button_gold
-                        else -> R.drawable.widget_pill_button_teal
-                    }
+                    val activeCapsuleBg = Color(0xFFFFBF1F)
+                    val inactiveCapsuleBg = Color(0xB31B3D4E)
+                    val onActiveColor = Color(0xFF1A1200)
+                    val pPrimary = Color(0xFFF4F8F9)
+                    val pMuted = Color(0xFFA3B7C3)
+                    val pGold = Color(0xFFFFBF1F)
+                    val pillButtonRes = R.drawable.widget_pill_button_teal
 
                     // 1) 4x2 Compact 5-Prayer Strip Widget Preview & Pin
                     WidgetPreviewCard(
@@ -676,54 +639,6 @@ fun SettingsScreen(
                         textPrimary = textPrimary,
                         textMuted = textMuted
                     )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = glassBorder)
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = stringResource(R.string.widget_color_theme),
-                        color = textPrimary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        WidgetThemeChip(
-                            label = stringResource(R.string.widget_theme_dark),
-                            swatchColor = Color(0xFF07131A),
-                            isSelected = widgetTheme == "dark_teal",
-                            unselectedBg = chipUnselectedBg,
-                            border = glassBorder,
-                            textPrimary = textPrimary,
-                            modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setWidgetTheme("dark_teal") }
-                        )
-                        WidgetThemeChip(
-                            label = stringResource(R.string.widget_theme_cream),
-                            swatchColor = Color(0xFFF7F4EB),
-                            isSelected = widgetTheme == "light_cream",
-                            unselectedBg = chipUnselectedBg,
-                            border = glassBorder,
-                            textPrimary = textPrimary,
-                            modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setWidgetTheme("light_cream") }
-                        )
-                        WidgetThemeChip(
-                            label = stringResource(R.string.widget_theme_gold),
-                            swatchColor = Color(0xFFD9AE5C),
-                            isSelected = widgetTheme == "warm_gold",
-                            unselectedBg = chipUnselectedBg,
-                            border = glassBorder,
-                            textPrimary = textPrimary,
-                            modifier = Modifier.weight(1f),
-                            onClick = { viewModel.setWidgetTheme("warm_gold") }
-                        )
-                    }
                 }
 
                 // 3. JAMAAT TIMES CARD (Clean navigation to full Jamaat setup)

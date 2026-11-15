@@ -281,15 +281,11 @@ class VoicePlaybackService : Service() {
                 delay(250)
             }
 
-            if (prayer.equals("sunrise", ignoreCase = true)) {
+            val clipPath = resolveClipPath(language, kind, prayer, minutes)
+            if (clipPath != null) {
+                playAssetFile(clipPath, audioAttributes)
+            } else if (prayer.equals("sunrise", ignoreCase = true)) {
                 SunriseVoiceAnnouncer.speakSunrise(this, language, usage)
-            } else if (kind == "after_prayer") {
-                PostPrayerVoiceAnnouncer.speakPostPrayer(this, language, minutes, usage)
-            } else {
-                val clipPath = resolveClipPath(language, kind, prayer, minutes)
-                if (clipPath != null) {
-                    playAssetFile(clipPath, audioAttributes)
-                }
             }
         } finally {
             abandonAudioFocus(audioManager)
@@ -393,11 +389,12 @@ class VoicePlaybackService : Service() {
         }
 
         val isSunrise = prayer.equals("sunrise", ignoreCase = true)
-        if (isSunrise || kind == "after_prayer") {
+        if (kind == "after_prayer") {
             return null
         }
 
         val prayerName = when {
+            isSunrise -> "sunrise"
             kind == "jumuah_before_azan" || prayer.equals("jumuah", ignoreCase = true) -> "jumuah"
             else -> prayer.lowercase()
         }
@@ -414,10 +411,11 @@ class VoicePlaybackService : Service() {
             else -> null
         }
 
-        val filename = when (kind) {
-            "before_azan", "jumuah_before_azan" -> "before_azan_${prayerName}_${min}.mp3"
-            "at_azan" -> "at_azan_${prayerName}.mp3"
-            "before_jamaat" -> "before_jamaat_${prayerName}_${min}.mp3"
+        val filename = when {
+            isSunrise -> "at_azan_sunrise.mp3"
+            kind == "before_azan" || kind == "jumuah_before_azan" -> "before_azan_${prayerName}_${min}.mp3"
+            kind == "at_azan" -> "at_azan_${prayerName}.mp3"
+            kind == "before_jamaat" -> "before_jamaat_${prayerName}_${min}.mp3"
             else -> "before_azan_${prayerName}_10.mp3"
         }
 

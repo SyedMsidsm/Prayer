@@ -70,15 +70,7 @@ object WidgetStateBuilder {
         val lang = savedLang?.ifEmpty { null }
             ?: (if (!locales.isEmpty) locales.get(0)?.language ?: "en" else "en")
 
-        val rawTheme = runBlocking {
-            container.settingsRepository.widgetTheme.firstOrNull()
-        } ?: "dark_teal"
-        val resolvedTheme = if (rawTheme == "system") {
-            val isNight = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-            if (isNight) "dark_teal" else "light_cream"
-        } else {
-            rawTheme
-        }
+        val resolvedTheme = "dark_teal"
 
         var timetables = container.timetableRepository.timetables.value
         if (timetables.isEmpty()) {

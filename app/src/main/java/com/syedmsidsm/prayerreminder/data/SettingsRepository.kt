@@ -23,7 +23,7 @@ class SettingsRepository(
 
     companion object {
         val PRAYER_KEYS = listOf("FAJR", "SUNRISE", "DHUHR", "ASR", "MAGHRIB", "ISHA", "JUMUAH")
-        val REMINDER_KINDS = listOf("BEFORE_AZAN", "AT_AZAN", "BEFORE_JAMAAT", "AFTER_PRAYER")
+        val REMINDER_KINDS = listOf("BEFORE_AZAN", "AT_AZAN", "BEFORE_JAMAAT")
 
         val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
@@ -95,12 +95,10 @@ class SettingsRepository(
         dataStore.edit { it[KEY_PLAY_DUA_AFTER_AZAN] = enabled }
     }
 
-    val widgetTheme: Flow<String> = dataStore.data.map { prefs ->
-        prefs[KEY_WIDGET_THEME] ?: "dark_teal"
-    }
+    val widgetTheme: Flow<String> = dataStore.data.map { "dark_teal" }
 
     suspend fun setWidgetTheme(theme: String) {
-        dataStore.edit { it[KEY_WIDGET_THEME] = theme }
+        dataStore.edit { it[KEY_WIDGET_THEME] = "dark_teal" }
     }
 
     val appLanguage: Flow<String> = dataStore.data.map { prefs ->
@@ -286,18 +284,11 @@ class SettingsRepository(
         }
     }
 
-    val remAfterPrayerOffsets: Flow<Set<Int>> = dataStore.data.map { prefs ->
-        val raw = prefs[KEY_REM_AFTER_PRAYER_OFFSETS]
-        if (raw.isNullOrBlank()) {
-            emptySet()
-        } else {
-            raw.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-        }
-    }
+    val remAfterPrayerOffsets: Flow<Set<Int>> = dataStore.data.map { emptySet() }
 
     suspend fun setRemAfterPrayerOffsets(offsets: Set<Int>) {
         dataStore.edit { prefs ->
-            prefs[KEY_REM_AFTER_PRAYER_OFFSETS] = offsets.sortedDescending().joinToString(",")
+            prefs[KEY_REM_AFTER_PRAYER_OFFSETS] = ""
         }
     }
 

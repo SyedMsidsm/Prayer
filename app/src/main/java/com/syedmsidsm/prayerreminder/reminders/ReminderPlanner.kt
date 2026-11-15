@@ -175,29 +175,6 @@ class ReminderPlanner {
                     }
                 }
 
-                // 4. AFTER_PRAYER (Support multiple reminder intervals after prayer / jamaat)
-                for (offset in settings.remAfterPrayerOffsets) {
-                    if (offset > 0 && settings.isEnabled(prayerKey, ReminderKind.AFTER_PRAYER)) {
-                        val refTime = jamaat ?: azan
-                        val fireTime = day.date.atTime(refTime).plusMinutes(offset.toLong()).atZone(now.zone)
-                        if (fireTime.isAfter(cutoff) && !fireTime.isAfter(horizon)) {
-                            events.add(
-                                ScheduledReminderEvent(
-                                    code = calculateCode(day.date, prayer, ReminderKind.AFTER_PRAYER, offset),
-                                    fireAtEpochSeconds = fireTime.toEpochSecond(),
-                                    prayer = prayer,
-                                    kind = ReminderKind.AFTER_PRAYER,
-                                    isJumuah = isJumuah,
-                                    minutesOffset = offset,
-                                    azanTimeIso = azan.toString(),
-                                    jamaatTimeIso = jamaat?.toString(),
-                                    isEstimated = day.source.isEstimated
-                                )
-                            )
-                        }
-                    }
-                }
-
                 // 5. PHASE change at jamaat time (silent refresh for widgets and next prayer)
                 if (jamaat != null) {
                     val fireTime = day.date.atTime(jamaat).atZone(now.zone)

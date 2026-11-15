@@ -1,5 +1,7 @@
 package com.syedmsidsm.prayerreminder.ui.home
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -109,6 +111,52 @@ data class SkyPalette(
     val deep: Color,       // very bottom (behind nav pill)
 )
 
+// Dark-mode immersive sky palettes across all 6 prayer phases
+val FajrSky = SkyPalette(
+    top = Color(0xFF12102E),
+    upper = Color(0xFF33235A),
+    horizon = Color(0xFFD96B43),
+    afterGlow = Color(0xFF3A203A),
+    ground = Color(0xFF101324),
+    deep = Color(0xFF060812),
+)
+
+val SunriseSky = SkyPalette(
+    top = Color(0xFF182A4A),
+    upper = Color(0xFF38537A),
+    horizon = Color(0xFFF59E0B),
+    afterGlow = Color(0xFF473028),
+    ground = Color(0xFF121824),
+    deep = Color(0xFF070A10),
+)
+
+val DhuhrSky = SkyPalette(
+    top = Color(0xFF0C2D48),
+    upper = Color(0xFF19537A),
+    horizon = Color(0xFFEAB308),
+    afterGlow = Color(0xFF1D3549),
+    ground = Color(0xFF0C1826),
+    deep = Color(0xFF050B12),
+)
+
+val AsrSky = SkyPalette(
+    top = Color(0xFF1A253A),
+    upper = Color(0xFF4A3D4D),
+    horizon = Color(0xFFEA7B26),
+    afterGlow = Color(0xFF36252B),
+    ground = Color(0xFF121420),
+    deep = Color(0xFF06070D),
+)
+
+val MaghribSky = SkyPalette(
+    top = Color(0xFF190E2E),
+    upper = Color(0xFF561D46),
+    horizon = Color(0xFFEA580C),
+    afterGlow = Color(0xFF38192A),
+    ground = Color(0xFF120E1E),
+    deep = Color(0xFF06040C),
+)
+
 val NightSky = SkyPalette(
     top = Color(0xFF0A1330),
     upper = Color(0xFF1B2A52),
@@ -118,6 +166,81 @@ val NightSky = SkyPalette(
     deep = Color(0xFF04070D),
 )
 
+// Light-mode immersive sky palettes (atmospheric hero dome + warm parchment ground for the prayer list)
+val FajrLightSky = SkyPalette(
+    top = Color(0xFF2A2152),
+    upper = Color(0xFF63407A),
+    horizon = Color(0xFFF08A5D),
+    afterGlow = Color(0xFFE6C8B4),
+    ground = Color(0xFFF6F1E6),
+    deep = Color(0xFFECE3CE),
+)
+
+val SunriseLightSky = SkyPalette(
+    top = Color(0xFF1E3F66),
+    upper = Color(0xFF4A789C),
+    horizon = Color(0xFFFBBF24),
+    afterGlow = Color(0xFFEED6B3),
+    ground = Color(0xFFF6F1E6),
+    deep = Color(0xFFECE3CE),
+)
+
+val DhuhrLightSky = SkyPalette(
+    top = Color(0xFF144266),
+    upper = Color(0xFF2B6FA3),
+    horizon = Color(0xFFF5C451),
+    afterGlow = Color(0xFFE6D8BE),
+    ground = Color(0xFFF6F1E6),
+    deep = Color(0xFFECE3CE),
+)
+
+val AsrLightSky = SkyPalette(
+    top = Color(0xFF243754),
+    upper = Color(0xFF6E5359),
+    horizon = Color(0xFFF59E0B),
+    afterGlow = Color(0xFFEAD0B3),
+    ground = Color(0xFFF6F1E6),
+    deep = Color(0xFFECE3CE),
+)
+
+val MaghribLightSky = SkyPalette(
+    top = Color(0xFF2B1644),
+    upper = Color(0xFF7A2852),
+    horizon = Color(0xFFF97316),
+    afterGlow = Color(0xFFE5C1AE),
+    ground = Color(0xFFF6F1E6),
+    deep = Color(0xFFECE3CE),
+)
+
+val NightLightSky = SkyPalette(
+    top = Color(0xFF132046),
+    upper = Color(0xFF283D6E),
+    horizon = Color(0xFFC27D44),
+    afterGlow = Color(0xFFDCCBB8),
+    ground = Color(0xFFF6F1E6),
+    deep = Color(0xFFECE3CE),
+)
+
+fun skyForPrayer(prayer: Prayer, isDark: Boolean): SkyPalette = if (isDark) {
+    when (prayer) {
+        Prayer.FAJR -> FajrSky
+        Prayer.SUNRISE -> SunriseSky
+        Prayer.DHUHR -> DhuhrSky
+        Prayer.ASR -> AsrSky
+        Prayer.MAGHRIB -> MaghribSky
+        Prayer.ISHA -> NightSky
+    }
+} else {
+    when (prayer) {
+        Prayer.FAJR -> FajrLightSky
+        Prayer.SUNRISE -> SunriseLightSky
+        Prayer.DHUHR -> DhuhrLightSky
+        Prayer.ASR -> AsrLightSky
+        Prayer.MAGHRIB -> MaghribLightSky
+        Prayer.ISHA -> NightLightSky
+    }
+}
+
 @Composable
 fun PrayerSkyBackground(
     modifier: Modifier = Modifier,
@@ -125,10 +248,17 @@ fun PrayerSkyBackground(
     horizonFraction: Float = 0.22f, // where the mosque base sits, as a fraction of screen height
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val top by animateColorAsState(sky.top, tween(750), label = "skyTop")
+    val upper by animateColorAsState(sky.upper, tween(750), label = "skyUpper")
+    val horizon by animateColorAsState(sky.horizon, tween(750), label = "skyHorizon")
+    val afterGlow by animateColorAsState(sky.afterGlow, tween(750), label = "skyAfterGlow")
+    val ground by animateColorAsState(sky.ground, tween(750), label = "skyGround")
+    val deep by animateColorAsState(sky.deep, tween(750), label = "skyDeep")
+
     Box(
         modifier
             .fillMaxSize()
-            .background(sky.deep)
+            .background(deep)
             .drawBehind {
                 val h = size.height
                 val f = horizonFraction.coerceIn(0.05f, 0.45f)
@@ -140,12 +270,12 @@ fun PrayerSkyBackground(
                 drawRect(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f to sky.top,
-                            at(f * 0.60f) to sky.upper,
-                            at(f * 0.95f) to sky.horizon,
-                            at(f * 1.30f) to sky.afterGlow,
-                            at(f * 2.10f) to sky.ground,
-                            1f to sky.deep,
+                            0f to top,
+                            at(f * 0.60f) to upper,
+                            at(f * 0.95f) to horizon,
+                            at(f * 1.30f) to afterGlow,
+                            at(f * 2.10f) to ground,
+                            1f to deep,
                         )
                     )
                 )
@@ -153,9 +283,9 @@ fun PrayerSkyBackground(
                 // 2) soft glow centred on the dome so the light seems to come from behind it
                 drawRect(
                     Brush.radialGradient(
-                        colors = listOf(sky.horizon.copy(alpha = 0.40f), Color.Transparent),
+                        colors = listOf(horizon.copy(alpha = 0.44f), Color.Transparent),
                         center = Offset(size.width / 2f, hy),
-                        radius = size.width * 0.80f,
+                        radius = size.width * 0.85f,
                     )
                 )
             },
@@ -188,15 +318,28 @@ fun Modifier.fadeOutBottom(startFraction: Float = 0.60f): Modifier = this
  */
 fun Modifier.glassCard(
     active: Boolean = false,
+    isDark: Boolean = true,
     shape: Shape = RoundedCornerShape(22.dp),
 ): Modifier {
-    val gold = Color(0xFFFBBF24)
+    val gold = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
+    val bgColor = when {
+        active && isDark -> gold.copy(alpha = 0.12f)
+        active && !isDark -> Color(0xFFFFFBEB).copy(alpha = 0.92f)
+        isDark -> Color.White.copy(alpha = 0.06f)
+        else -> Color.White.copy(alpha = 0.78f)
+    }
+    val borderColor = when {
+        active && isDark -> gold.copy(alpha = 0.85f)
+        active && !isDark -> gold.copy(alpha = 0.75f)
+        isDark -> Color.White.copy(alpha = 0.10f)
+        else -> Color(0xFFD6CEBF)
+    }
     return this
         .clip(shape)
-        .background(if (active) gold.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.055f))
+        .background(bgColor)
         .border(
             width = 1.dp,
-            color = if (active) gold.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.09f),
+            color = borderColor,
             shape = shape,
         )
 }
@@ -217,12 +360,13 @@ fun HomeScreen(
     val pmMarker = stringResource(R.string.pm_marker)
 
     val isDark = PrayerReminderColors.isDark
-    val cardTextPrimary = Color.White
-    val cardTextSecondary = Color(0xFFA8A29E)
+    val cardTextPrimary = if (isDark) Color.White else Color(0xFF1C1917)
+    val cardTextSecondary = if (isDark) Color(0xFFA8A29E) else Color(0xFF57534E)
     val next = uiState.nextPrayer
     val schedule = uiState.schedule
+    val currentSkyPalette = skyForPrayer(uiState.activeSky, isDark)
 
-    PrayerSkyBackground {
+    PrayerSkyBackground(sky = currentSkyPalette) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -300,18 +444,24 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Sky Vibe Switcher Pill
+                            val activeSkyName = SanctuarySkyThemes.forPrayer(uiState.activeSky).label
                             val skyLabel = if (uiState.skyOverride.isBlank()) {
-                                stringResource(R.string.auto_sky)
+                                "${stringResource(R.string.auto_sky)} • $activeSkyName"
                             } else {
-                                SanctuarySkyThemes.forPrayer(uiState.activeSky).label
+                                activeSkyName
+                            }
+                            val skyPillIcon = if (uiState.skyOverride.isBlank()) {
+                                Icons.Default.AutoAwesome
+                            } else {
+                                getPrayerIcon(uiState.activeSky)
                             }
                             Surface(
                                 shape = RoundedCornerShape(50),
                                 color = Color.Black.copy(alpha = 0.38f),
                                 border = BorderStroke(
                                     1.dp,
-                                    if (uiState.skyOverride.isNotBlank()) AmberBright.copy(alpha = 0.55f)
-                                    else Color.White.copy(alpha = 0.14f)
+                                    if (uiState.skyOverride.isNotBlank()) AmberBright.copy(alpha = 0.65f)
+                                    else Color.White.copy(alpha = 0.18f)
                                 ),
                                 modifier = Modifier
                                     .height(36.dp)
@@ -323,7 +473,7 @@ fun HomeScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
+                                        imageVector = skyPillIcon,
                                         contentDescription = "Sky Vibe",
                                         tint = AmberBright,
                                         modifier = Modifier.size(14.dp)
@@ -343,7 +493,7 @@ fun HomeScreen(
                             Surface(
                                 shape = CircleShape,
                                 color = Color.Black.copy(alpha = 0.38f),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 IconButton(onClick = onToggleTheme) {
@@ -432,12 +582,13 @@ fun HomeScreen(
                             }
 
                             SanctuaryPrayerRow(
-                                modifier = Modifier.glassCard(active = isNext),
+                                modifier = Modifier.glassCard(active = isNext, isDark = isDark),
                                 prayer = prayer,
                                 isFriday = schedule.isFriday,
                                 azanTime = azan,
                                 jamaatTime = jamaat,
                                 isNext = isNext,
+                                isDark = isDark,
                                 use24Hour = uiState.use24Hour,
                                 amMarker = amMarker,
                                 pmMarker = pmMarker,
@@ -626,6 +777,7 @@ private fun SanctuaryPrayerRow(
     azanTime: java.time.LocalTime,
     jamaatTime: java.time.LocalTime?,
     isNext: Boolean,
+    isDark: Boolean,
     use24Hour: Boolean,
     amMarker: String,
     pmMarker: String,
@@ -641,6 +793,7 @@ private fun SanctuaryPrayerRow(
         getPrayerName(prayer)
     }
     val prayerIcon = getPrayerIcon(prayer)
+    val accentGold = if (isDark) AmberSoft else Color(0xFFB45309)
 
     Row(
         modifier = modifier
@@ -660,16 +813,22 @@ private fun SanctuaryPrayerRow(
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        if (isNext) AmberBright
-                        else Color.White.copy(alpha = 0.09f)
+                        when {
+                            isNext -> AmberBright
+                            isDark -> Color.White.copy(alpha = 0.09f)
+                            else -> Color(0xFFECE3CE).copy(alpha = 0.85f)
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = prayerIcon,
                     contentDescription = null,
-                    tint = if (isNext) Color(0xFF020617)
-                    else Color(0xFFD6D3D1),
+                    tint = when {
+                        isNext -> Color(0xFF020617)
+                        isDark -> Color(0xFFD6D3D1)
+                        else -> Color(0xFF57534E)
+                    },
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -689,11 +848,11 @@ private fun SanctuaryPrayerRow(
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = AmberBright.copy(alpha = 0.22f)
+                            color = AmberBright.copy(alpha = if (isDark) 0.22f else 0.26f)
                         ) {
                             Text(
                                 text = stringResource(R.string.next_tag).uppercase(Locale.US),
-                                color = AmberSoft,
+                                color = accentGold,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.6.sp,
@@ -715,7 +874,7 @@ private fun SanctuaryPrayerRow(
                             Icon(
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = stringResource(R.string.jamaat_fixed_before_azan),
-                                tint = AmberBright,
+                                tint = if (isDark) AmberBright else Color(0xFFD97706),
                                 modifier = Modifier.size(12.dp)
                             )
                         }
@@ -731,7 +890,7 @@ private fun SanctuaryPrayerRow(
         ) {
             Text(
                 text = TimeFormatter.formatTime(azanTime, use24Hour, amMarker, pmMarker),
-                color = if (isNext) AmberSoft else cardTextPrimary,
+                color = if (isNext) accentGold else cardTextPrimary,
                 fontSize = 15.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.SemiBold
@@ -740,20 +899,20 @@ private fun SanctuaryPrayerRow(
             if (prayer.hasReminders) {
                 val (btnBg, btnBorder, btnTint, btnIcon) = when (alertMode) {
                     "sound" -> AlertBtnStyle(
-                        bg = AmberBright.copy(alpha = 0.16f),
-                        border = AmberBright.copy(alpha = 0.45f),
-                        tint = AmberSoft,
+                        bg = AmberBright.copy(alpha = if (isDark) 0.16f else 0.20f),
+                        border = AmberBright.copy(alpha = if (isDark) 0.45f else 0.65f),
+                        tint = accentGold,
                         icon = Icons.AutoMirrored.Filled.VolumeUp
                     )
                     "vibrate" -> AlertBtnStyle(
-                        bg = Color(0xFF34D399).copy(alpha = 0.16f),
-                        border = Color(0xFF34D399).copy(alpha = 0.45f),
-                        tint = EmeraldSoft,
+                        bg = Color(0xFF34D399).copy(alpha = if (isDark) 0.16f else 0.18f),
+                        border = Color(0xFF34D399).copy(alpha = if (isDark) 0.45f else 0.60f),
+                        tint = if (isDark) EmeraldSoft else Color(0xFF047857),
                         icon = Icons.Default.Vibration
                     )
                     else -> AlertBtnStyle(
-                        bg = Color.White.copy(alpha = 0.06f),
-                        border = Color.White.copy(alpha = 0.12f),
+                        bg = if (isDark) Color.White.copy(alpha = 0.06f) else Color(0xFFECE3CE).copy(alpha = 0.65f),
+                        border = if (isDark) Color.White.copy(alpha = 0.12f) else Color(0xFFD6CEBF),
                         tint = cardTextSecondary,
                         icon = Icons.Default.NotificationsOff
                     )
@@ -780,10 +939,10 @@ private fun SanctuaryPrayerRow(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.04f))
+                        .background(if (isDark) Color.White.copy(alpha = 0.04f) else Color(0xFFECE3CE).copy(alpha = 0.45f))
                         .border(
                             1.dp,
-                            Color.White.copy(alpha = 0.08f),
+                            if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFD6CEBF),
                             RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center

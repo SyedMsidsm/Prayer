@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.syedmsidsm.prayerreminder.R
+import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 
 enum class SanctuaryTab { HOME, SETTINGS }
 
@@ -40,6 +41,11 @@ fun SanctuaryBottomNavBar(
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = PrayerReminderColors.isDark
+    val barBg = if (isDark) Color(0xEB07131A) else Color(0xF5FFFFFF)
+    val barBorder = if (isDark) Color.White.copy(alpha = 0.16f) else Color(0xFFDCD3BE)
+    val unselectedTint = if (isDark) Color(0xFFD6D3D1) else Color(0xFF4A5859)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -49,9 +55,9 @@ fun SanctuaryBottomNavBar(
     ) {
         Surface(
             shape = RoundedCornerShape(50),
-            color = Color(0xEB07131A),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
-            shadowElevation = 16.dp
+            color = barBg,
+            border = BorderStroke(1.dp, barBorder),
+            shadowElevation = if (isDark) 16.dp else 8.dp
         ) {
             Row(
                 modifier = Modifier.padding(6.dp),
@@ -62,12 +68,14 @@ fun SanctuaryBottomNavBar(
                     icon = Icons.Default.Home,
                     label = stringResource(R.string.nav_home),
                     isSelected = activeTab == SanctuaryTab.HOME,
+                    unselectedTint = unselectedTint,
                     onClick = onHomeClick
                 )
                 SanctuaryNavPill(
                     icon = Icons.Default.Settings,
                     label = stringResource(R.string.settings),
                     isSelected = activeTab == SanctuaryTab.SETTINGS,
+                    unselectedTint = unselectedTint,
                     onClick = onSettingsClick
                 )
             }
@@ -80,6 +88,7 @@ private fun SanctuaryNavPill(
     icon: ImageVector,
     label: String,
     isSelected: Boolean,
+    unselectedTint: Color,
     onClick: () -> Unit
 ) {
     Surface(
@@ -99,13 +108,13 @@ private fun SanctuaryNavPill(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (isSelected) Color(0xFF020617) else Color(0xFFD6D3D1),
+                tint = if (isSelected) Color(0xFF020617) else unselectedTint,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
-                color = if (isSelected) Color(0xFF020617) else Color(0xFFD6D3D1),
+                color = if (isSelected) Color(0xFF020617) else unselectedTint,
                 fontSize = 13.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 maxLines = 1

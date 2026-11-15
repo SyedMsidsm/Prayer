@@ -1,6 +1,12 @@
 package com.syedmsidsm.prayerreminder.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -442,9 +448,38 @@ fun MosqueSilhouette(
     activeSky: Prayer = Prayer.ISHA,
 ) {
     val theme = SanctuarySkyThemes.forPrayer(activeSky)
-    val animSpec = tween<Color>(durationMillis = 800)
-    val domeColor by animateColorAsState(theme.domeColor, animationSpec = animSpec, label = "dome")
-    val domeMidColor by animateColorAsState(theme.domeMidColor, animationSpec = animSpec, label = "domeMid")
+    val colorAnimSpec = tween<Color>(durationMillis = 750, easing = FastOutSlowInEasing)
+    val floatAnimSpec = tween<Float>(durationMillis = 750, easing = FastOutSlowInEasing)
+
+    val domeColor by animateColorAsState(theme.domeColor, animationSpec = colorAnimSpec, label = "dome")
+    val domeMidColor by animateColorAsState(theme.domeMidColor, animationSpec = colorAnimSpec, label = "domeMid")
+    val starsAlpha by animateFloatAsState(theme.starsOpacity, animationSpec = floatAnimSpec, label = "stars")
+    val crescentAlpha by animateFloatAsState(if (theme.isCrescent) 1f else 0f, animationSpec = floatAnimSpec, label = "crescent")
+    val sunAlpha by animateFloatAsState(if (theme.isCrescent) 0f else 1f, animationSpec = floatAnimSpec, label = "sun")
+
+    // Celestial arc position across the sky for each prayer
+    val (targetCelX, targetCelY) = when (activeSky) {
+        Prayer.FAJR -> 0.25f to 0.18f
+        Prayer.SUNRISE -> 0.24f to 0.30f
+        Prayer.DHUHR -> 0.50f to 0.14f
+        Prayer.ASR -> 0.76f to 0.24f
+        Prayer.MAGHRIB -> 0.75f to 0.19f
+        Prayer.ISHA -> 0.50f to 0.15f
+    }
+    val celX by animateFloatAsState(targetCelX, animationSpec = floatAnimSpec, label = "celX")
+    val celY by animateFloatAsState(targetCelY, animationSpec = floatAnimSpec, label = "celY")
+
+    // Subtle atmospheric shimmer for stars and celestial halo
+    val infiniteTransition = rememberInfiniteTransition(label = "skyAtmosphere")
+    val shimmerPhase by infiniteTransition.animateFloat(
+        initialValue = 0.78f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "shimmer"
+    )
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -452,39 +487,53 @@ fun MosqueSilhouette(
         val horizonBottom = h
         val mosqueTop = h * 0.14f
 
-        // Twinkling Starfield for Night/Dawn
-        if (theme.starsOpacity > 0.01f) {
+        // Twinkling Starfield for Night/Dawn/Dusk
+        if (starsAlpha > 0.01f) {
             val stars = listOf(
-                Triple(0.11f, 0.06f, 2.2f),
-                Triple(0.26f, 0.11f, 1.6f),
-                Triple(0.41f, 0.05f, 2.6f),
-                Triple(0.60f, 0.09f, 1.9f),
-                Triple(0.77f, 0.055f, 2.3f),
-                Triple(0.89f, 0.12f, 1.8f),
-                Triple(0.18f, 0.16f, 1.4f),
-                Triple(0.52f, 0.14f, 1.5f)
+                Triple(0.09f, 0.06f, 2.2f),
+                Triple(0.18f, 0.15f, 1.5f),
+                Triple(0.26f, 0.09f, 1.8f),
+                Triple(0.36f, 0.13f, 1.3f),
+                Triple(0.42f, 0.05f, 2.5f),
+                Triple(0.54f, 0.12f, 1.6f),
+                Triple(0.63f, 0.07f, 2.0f),
+                Triple(0.73f, 0.14f, 1.4f),
+                Triple(0.81f, 0.06f, 2.3f),
+                Triple(0.90f, 0.11f, 1.8f)
             )
             stars.forEachIndexed { idx, (rx, ry, r) ->
                 val starColor = if (idx % 2 == 0) Color(0xFFFDE68A) else Color.White
+                val twinkle = if (idx % 2 == 0) shimmerPhase else (1.78f - shimmerPhase)
+                val starCenter = Offset(w * rx, horizonBottom * ry * 2.1f)
+                val starRadius = r * (w / 420f).coerceAtLeast(0.8f)
                 drawCircle(
-                    color = starColor.copy(alpha = theme.starsOpacity * 0.85f),
-                    radius = r * (w / 420f).coerceAtLeast(0.8f),
-                    center = Offset(w * rx, horizonBottom * ry * 2.1f)
+                    color = starColor.copy(alpha = (starsAlpha * 0.28f * twinkle).coerceIn(0f, 1f)),
+                    radius = starRadius * 2.4f,
+                    center = starCenter
+                )
+                drawCircle(
+                    color = starColor.copy(alpha = (starsAlpha * 0.90f * twinkle).coerceIn(0f, 1f)),
+                    radius = starRadius,
+                    center = starCenter
                 )
             }
         }
 
-        // Celestial Crescent or Glowing Sun
-        val celCenter = Offset(w * 0.5f, horizonBottom * 0.16f)
-        val celRadius = (w * 0.034f).coerceIn(12f, 26f)
-        if (theme.isCrescent) {
+        // Celestial Crescent or Glowing Sun along the sky arc
+        val celCenter = Offset(w * celX, horizonBottom * celY)
+        val celRadius = (w * 0.035f).coerceIn(13f, 26f)
+
+        if (crescentAlpha > 0.01f) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0x45FBBF24), Color.Transparent),
+                    colors = listOf(
+                        Color(0x55FBBF24).copy(alpha = 0.36f * crescentAlpha * shimmerPhase),
+                        Color.Transparent
+                    ),
                     center = celCenter,
-                    radius = celRadius * 2.4f
+                    radius = celRadius * 2.8f
                 ),
-                radius = celRadius * 2.4f,
+                radius = celRadius * 2.8f,
                 center = celCenter
             )
             val outerPath = Path().apply {
@@ -499,23 +548,34 @@ fun MosqueSilhouette(
             }
             drawPath(
                 path = crescentPath,
-                color = Color(0xFFFDE68A).copy(alpha = 0.92f)
+                color = Color(0xFFFDE68A).copy(alpha = 0.94f * crescentAlpha)
             )
-        } else {
+        }
+
+        if (sunAlpha > 0.01f) {
+            // Outer warm solar corona
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0x99FBBF24), Color(0x00FBBF24)),
+                    colors = listOf(
+                        Color(0xFFFBBF24).copy(alpha = 0.42f * sunAlpha * shimmerPhase),
+                        Color(0xFFF59E0B).copy(alpha = 0.14f * sunAlpha),
+                        Color.Transparent
+                    ),
                     center = celCenter,
-                    radius = celRadius * 2.8f
+                    radius = celRadius * 3.8f
                 ),
-                radius = celRadius * 2.8f,
+                radius = celRadius * 3.8f,
                 center = celCenter
             )
+            // Inner glowing solar disc
             drawCircle(
                 brush = Brush.linearGradient(
-                    colors = listOf(Color(0xFFFEF3C7), Color(0xFFFCD34D))
+                    colors = listOf(
+                        Color(0xFFFFFBEB).copy(alpha = 0.96f * sunAlpha),
+                        Color(0xFFFCD34D).copy(alpha = 0.92f * sunAlpha)
+                    )
                 ),
-                radius = celRadius * 0.95f,
+                radius = celRadius * 1.02f,
                 center = celCenter
             )
         }
