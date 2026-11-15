@@ -25,7 +25,7 @@ enum class WidgetSize { SMALL, MEDIUM, LARGE }
 object WidgetRenderer {
     private val HIGHLIGHT_TEXT = 0xFF2A1442.toInt()
     private val WHITE = 0xFFFFFFFF.toInt()
-    private val WHITE_80 = 0xCCFFFFFF.toInt()
+    private val WHITE_95 = 0xF2FFFFFF.toInt()
     private const val DASH = "\u2014"
 
     // root, name, adhan, namaz
@@ -78,7 +78,6 @@ object WidgetRenderer {
         )
         v.setOnClickPendingIntent(R.id.root, openAppIntent)
 
-        // Shared design token: keep the warm dusk gradient and radial sun glow across themes
         v.setInt(R.id.root, "setBackgroundResource", R.drawable.sky_dusk)
         v.setImageViewResource(R.id.sky_body, R.drawable.ic_sun_warm)
         v.setViewVisibility(R.id.sky_stars, View.GONE)
@@ -100,7 +99,6 @@ object WidgetRenderer {
         Prayer.ISHA -> R.string.w_prayer_isha
     }
 
-    /** Live countdown that ticks by itself (no battery-hungry refresh every second). */
     private fun countdown(v: RemoteViews, id: Int, next: NextInfo, now: LocalDateTime, format: String = "%s") {
         val ms = Duration.between(now, next.at).toMillis().coerceAtLeast(0L)
         v.setChronometerCountDown(id, true)
@@ -149,7 +147,7 @@ object WidgetRenderer {
         maxWidthDp: Float,
         bold: Boolean = true,
         letterSpacingEm: Float = 0f,
-        minSp: Float = 6.5f
+        minSp: Float = 8f
     ): Float {
         if (maxWidthDp <= 0f || text.isEmpty()) return targetSp
         var sp = targetSp
@@ -173,16 +171,16 @@ object WidgetRenderer {
         widthDp: Int,
         heightDp: Int
     ) {
-        // Reference small-widget.html is 200x360
+        // Default 2x2 grid size on launcher is ~125x221dp
         val w = (if (widthDp > 0) widthDp else 125).toFloat()
         val h = (if (heightDp > 0) heightDp else 221).toFloat()
-        val s = min(w / 200f, h / 360f).coerceIn(0.48f, 1.35f)
+        val s = min(w / 125f, h / 221f).coerceIn(0.75f, 1.8f)
         val fd = fontDamp(ctx)
-        fun refSp(px: Float): Float = (px * s) / fd
+        fun sz(baseSp: Float): Float = (baseSp * s) / fd
 
-        val padTop = (24f * s).coerceAtLeast(8f)
-        val padSide = (20f * s).coerceAtLeast(8f)
-        val padBot = (20f * s).coerceAtLeast(8f)
+        val padTop = (11f * s).coerceAtLeast(8f)
+        val padSide = (9f * s).coerceAtLeast(7f)
+        val padBot = (10f * s).coerceAtLeast(8f)
         v.setViewPadding(
             R.id.content_box,
             dpToPx(ctx, padSide),
@@ -191,51 +189,47 @@ object WidgetRenderer {
             dpToPx(ctx, padBot)
         )
 
-        val sunSize = (30f * s).coerceAtLeast(14f)
-        val sunMargin = (18f * s).coerceAtLeast(8f)
+        val sunSize = (20f * s).coerceAtLeast(16f)
+        val sunMargin = (10f * s).coerceAtLeast(8f)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             v.setViewLayoutWidth(R.id.sky_body, sunSize, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutHeight(R.id.sky_body, sunSize, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.sky_body, RemoteViews.MARGIN_TOP, sunMargin, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.sky_body, RemoteViews.MARGIN_END, sunMargin, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.next_label, RemoteViews.MARGIN_END, sunSize + 4f, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.until_label, RemoteViews.MARGIN_TOP, (6f * s).coerceAtLeast(2f), TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.small_namaz_row, RemoteViews.MARGIN_TOP, (10f * s).coerceAtLeast(3f), TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.next_label, RemoteViews.MARGIN_END, sunSize + 3f, TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.until_label, RemoteViews.MARGIN_TOP, (3f * s).coerceAtLeast(2f), TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.small_namaz_row, RemoteViews.MARGIN_TOP, (6f * s).coerceAtLeast(4f), TypedValue.COMPLEX_UNIT_DIP)
         }
 
-        val innerW = (w - 2f * padSide).coerceAtLeast(60f)
-        val topAvailW = (innerW - sunSize - 4f).coerceAtLeast(45f)
+        val innerW = (w - 2f * padSide).coerceAtLeast(80f)
+        val topAvailW = (innerW - sunSize - 3f).coerceAtLeast(58f)
 
-        // Top: "NEXT · MAGHRIB" 13sp bold, letter-spacing 1.5, 80% white.
-        // Must never truncate; if too long, shrink to 12sp and drop "NEXT ·".
         val prayerNameUpper = ctx.getString(nameRes(next.slot.prayer)).uppercase(loc)
         val fullTop = ctx.getString(R.string.next_label, prayerNameUpper).uppercase(loc)
-        val sp13 = refSp(13f)
-        val sp12 = refSp(12f)
+        val targetTopSp = sz(11.5f)
+        val fallbackTopSp = sz(10.2f)
         val (topText, topSp) = when {
-            measureWidthDp(ctx, fullTop, sp13, bold = true, letterSpacingEm = 0.11f) <= topAvailW ->
-                fullTop to sp13
-            measureWidthDp(ctx, fullTop, sp12, bold = true, letterSpacingEm = 0.11f) <= topAvailW ->
-                fullTop to sp12
+            measureWidthDp(ctx, fullTop, targetTopSp, bold = true, letterSpacingEm = 0.06f) <= topAvailW ->
+                fullTop to targetTopSp
+            measureWidthDp(ctx, fullTop, fallbackTopSp, bold = true, letterSpacingEm = 0.06f) <= topAvailW ->
+                fullTop to fallbackTopSp
             else ->
-                prayerNameUpper to fitSp(ctx, prayerNameUpper, sp12, topAvailW, bold = true, letterSpacingEm = 0.11f)
+                prayerNameUpper to fitSp(ctx, prayerNameUpper, targetTopSp, topAvailW, bold = true, letterSpacingEm = 0.06f)
         }
         v.setTextViewText(R.id.next_label, topText)
         setSp(v, R.id.next_label, topSp)
 
-        // Middle: countdown "00:11" 52sp extra-bold, "until adhan" 17sp below.
         countdown(v, R.id.countdown, next, now, "%s")
         val cdSample = chronoSampleFor(now, next.at)
-        setSp(v, R.id.countdown, fitSp(ctx, cdSample, refSp(52f), innerW, bold = true, minSp = 14f))
+        setSp(v, R.id.countdown, fitSp(ctx, cdSample, sz(40f), innerW, bold = true, minSp = 18f))
 
         val untilText = ctx.getString(R.string.until_adhan)
         v.setTextViewText(R.id.until_label, untilText)
-        setSp(v, R.id.until_label, fitSp(ctx, untilText, refSp(17f), innerW, bold = false, minSp = 8f))
+        setSp(v, R.id.until_label, fitSp(ctx, untilText, sz(13.5f), innerW, bold = true, minSp = 9.5f))
         v.setViewVisibility(R.id.until_label, if (h < 135f) View.GONE else View.VISIBLE)
 
-        // Panel (radius 20, padding 14/16): two rows, "Adhan 6:04 PM" and "Namaz 6:19 PM"
-        val panelPadV = (14f * s).coerceAtLeast(5f)
-        val panelPadH = (16f * s).coerceAtLeast(6f)
+        val panelPadV = (9f * s).coerceAtLeast(6f)
+        val panelPadH = (8f * s).coerceAtLeast(6f)
         v.setViewPadding(
             R.id.small_panel,
             dpToPx(ctx, panelPadH),
@@ -243,23 +237,23 @@ object WidgetRenderer {
             dpToPx(ctx, panelPadH),
             dpToPx(ctx, panelPadV)
         )
-        val panelInnerW = (innerW - 2f * panelPadH).coerceAtLeast(48f)
+        val panelInnerW = (innerW - 2f * panelPadH).coerceAtLeast(64f)
 
         val adhanLbl = ctx.getString(R.string.adhan)
         val namazLbl = ctx.getString(R.string.namaz)
         val adhanStr = DateText.time(ctx, next.slot.adhan, loc, true)
         val namazStr = next.slot.namaz?.let { DateText.time(ctx, it, loc, true) } ?: DASH
 
-        var lblSp = refSp(14f)
-        var timeSp = refSp(19f)
-        while (timeSp > 8f) {
-            val row1W = measureWidthDp(ctx, adhanLbl, lblSp, bold = false) +
-                measureWidthDp(ctx, adhanStr, timeSp, bold = true) + 6f
-            val row2W = measureWidthDp(ctx, namazLbl, lblSp, bold = false) +
-                measureWidthDp(ctx, namazStr, timeSp, bold = true) + 6f
+        var lblSp = sz(11.5f)
+        var timeSp = sz(14.5f)
+        while (timeSp > 9.5f) {
+            val row1W = measureWidthDp(ctx, adhanLbl, lblSp, bold = true) +
+                measureWidthDp(ctx, adhanStr, timeSp, bold = true) + 4f
+            val row2W = measureWidthDp(ctx, namazLbl, lblSp, bold = true) +
+                measureWidthDp(ctx, namazStr, timeSp, bold = true) + 4f
             if (maxOf(row1W, row2W) <= panelInnerW) break
             timeSp -= 0.4f
-            lblSp = (lblSp - 0.3f).coerceAtLeast(6.5f)
+            lblSp = (lblSp - 0.3f).coerceAtLeast(8.5f)
         }
 
         v.setTextViewText(R.id.adhan_label, adhanLbl)
@@ -271,10 +265,9 @@ object WidgetRenderer {
         setSp(v, R.id.adhan_time, timeSp)
         setSp(v, R.id.namaz_time, timeSp)
 
-        // Bottom: short date only, "Sun, 15 Nov", 14sp. Do NOT show the Hijri date here.
         val shortDate = DateText.gregorian(now.toLocalDate(), loc, false)
         v.setTextViewText(R.id.date_en, shortDate)
-        setSp(v, R.id.date_en, fitSp(ctx, shortDate, refSp(14f), innerW, bold = false, minSp = 7.5f))
+        setSp(v, R.id.date_en, fitSp(ctx, shortDate, sz(12.5f), innerW, bold = true, minSp = 9.5f))
     }
 
     private fun medium(
@@ -286,14 +279,14 @@ object WidgetRenderer {
         widthDp: Int,
         heightDp: Int
     ) {
-        // Reference wide-widget.html is 720x270
+        // Default wide grid size on launcher is ~480x221dp
         val w = (if (widthDp > 0) widthDp else 480).toFloat()
         val h = (if (heightDp > 0) heightDp else 221).toFloat()
-        val s = min(w / 720f, h / 270f).coerceIn(0.45f, 1.35f)
+        val s = min(w / 480f, h / 221f).coerceIn(0.7f, 1.8f)
         val fd = fontDamp(ctx)
-        fun refSp(px: Float): Float = (px * s) / fd
+        fun sz(baseSp: Float): Float = (baseSp * s) / fd
 
-        val pad = (24f * s).coerceAtLeast(10f)
+        val pad = (13f * s).coerceAtLeast(9f)
         v.setViewPadding(
             R.id.content_box,
             dpToPx(ctx, pad),
@@ -302,52 +295,49 @@ object WidgetRenderer {
             dpToPx(ctx, pad)
         )
 
-        val sunSize = (36f * s).coerceAtLeast(18f)
-        val sunTop = (22f * s).coerceAtLeast(10f)
-        val sunEnd = (24f * s).coerceAtLeast(10f)
-        val sectionGap = (18f * s).coerceAtLeast(6f)
-        val cardHalfGap = (5f * s).coerceAtLeast(2f)
+        val sunSize = (26f * s).coerceAtLeast(18f)
+        val sunTop = (13f * s).coerceAtLeast(9f)
+        val sunEnd = (14f * s).coerceAtLeast(9f)
+        val sectionGap = (9f * s).coerceAtLeast(6f)
+        val cardHalfGap = (3f * s).coerceAtLeast(2f)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             v.setViewLayoutWidth(R.id.sky_body, sunSize, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutHeight(R.id.sky_body, sunSize, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.sky_body, RemoteViews.MARGIN_TOP, sunTop, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.sky_body, RemoteViews.MARGIN_END, sunEnd, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.header_block, RemoteViews.MARGIN_END, sunSize + 8f, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.date_combined, RemoteViews.MARGIN_TOP, (6f * s).coerceAtLeast(2f), TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.header_block, RemoteViews.MARGIN_END, sunSize + 6f, TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.date_combined, RemoteViews.MARGIN_TOP, (3f * s).coerceAtLeast(2f), TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.cards_row, RemoteViews.MARGIN_TOP, sectionGap, TypedValue.COMPLEX_UNIT_DIP)
         }
 
-        val innerW = (w - 2f * pad).coerceAtLeast(200f)
-        val headerAvailW = (innerW - sunSize - 8f).coerceAtLeast(140f)
+        val innerW = (w - 2f * pad).coerceAtLeast(220f)
+        val headerAvailW = (innerW - sunSize - 6f).coerceAtLeast(160f)
 
-        // Top-left: "Maghrib in 00:11" 34sp extra-bold
         val nextPrayerName = ctx.getString(nameRes(next.slot.prayer))
         val headlinePrefix = ctx.getString(R.string.headline_in, nextPrayerName)
         val cdFormat = "$headlinePrefix %s"
         countdown(v, R.id.countdown, next, now, cdFormat)
         val headlineSample = "$headlinePrefix ${chronoSampleFor(now, next.at)}"
-        setSp(v, R.id.countdown, fitSp(ctx, headlineSample, refSp(34f), headerAvailW, bold = true, minSp = 12f))
+        setSp(v, R.id.countdown, fitSp(ctx, headlineSample, sz(29f), headerAvailW, bold = true, minSp = 15f))
 
-        // Under it, one line at 15sp: "Sunday, 15 Nov 2026 · 5 Jumada al-Akhirah 1448"
         val date = now.toLocalDate()
         val combinedFull = "${DateText.gregorian(date, loc, true)} · ${DateText.hijri(ctx, date, loc, false)}"
         val combinedShort = "${DateText.gregorian(date, loc, false)} · ${DateText.hijri(ctx, date, loc, true)}"
-        val targetDateSp = refSp(15f)
-        val (dateLine, dateSp) = if (measureWidthDp(ctx, combinedFull, targetDateSp, bold = false) <= headerAvailW) {
+        val targetDateSp = sz(14f)
+        val (dateLine, dateSp) = if (measureWidthDp(ctx, combinedFull, targetDateSp, bold = true) <= headerAvailW) {
             combinedFull to targetDateSp
-        } else if (measureWidthDp(ctx, combinedFull, refSp(13.5f), bold = false) <= headerAvailW) {
-            combinedFull to fitSp(ctx, combinedFull, targetDateSp, headerAvailW, bold = false, minSp = 8.5f)
+        } else if (measureWidthDp(ctx, combinedFull, sz(11.5f), bold = true) <= headerAvailW) {
+            combinedFull to fitSp(ctx, combinedFull, targetDateSp, headerAvailW, bold = true, minSp = 10f)
         } else {
-            combinedShort to fitSp(ctx, combinedShort, targetDateSp, headerAvailW, bold = false, minSp = 8.5f)
+            combinedShort to fitSp(ctx, combinedShort, targetDateSp, headerAvailW, bold = true, minSp = 10f)
         }
         v.setTextViewText(R.id.date_combined, dateLine)
         setSp(v, R.id.date_combined, dateSp)
 
-        // Below: a row of 5 equal cards (Fajr, Dhuhr, Asr, Maghrib, Isha), gap 10, radius 20
         val five = next.today.fivePrayers
-        val cardPad = (4f * s).coerceAtLeast(2f)
-        val cardInnerW = ((innerW - 8f * cardHalfGap) / 5f - 2f * cardPad - 2f).coerceAtLeast(36f)
+        val cardPad = (3f * s).coerceAtLeast(2f)
+        val cardInnerW = ((innerW - 8f * cardHalfGap) / 5f - 2f * cardPad - 1f).coerceAtLeast(42f)
         val namazWord = ctx.getString(R.string.namaz)
 
         val names = five.map { ctx.getString(nameRes(it.prayer)) }
@@ -357,9 +347,9 @@ object WidgetRenderer {
             "$namazWord $t"
         }
 
-        val uniformNameSp = names.minOf { fitSp(ctx, it, refSp(17f), cardInnerW, bold = true, minSp = 8f) }
-        val uniformAdhanSp = adhans.minOf { fitSp(ctx, it, refSp(27f), cardInnerW, bold = true, minSp = 11f) }
-        val uniformNamazSp = namazs.minOf { fitSp(ctx, it, refSp(15f), cardInnerW, bold = false, minSp = 7f) }
+        val uniformNameSp = names.minOf { fitSp(ctx, it, sz(15f), cardInnerW, bold = true, minSp = 10f) }
+        val uniformAdhanSp = adhans.minOf { fitSp(ctx, it, sz(24.5f), cardInnerW, bold = true, minSp = 13f) }
+        val uniformNamazSp = namazs.minOf { fitSp(ctx, it, sz(12.5f), cardInnerW, bold = true, minSp = 9f) }
 
         five.forEachIndexed { i, slot ->
             val c = CELLS[i]
@@ -375,7 +365,7 @@ object WidgetRenderer {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 v.setViewLayoutMargin(c[0], RemoteViews.MARGIN_START, if (i == 0) 0f else cardHalfGap, TypedValue.COMPLEX_UNIT_DIP)
                 v.setViewLayoutMargin(c[0], RemoteViews.MARGIN_END, if (i == 4) 0f else cardHalfGap, TypedValue.COMPLEX_UNIT_DIP)
-                val lineGap = (6f * s).coerceAtLeast(2f)
+                val lineGap = (5f * s).coerceAtLeast(2f)
                 v.setViewLayoutMargin(c[2], RemoteViews.MARGIN_TOP, lineGap, TypedValue.COMPLEX_UNIT_DIP)
                 v.setViewLayoutMargin(c[2], RemoteViews.MARGIN_BOTTOM, lineGap, TypedValue.COMPLEX_UNIT_DIP)
             }
@@ -390,7 +380,7 @@ object WidgetRenderer {
 
             v.setTextColor(c[1], if (hi) HIGHLIGHT_TEXT else WHITE)
             v.setTextColor(c[2], if (hi) HIGHLIGHT_TEXT else WHITE)
-            v.setTextColor(c[3], if (hi) HIGHLIGHT_TEXT else WHITE_80)
+            v.setTextColor(c[3], if (hi) HIGHLIGHT_TEXT else WHITE_95)
         }
     }
 
@@ -403,16 +393,16 @@ object WidgetRenderer {
         widthDp: Int,
         heightDp: Int
     ) {
-        // Reference large-widget.html is 360x700
+        // Default 4x4 grid size on launcher is ~267x458dp
         val w = (if (widthDp > 0) widthDp else 267).toFloat()
         val h = (if (heightDp > 0) heightDp else 458).toFloat()
-        val s = min(w / 360f, h / 700f).coerceIn(0.45f, 1.35f)
+        val s = min(w / 267f, h / 458f).coerceIn(0.7f, 1.8f)
         val fd = fontDamp(ctx)
-        fun refSp(px: Float): Float = (px * s) / fd
+        fun sz(baseSp: Float): Float = (baseSp * s) / fd
 
-        val padTop = (28f * s).coerceAtLeast(10f)
-        val padSide = (24f * s).coerceAtLeast(10f)
-        val padBot = (24f * s).coerceAtLeast(10f)
+        val padTop = (14f * s).coerceAtLeast(10f)
+        val padSide = (12f * s).coerceAtLeast(9f)
+        val padBot = (12f * s).coerceAtLeast(9f)
         v.setViewPadding(
             R.id.content_box,
             dpToPx(ctx, padSide),
@@ -421,64 +411,59 @@ object WidgetRenderer {
             dpToPx(ctx, padBot)
         )
 
-        val sunSize = (40f * s).coerceAtLeast(20f)
-        val sunMargin = (26f * s).coerceAtLeast(10f)
-        val sectionGap = (22f * s).coerceAtLeast(8f)
+        val sunSize = (28f * s).coerceAtLeast(20f)
+        val sunMargin = (14f * s).coerceAtLeast(10f)
+        val sectionGap = (10f * s).coerceAtLeast(6f)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             v.setViewLayoutWidth(R.id.sky_body, sunSize, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutHeight(R.id.sky_body, sunSize, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.sky_body, RemoteViews.MARGIN_TOP, sunMargin, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.sky_body, RemoteViews.MARGIN_END, sunMargin, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.header_block, RemoteViews.MARGIN_END, sunSize + 8f, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.date_hijri, RemoteViews.MARGIN_TOP, (4f * s).coerceAtLeast(2f), TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.header_block, RemoteViews.MARGIN_END, sunSize + 6f, TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.date_hijri, RemoteViews.MARGIN_TOP, (2f * s).coerceAtLeast(1f), TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.next_block, RemoteViews.MARGIN_TOP, sectionGap, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutMargin(R.id.next_block, RemoteViews.MARGIN_END, sunSize + 8f, TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutMargin(R.id.next_block, RemoteViews.MARGIN_END, sunSize + 6f, TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.progress, RemoteViews.MARGIN_TOP, sectionGap, TypedValue.COMPLEX_UNIT_DIP)
-            v.setViewLayoutHeight(R.id.progress, (6f * s).coerceAtLeast(3f), TypedValue.COMPLEX_UNIT_DIP)
+            v.setViewLayoutHeight(R.id.progress, (5f * s).coerceAtLeast(3f), TypedValue.COMPLEX_UNIT_DIP)
             v.setViewLayoutMargin(R.id.table_box, RemoteViews.MARGIN_TOP, sectionGap, TypedValue.COMPLEX_UNIT_DIP)
         }
 
-        val innerW = (w - 2f * padSide).coerceAtLeast(150f)
-        val headerAvailW = (innerW - sunSize - 8f).coerceAtLeast(100f)
+        val innerW = (w - 2f * padSide).coerceAtLeast(160f)
+        val headerAvailW = (innerW - sunSize - 6f).coerceAtLeast(110f)
 
-        // Header: "Sunday, 15 Nov 2026" 18sp bold; Hijri date below at 14sp, 80% white.
         val date = now.toLocalDate()
         val gregStr = DateText.gregorian(date, loc, true)
         val hijriStr = DateText.hijri(ctx, date, loc, false)
         v.setTextViewText(R.id.date_en, gregStr)
         v.setTextViewText(R.id.date_hijri, hijriStr)
-        setSp(v, R.id.date_en, fitSp(ctx, gregStr, refSp(18f), headerAvailW, bold = true, minSp = 9f))
-        setSp(v, R.id.date_hijri, fitSp(ctx, hijriStr, refSp(14f), headerAvailW, bold = false, minSp = 8f))
+        setSp(v, R.id.date_en, fitSp(ctx, gregStr, sz(16f), headerAvailW, bold = true, minSp = 11f))
+        setSp(v, R.id.date_hijri, fitSp(ctx, hijriStr, sz(13f), headerAvailW, bold = true, minSp = 9.5f))
 
-        // Next prayer block: label "NEXT PRAYER" 13sp, letter-spacing 2; prayer name 52sp extra-bold; "in 00:11" 24sp semibold.
         val nextTitle = ctx.getString(R.string.next_prayer_title).uppercase(loc)
         val nextName = ctx.getString(nameRes(next.slot.prayer))
         val inPrefix = ctx.getString(R.string.in_label)
         v.setTextViewText(R.id.next_title, nextTitle)
         v.setTextViewText(R.id.next_name, nextName)
-        setSp(v, R.id.next_title, fitSp(ctx, nextTitle, refSp(13f), headerAvailW, bold = true, letterSpacingEm = 0.14f, minSp = 7.5f))
-        setSp(v, R.id.next_name, fitSp(ctx, nextName, refSp(52f), headerAvailW, bold = true, minSp = 18f))
+        setSp(v, R.id.next_title, fitSp(ctx, nextTitle, sz(11.5f), headerAvailW, bold = true, letterSpacingEm = 0.10f, minSp = 9f))
+        setSp(v, R.id.next_name, fitSp(ctx, nextName, sz(42f), headerAvailW, bold = true, minSp = 22f))
 
         countdown(v, R.id.countdown, next, now, "$inPrefix %s")
         val cdSample = "$inPrefix ${chronoSampleFor(now, next.at)}"
-        setSp(v, R.id.countdown, fitSp(ctx, cdSample, refSp(24f), headerAvailW, bold = false, minSp = 11f))
+        setSp(v, R.id.countdown, fitSp(ctx, cdSample, sz(20f), headerAvailW, bold = true, minSp = 13f))
 
-        // Progress bar: 6dp high, 22% white track, solid white fill
         val total = Duration.between(next.previousAt, next.at).toMillis().coerceAtLeast(1L)
         val elapsed = Duration.between(next.previousAt, now).toMillis().coerceIn(0L, total)
         v.setProgressBar(R.id.progress, 1000, (elapsed * 1000 / total).toInt(), false)
         v.setViewVisibility(R.id.progress, if (h < 240f) View.GONE else View.VISIBLE)
 
-        // Responsive adaptation on short sizes:
-        // "On short sizes, hide the Sunrise row first, then the Namaz column, before shrinking text below 18sp."
         val hideSunrise = h < 340f && next.slot.prayer != Prayer.SUNRISE
         val hideNamazCol = (h < 290f || w < 200f)
 
-        val tablePad = (6f * s).coerceAtLeast(3f)
-        val rowPadH = (18f * s).coerceAtLeast(8f)
-        val hdrPadTop = (6f * s).coerceAtLeast(2f)
-        val hdrPadBot = (8f * s).coerceAtLeast(3f)
+        val tablePad = (4f * s).coerceAtLeast(3f)
+        val rowPadH = (10f * s).coerceAtLeast(6f)
+        val hdrPadTop = (4f * s).coerceAtLeast(2f)
+        val hdrPadBot = (5f * s).coerceAtLeast(3f)
 
         v.setViewPadding(
             R.id.table_box,
@@ -503,16 +488,16 @@ object WidgetRenderer {
         v.setTextViewText(R.id.h_namaz, colNamazTxt)
         v.setViewVisibility(R.id.h_namaz, if (hideNamazCol) View.GONE else View.VISIBLE)
 
-        val tableInnerW = (innerW - 2f * tablePad - 2f * rowPadH).coerceAtLeast(110f)
-        val totalWeight = if (hideNamazCol) 2.2f else 3.2f
-        val col1W = (tableInnerW * (1.2f / totalWeight) - 4f).coerceAtLeast(40f)
-        val col2W = (tableInnerW * (1.0f / totalWeight) - 4f).coerceAtLeast(36f)
-        val col3W = (tableInnerW * (1.0f / totalWeight) - 4f).coerceAtLeast(36f)
+        val tableInnerW = (innerW - 2f * tablePad - 2f * rowPadH).coerceAtLeast(120f)
+        val totalWeight = if (hideNamazCol) 2.15f else 3.15f
+        val col1W = (tableInnerW * (1.15f / totalWeight) - 3f).coerceAtLeast(44f)
+        val col2W = (tableInnerW * (1.0f / totalWeight) - 3f).coerceAtLeast(40f)
+        val col3W = (tableInnerW * (1.0f / totalWeight) - 3f).coerceAtLeast(40f)
 
         val hdrSp = minOf(
-            fitSp(ctx, colPrayerTxt, refSp(12f), col1W, bold = true, letterSpacingEm = 0.12f, minSp = 7f),
-            fitSp(ctx, colAdhanTxt, refSp(12f), col2W, bold = true, letterSpacingEm = 0.12f, minSp = 7f),
-            if (hideNamazCol) 99f else fitSp(ctx, colNamazTxt, refSp(12f), col3W, bold = true, letterSpacingEm = 0.12f, minSp = 7f)
+            fitSp(ctx, colPrayerTxt, sz(11f), col1W, bold = true, letterSpacingEm = 0.08f, minSp = 8.5f),
+            fitSp(ctx, colAdhanTxt, sz(11f), col2W, bold = true, letterSpacingEm = 0.08f, minSp = 8.5f),
+            if (hideNamazCol) 99f else fitSp(ctx, colNamazTxt, sz(11f), col3W, bold = true, letterSpacingEm = 0.08f, minSp = 8.5f)
         )
         setSp(v, R.id.h_prayer, hdrSp)
         setSp(v, R.id.h_adhan, hdrSp)
@@ -523,26 +508,15 @@ object WidgetRenderer {
         val rowAdhans = slots.map { DateText.time(ctx, it.adhan, loc, true) }
         val rowNamazs = slots.map { slot -> slot.namaz?.let { DateText.time(ctx, it, loc, true) } ?: DASH }
 
-        val targetRowSp = refSp(21f)
-        val minFloorSp = refSp(18f).coerceAtMost(targetRowSp)
+        val targetRowSp = sz(16.5f)
         var uniformRowSp = targetRowSp
         slots.indices.forEach { i ->
             if (i == 1 && hideSunrise) return@forEach
             uniformRowSp = minOf(
                 uniformRowSp,
-                fitSp(ctx, rowNames[i], targetRowSp, col1W, bold = true, minSp = minFloorSp),
-                fitSp(ctx, rowAdhans[i], targetRowSp, col2W, bold = false, minSp = minFloorSp),
-                if (hideNamazCol) 99f else fitSp(ctx, rowNamazs[i], targetRowSp, col3W, bold = false, minSp = minFloorSp)
-            )
-        }
-        // Final safety pass in case 1.3x font scale needs slightly below minFloorSp to avoid clipping
-        slots.indices.forEach { i ->
-            if (i == 1 && hideSunrise) return@forEach
-            uniformRowSp = minOf(
-                uniformRowSp,
-                fitSp(ctx, rowNames[i], uniformRowSp, col1W, bold = true, minSp = 8.5f),
-                fitSp(ctx, rowAdhans[i], uniformRowSp, col2W, bold = false, minSp = 8.5f),
-                if (hideNamazCol) 99f else fitSp(ctx, rowNamazs[i], uniformRowSp, col3W, bold = false, minSp = 8.5f)
+                fitSp(ctx, rowNames[i], uniformRowSp, col1W, bold = true, minSp = 11f),
+                fitSp(ctx, rowAdhans[i], uniformRowSp, col2W, bold = true, minSp = 11f),
+                if (hideNamazCol) 99f else fitSp(ctx, rowNamazs[i], uniformRowSp, col3W, bold = true, minSp = 11f)
             )
         }
 
