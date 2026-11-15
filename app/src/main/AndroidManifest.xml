@@ -105,9 +105,9 @@
             android:foregroundServiceType="mediaPlayback" />
 
         <receiver
-            android:name=".widget.SmallPrayerWidgetReceiver"
+            android:name=".widgets.SmallWidgetProvider"
             android:exported="true"
-            android:label="@string/widget_small_label">
+            android:label="@string/widget_small_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -117,39 +117,41 @@
         </receiver>
 
         <receiver
-            android:name=".widget.WidePrayerWidgetReceiver"
+            android:name=".widgets.MediumWidgetProvider"
             android:exported="true"
-            android:label="@string/widget_wide_label">
+            android:label="@string/widget_medium_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_wide_info" />
+                android:resource="@xml/widget_medium_info" />
         </receiver>
 
         <receiver
-            android:name=".widget.SlimPrayerWidgetReceiver"
+            android:name=".widgets.LargeWidgetProvider"
             android:exported="true"
-            android:label="@string/widget_slim_label">
+            android:label="@string/widget_large_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_slim_info" />
+                android:resource="@xml/widget_large_info" />
         </receiver>
 
         <receiver
-            android:name=".widget.StripPrayerWidgetReceiver"
-            android:exported="true"
-            android:label="Prayer Strip (4×1)">
+            android:name=".widgets.WidgetUpdateReceiver"
+            android:exported="false">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.syedmsidsm.prayerreminder.widgets.ACTION_REFRESH" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_strip_info" />
         </receiver>
 
     </application>

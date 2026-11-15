@@ -78,9 +78,9 @@ import com.syedmsidsm.prayerreminder.ui.components.MosqueBackdrop
 import com.syedmsidsm.prayerreminder.ui.components.SanctuaryBottomNavBar
 import com.syedmsidsm.prayerreminder.ui.components.SanctuaryTab
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
-import com.syedmsidsm.prayerreminder.widget.SlimPrayerWidgetReceiver
-import com.syedmsidsm.prayerreminder.widget.SmallPrayerWidgetReceiver
-import com.syedmsidsm.prayerreminder.widget.WidePrayerWidgetReceiver
+import com.syedmsidsm.prayerreminder.widgets.LargeWidgetProvider
+import com.syedmsidsm.prayerreminder.widgets.MediumWidgetProvider
+import com.syedmsidsm.prayerreminder.widgets.SmallWidgetProvider
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -349,117 +349,180 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val previewCardGradient = Brush.verticalGradient(listOf(Color(0xFF0F2430), Color(0xFF0F2430)))
-                    val previewCardBorder = Color(0x33FFBF1F)
-                    val previewPillBorder = previewCardBorder
-                    val activeCapsuleBg = Color(0xFFFFBF1F)
-                    val inactiveCapsuleBg = Color(0xB31B3D4E)
-                    val onActiveColor = Color(0xFF1A1200)
-                    val pPrimary = Color(0xFFF4F8F9)
-                    val pMuted = Color(0xFFA3B7C3)
-                    val pGold = Color(0xFFFFBF1F)
-                    val pillButtonRes = R.drawable.widget_pill_button_teal
+                    val nightGradient = Brush.verticalGradient(
+                        listOf(Color(0xFF0B1030), Color(0xFF1B1F5A), Color(0xFF3A2C78))
+                    )
+                    val dayGradient = Brush.verticalGradient(
+                        listOf(Color(0xFF1B5FA8), Color(0xFF3F8FD8), Color(0xFF7AB9EE))
+                    )
+                    val duskGradient = Brush.verticalGradient(
+                        listOf(Color(0xFF2A2466), Color(0xFF8A3F7A), Color(0xFFF08A4B))
+                    )
+                    val glassPanelBg = Color(0x80060A22)
+                    val glassPanelBorder = Color(0x33FFFFFF)
+                    val highlightBg = Color(0xEBFFFFFF)
+                    val highlightText = Color(0xFF1A1F3C)
+                    val highlightSubText = Color(0xFF3A3F5C)
 
-                    // 1) 4x2 Compact 5-Prayer Strip Widget Preview & Pin
+                    // 1) Small (2x2) Auto-Sky Widget Preview & Pin
                     WidgetPreviewCard(
-                        title = stringResource(R.string.widget_strip_title),
-                        description = stringResource(R.string.widget_strip_desc),
+                        title = stringResource(R.string.widget_small_name),
+                        description = stringResource(R.string.widget_small_desc),
                         previewContent = {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(130.dp)
-                                    .background(previewCardGradient, RoundedCornerShape(20.dp))
-                                    .border(1.dp, previewCardBorder, RoundedCornerShape(20.dp))
-                                    .clip(RoundedCornerShape(20.dp))
+                                    .height(148.dp)
+                                    .background(nightGradient, RoundedCornerShape(24.dp))
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .padding(12.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.BottomCenter
-                                ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.widget_mosque_silhouette),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Fit,
-                                        modifier = Modifier.fillMaxWidth().height(65.dp).alpha(0.18f)
-                                    )
-                                }
-                                Column(
+                                Image(
+                                    painter = painterResource(R.drawable.ic_moon),
+                                    contentDescription = null,
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(12.dp),
+                                        .size(24.dp)
+                                        .align(Alignment.TopEnd)
+                                )
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "NEXT · FAJR",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.6.sp
+                                    )
+                                    Column {
+                                        Text(
+                                            text = "2:14:05",
+                                            color = Color.White,
+                                            fontSize = 22.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "until adhan",
+                                            color = Color.White.copy(alpha = 0.9f),
+                                            fontSize = 9.sp
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(glassPanelBg, RoundedCornerShape(12.dp))
+                                            .border(1.dp, glassPanelBorder, RoundedCornerShape(12.dp))
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("Adhan", color = Color.White.copy(alpha = 0.9f), fontSize = 9.sp)
+                                            Text("5:06 AM", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("Namaz", color = Color.White.copy(alpha = 0.9f), fontSize = 9.sp)
+                                            Text("5:21 AM", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Sun, 15 Nov", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        Text("4 Jumada II 1448", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        },
+                        onPin = { pinWidget(SmallWidgetProvider::class.java, "Prayer · Small (2×2)") },
+                        isDark = isDark,
+                        chipBg = chipUnselectedBg,
+                        border = glassBorder,
+                        textPrimary = textPrimary,
+                        textMuted = textMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 2) Medium (4x2) Auto-Sky Widget Preview & Pin
+                    WidgetPreviewCard(
+                        title = stringResource(R.string.widget_medium_name),
+                        description = stringResource(R.string.widget_medium_desc),
+                        previewContent = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(142.dp)
+                                    .background(dayGradient, RoundedCornerShape(24.dp))
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_sun_day),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 14.dp, end = 4.dp)
+                                )
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.Bottom
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Column {
-                                            val rawTown = activePlace.split(',').first().trim()
-                                            val townName = when {
-                                                rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ar" -> "باتكال"
-                                                rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ur" -> "بھٹکل"
-                                                else -> rawTown
-                                            }
-                                            val nextPrefix = when (currentLangTag) {
-                                                "ar" -> "$townName · الصلاة القادمة"
-                                                "ur" -> "$townName · اگلی نماز"
-                                                else -> "$townName · NEXT PRAYER"
-                                            }
-                                            Text(nextPrefix.uppercase(), color = pMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text("${stringResource(R.string.prayer_fajr)} ", color = pPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                                Text("05:15", color = pGold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-
-                                        val startsInLabel = when (currentLangTag) {
-                                            "ar" -> "يبدأ خلال"
-                                            "ur" -> "باقی وقت"
-                                            else -> "STARTS IN"
-                                        }
-                                        Column(horizontalAlignment = Alignment.End) {
-                                            Text(startsInLabel, color = pMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                            Text("02:45:10", color = pGold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        }
+                                        Text("Sunday, 15 Nov 2026", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        Text("4 Jumada al-Akhirah 1448", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                     }
-
+                                    Text(
+                                        text = "Asr in 1:20:08",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        val previewPrayers = listOf(
-                                            Triple(stringResource(R.string.prayer_fajr), "05:15", true),
-                                            Triple(stringResource(R.string.prayer_dhuhr), "12:30", false),
-                                            Triple(stringResource(R.string.prayer_asr), "04:30", false),
-                                            Triple(stringResource(R.string.prayer_maghrib), "06:45", false),
-                                            Triple(stringResource(R.string.prayer_isha), "08:15", false)
+                                        val cells = listOf(
+                                            Triple("Fajr", "5:06", "5:21"),
+                                            Triple("Dhuhr", "12:10", "12:25"),
+                                            Triple("Asr", "3:32", "3:45"),
+                                            Triple("Maghrib", "5:56", "5:58"),
+                                            Triple("Isha", "7:12", "7:27")
                                         )
-                                        val ordered = if (isRtl) previewPrayers.reversed() else previewPrayers
-                                        ordered.forEach { (pName, pTime, isNext) ->
-                                            Box(
+                                        cells.forEachIndexed { idx, (pName, adhanT, namazT) ->
+                                            val hi = idx == 2
+                                            Column(
                                                 modifier = Modifier
                                                     .weight(1f)
-                                                    .background(if (isNext) activeCapsuleBg else inactiveCapsuleBg, RoundedCornerShape(10.dp))
-                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(
+                                                        if (hi) highlightBg else glassPanelBg,
+                                                        RoundedCornerShape(10.dp)
+                                                    )
+                                                    .border(
+                                                        1.dp,
+                                                        if (hi) Color.Transparent else glassPanelBorder,
+                                                        RoundedCornerShape(10.dp)
+                                                    )
+                                                    .padding(vertical = 4.dp, horizontal = 2.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 5.dp),
-                                                    horizontalAlignment = Alignment.CenterHorizontally
-                                                ) {
-                                                    Text(pName, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) onActiveColor else pMuted)
-                                                    Text(pTime, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isNext) onActiveColor else pPrimary)
-                                                }
+                                                Text(pName, color = if (hi) highlightText else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                                                Text("Adhan", color = if (hi) highlightSubText else Color.White.copy(alpha = 0.85f), fontSize = 7.sp, maxLines = 1)
+                                                Text(adhanT, color = if (hi) highlightText else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                                                Text("Namaz", color = if (hi) highlightSubText else Color.White.copy(alpha = 0.85f), fontSize = 7.sp, maxLines = 1)
+                                                Text(namazT, color = if (hi) highlightText else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                                             }
                                         }
                                     }
                                 }
                             }
                         },
-                        onPin = { pinWidget(WidePrayerWidgetReceiver::class.java, "4×2 Wide Widget") },
+                        onPin = { pinWidget(MediumWidgetProvider::class.java, "Prayer · Medium (4×2)") },
                         isDark = isDark,
                         chipBg = chipUnselectedBg,
                         border = glassBorder,
@@ -469,170 +532,77 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 2) 2x2 Lock-Screen / Square Widget Preview & Pin
+                    // 3) Large (4x4) Auto-Sky Widget Preview & Pin
                     WidgetPreviewCard(
-                        title = stringResource(R.string.widget_square_title),
-                        description = stringResource(R.string.widget_square_desc),
+                        title = stringResource(R.string.widget_large_name),
+                        description = stringResource(R.string.widget_large_desc),
                         previewContent = {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(130.dp)
-                                    .background(previewCardGradient, RoundedCornerShape(20.dp))
-                                    .border(1.dp, previewCardBorder, RoundedCornerShape(20.dp))
-                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(duskGradient, RoundedCornerShape(24.dp))
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .padding(12.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.BottomCenter
-                                ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.widget_mosque_silhouette),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Fit,
-                                        modifier = Modifier.fillMaxWidth().height(65.dp).alpha(0.18f)
-                                    )
-                                }
+                                Image(
+                                    painter = painterResource(R.drawable.ic_moon),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 18.dp, end = 6.dp)
+                                )
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(12.dp),
-                                    verticalArrangement = Arrangement.SpaceBetween
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("NEXT · ${stringResource(R.string.prayer_fajr).uppercase()}", color = pMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                        Text("الفجر", color = pGold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text("Sunday, 15 Nov 2026", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        Text("4 Jumada al-Akhirah 1448", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                     }
+                                    Text("NEXT PRAYER", color = Color.White.copy(alpha = 0.9f), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                    Text("Maghrib", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                    Text("in 0:36:12", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(glassPanelBg, RoundedCornerShape(12.dp))
+                                            .border(1.dp, glassPanelBorder, RoundedCornerShape(12.dp))
+                                            .padding(6.dp),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
-                                        Text("05:15 ${stringResource(R.string.am_marker)}", color = pPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(3.dp))
-                                        Surface(
-                                            shape = RoundedCornerShape(999.dp),
-                                            color = activeCapsuleBg
-                                        ) {
-                                            val inLabel = when (currentLangTag) {
-                                                "ar" -> "خلال 02:45:10"
-                                                "ur" -> "باقی 02:45:10"
-                                                else -> "in 02:45:10"
-                                            }
-                                            Text(
-                                                text = inLabel,
-                                                color = onActiveColor,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                    }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        val rawTown = activePlace.split(',').first().trim()
-                                        val townName = when {
-                                            rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ar" -> "باتكال"
-                                            rawTown.equals("Bhatkal", ignoreCase = true) && currentLangTag == "ur" -> "بھٹکل"
-                                            else -> rawTown
-                                        }
-                                        Text("${stringResource(R.string.jamaat)} 05:40", color = pMuted, fontSize = 9.sp)
-                                        Text(townName, color = pMuted, fontSize = 9.sp)
-                                    }
-                                }
-                            }
-                        },
-                        onPin = { pinWidget(SmallPrayerWidgetReceiver::class.java, "2×2 Square Widget") },
-                        isDark = isDark,
-                        chipBg = chipUnselectedBg,
-                        border = glassBorder,
-                        textPrimary = textPrimary,
-                        textMuted = textMuted
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // 3) 4x1 Minimal Horizontal Pill Preview & Pin
-                    WidgetPreviewCard(
-                        title = stringResource(R.string.widget_pill_title),
-                        description = stringResource(R.string.widget_pill_desc),
-                        previewContent = {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(58.dp)
-                                    .background(previewCardGradient, RoundedCornerShape(29.dp))
-                                    .border(1.2.dp, previewPillBorder, RoundedCornerShape(29.dp))
-                                    .clip(RoundedCornerShape(29.dp))
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(start = 14.dp, end = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(16.dp)
-                                                .background(inactiveCapsuleBg, CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(7.dp)
-                                                    .background(pGold, CircleShape)
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            val rawTown = activePlace.split(',').first().trim()
-                                            Text(
-                                                "${stringResource(R.string.prayer_fajr).uppercase()} · ${rawTown.uppercase()}",
-                                                color = pMuted,
-                                                fontSize = 8.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                "05:15 ${stringResource(R.string.am_marker)}",
-                                                color = pPrimary,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        val nextInLabel = when (currentLangTag) {
-                                            "ar" -> "خلال"
-                                            "ur" -> "باقی وقت"
-                                            else -> "NEXT IN"
-                                        }
-                                        Column(horizontalAlignment = Alignment.End) {
-                                            Text(nextInLabel, color = pMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                                            Text("02:45:10", color = pGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Image(
-                                            painter = painterResource(pillButtonRes),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(36.dp)
+                                        val rows = listOf(
+                                            Triple("Fajr", "5:06 AM", "5:21 AM"),
+                                            Triple("Sunrise", "6:17 AM", "—"),
+                                            Triple("Dhuhr", "12:10 PM", "12:25 PM"),
+                                            Triple("Asr", "3:32 PM", "3:45 PM"),
+                                            Triple("Maghrib", "5:56 PM", "5:58 PM"),
+                                            Triple("Isha", "7:12 PM", "7:27 PM")
                                         )
+                                        rows.forEachIndexed { idx, (rName, rAdhan, rNamaz) ->
+                                            val hi = idx == 4
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .background(
+                                                        if (hi) highlightBg else Color.Transparent,
+                                                        RoundedCornerShape(8.dp)
+                                                    )
+                                                    .padding(horizontal = 6.dp, vertical = 3.dp)
+                                            ) {
+                                                Text(rName, modifier = Modifier.weight(1.3f), color = if (hi) highlightText else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                Text(rAdhan, modifier = Modifier.weight(1f), color = if (hi) highlightText else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                Text(rNamaz, modifier = Modifier.weight(1f), color = if (hi) highlightText else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
                                     }
                                 }
                             }
                         },
-                        onPin = { pinWidget(SlimPrayerWidgetReceiver::class.java, "4×1 Minimal Pill") },
+                        onPin = { pinWidget(LargeWidgetProvider::class.java, "Prayer · Large (4×4)") },
                         isDark = isDark,
                         chipBg = chipUnselectedBg,
                         border = glassBorder,

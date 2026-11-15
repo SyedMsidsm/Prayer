@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="w_prayer_fajr">Fajr</string>
+    <string name="w_prayer_sunrise">Sunrise</string>
+    <string name="w_prayer_dhuhr">Dhuhr</string>
+    <string name="w_prayer_asr">Asr</string>
+    <string name="w_prayer_maghrib">Maghrib</string>
+    <string name="w_prayer_isha">Isha</string>
+    <string name="adhan">Adhan</string>
+    <string name="namaz">Namaz</string>
+    <string name="until_adhan">until adhan</string>
+    <string name="next_label">Next · %1$s</string>
+    <string name="headline_in">%1$s in</string>
+    <string name="next_prayer_title">Next prayer</string>
+    <string name="in_label">in</string>
+    <string name="col_prayer">Prayer</string>
+    <string name="widget_small_name">Prayer · Small</string>
+    <string name="widget_medium_name">Prayer · Medium</string>
+    <string name="widget_large_name">Prayer · Large</string>
+    <string name="widget_small_desc">Next prayer, adhan and namaz times, with the sky of the day</string>
+    <string name="widget_medium_desc">All five prayers with adhan and namaz times</string>
+    <string name="widget_large_desc">Full day schedule, countdown and both dates</string>
+    <string-array name="w_hijri_months">
+        <item>Muharram</item>
+        <item>Safar</item>
+        <item>Rabi al-Awwal</item>
+        <item>Rabi al-Thani</item>
+        <item>Jumada al-Ula</item>
+        <item>Jumada al-Akhirah</item>
+        <item>Rajab</item>
+        <item>Shaban</item>
+        <item>Ramadan</item>
+        <item>Shawwal</item>
+        <item>Dhul Qadah</item>
+        <item>Dhul Hijjah</item>
+    </string-array>
+    <string-array name="w_hijri_months_short">
+        <item>Muharram</item>
+        <item>Safar</item>
+        <item>Rabi I</item>
+        <item>Rabi II</item>
+        <item>Jumada I</item>
+        <item>Jumada II</item>
+        <item>Rajab</item>
+        <item>Shaban</item>
+        <item>Ramadan</item>
+        <item>Shawwal</item>
+        <item>Dhul Qadah</item>
+        <item>Dhul Hijjah</item>
+    </string-array>
+</resources>

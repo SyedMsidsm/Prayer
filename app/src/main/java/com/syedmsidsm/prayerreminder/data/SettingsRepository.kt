@@ -107,6 +107,15 @@ class SettingsRepository(
 
     suspend fun setAppLanguage(languageCode: String) {
         dataStore.edit { it[KEY_APP_LANGUAGE] = languageCode }
+        context?.let { ctx ->
+            ctx.getSharedPreferences(
+                com.syedmsidsm.prayerreminder.widgets.WidgetConfig.PREFS_NAME,
+                Context.MODE_PRIVATE
+            ).edit()
+                .putString(com.syedmsidsm.prayerreminder.widgets.WidgetConfig.KEY_LANGUAGE, languageCode)
+                .apply()
+            com.syedmsidsm.prayerreminder.widgets.WidgetUpdater.updateAll(ctx)
+        }
     }
 
     val themeMode: Flow<String> = dataStore.data.map { prefs ->
@@ -344,6 +353,7 @@ class SettingsRepository(
                 }
             }
         }
+        context?.let { com.syedmsidsm.prayerreminder.widgets.WidgetUpdater.updateAll(it) }
     }
 
     suspend fun resetAllJamaatTo15Minutes() {
@@ -353,6 +363,7 @@ class SettingsRepository(
                 prefs[intPreferencesKey("jamaat_${key}_minutes")] = 15
             }
         }
+        context?.let { com.syedmsidsm.prayerreminder.widgets.WidgetUpdater.updateAll(it) }
     }
 
     /**
@@ -428,6 +439,7 @@ class SettingsRepository(
 
     suspend fun setCalcMethod(method: String) {
         dataStore.edit { it[KEY_CALC_METHOD] = method }
+        context?.let { com.syedmsidsm.prayerreminder.widgets.WidgetUpdater.updateAll(it) }
     }
 
     val asrMethod: Flow<String> = dataStore.data.map { prefs ->
@@ -436,6 +448,7 @@ class SettingsRepository(
 
     suspend fun setAsrMethod(method: String) {
         dataStore.edit { it[KEY_ASR_METHOD] = method }
+        context?.let { com.syedmsidsm.prayerreminder.widgets.WidgetUpdater.updateAll(it) }
     }
 
     val use24Hour: Flow<Boolean> = dataStore.data.map { prefs ->
@@ -444,6 +457,7 @@ class SettingsRepository(
 
     suspend fun setUse24Hour(enabled: Boolean) {
         dataStore.edit { it[KEY_USE_24_HOUR] = enabled }
+        context?.let { com.syedmsidsm.prayerreminder.widgets.WidgetUpdater.updateAll(it) }
     }
 
     val skyOverride: Flow<String> = dataStore.data.map { prefs ->

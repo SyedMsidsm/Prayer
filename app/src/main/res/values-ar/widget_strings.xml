@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="w_prayer_fajr">الفجر</string>
+    <string name="w_prayer_sunrise">الشروق</string>
+    <string name="w_prayer_dhuhr">الظهر</string>
+    <string name="w_prayer_asr">العصر</string>
+    <string name="w_prayer_maghrib">المغرب</string>
+    <string name="w_prayer_isha">العشاء</string>
+    <string name="adhan">الأذان</string>
+    <string name="namaz">الإقامة</string>
+    <string name="until_adhan">حتى الأذان</string>
+    <string name="next_label">التالية · %1$s</string>
+    <string name="headline_in">%1$s بعد</string>
+    <string name="next_prayer_title">الصلاة القادمة</string>
+    <string name="in_label">بعد</string>
+    <string name="col_prayer">الصلاة</string>
+    <string name="widget_small_name">الصلاة · صغير</string>
+    <string name="widget_medium_name">الصلاة · متوسط</string>
+    <string name="widget_large_name">الصلاة · كبير</string>
+    <string name="widget_small_desc">الصلاة القادمة وأوقات الأذان والإقامة</string>
+    <string name="widget_medium_desc">الصلوات الخمس مع أوقات الأذان والإقامة</string>
+    <string name="widget_large_desc">جدول اليوم كاملاً والعد التنازلي والتاريخان</string>
+    <string-array name="w_hijri_months">
+        <item>محرم</item>
+        <item>صفر</item>
+        <item>ربيع الأول</item>
+        <item>ربيع الآخر</item>
+        <item>جمادى الأولى</item>
+        <item>جمادى الآخرة</item>
+        <item>رجب</item>
+        <item>شعبان</item>
+        <item>رمضان</item>
+        <item>شوال</item>
+        <item>ذو القعدة</item>
+        <item>ذو الحجة</item>
+    </string-array>
+    <string-array name="w_hijri_months_short">
+        <item>محرم</item>
+        <item>صفر</item>
+        <item>ربيع الأول</item>
+        <item>ربيع الآخر</item>
+        <item>جمادى الأولى</item>
+        <item>جمادى الآخرة</item>
+        <item>رجب</item>
+        <item>شعبان</item>
+        <item>رمضان</item>
+        <item>شوال</item>
+        <item>ذو القعدة</item>
+        <item>ذو الحجة</item>
+    </string-array>
+</resources>
