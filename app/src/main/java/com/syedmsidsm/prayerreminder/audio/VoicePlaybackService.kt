@@ -32,7 +32,6 @@ class VoicePlaybackService : Service() {
         @Volatile var isRunning: Boolean = false
 
         const val EXTRA_LANGUAGE = "extra_language"
-        const val EXTRA_GENDER = "extra_gender"
         const val EXTRA_KIND = "extra_kind"
         const val EXTRA_PRAYER = "extra_prayer"
         const val EXTRA_MINUTES = "extra_minutes"
@@ -53,7 +52,6 @@ class VoicePlaybackService : Service() {
         fun start(
             context: Context,
             language: String,
-            gender: String,
             kind: String,
             prayer: String,
             minutes: Int,
@@ -66,7 +64,6 @@ class VoicePlaybackService : Service() {
         ) {
             val intent = Intent(context, VoicePlaybackService::class.java).apply {
                 putExtra(EXTRA_LANGUAGE, language)
-                putExtra(EXTRA_GENDER, gender)
                 putExtra(EXTRA_KIND, kind)
                 putExtra(EXTRA_PRAYER, prayer)
                 putExtra(EXTRA_MINUTES, minutes)
@@ -141,7 +138,6 @@ class VoicePlaybackService : Service() {
         }
 
         val language = intent.getStringExtra(EXTRA_LANGUAGE) ?: "ur"
-        val gender = "male"
         val kind = intent.getStringExtra(EXTRA_KIND) ?: "before_azan"
         val prayer = intent.getStringExtra(EXTRA_PRAYER) ?: "asr"
         val minutes = intent.getIntExtra(EXTRA_MINUTES, 10)
@@ -185,7 +181,6 @@ class VoicePlaybackService : Service() {
                         audioManager = audioManager,
                         usage = audioUsage,
                         language = language,
-                        gender = gender,
                         prayer = prayer,
                         chime = chime,
                         atAzanType = atAzanType,
@@ -194,7 +189,7 @@ class VoicePlaybackService : Service() {
                         playDua = playDua
                     )
                 } else {
-                    playVoiceSequence(audioManager, audioUsage, language, gender, kind, prayer, minutes, chime)
+                    playVoiceSequence(audioManager, audioUsage, language, kind, prayer, minutes, chime)
                 }
             }
             stopPlaybackAndExit()
@@ -207,7 +202,6 @@ class VoicePlaybackService : Service() {
         audioManager: AudioManager,
         usage: Int,
         language: String,
-        gender: String,
         prayer: String,
         chime: Boolean,
         atAzanType: String,
@@ -229,7 +223,7 @@ class VoicePlaybackService : Service() {
                     playAssetFile("audio/samples/chime.mp3", audioAttributes)
                     delay(250)
                 }
-                val clipPath = resolveClipPath(language, gender, "at_azan", prayer, 0)
+                val clipPath = resolveClipPath(language, "at_azan", prayer, 0)
                 if (clipPath != null) {
                     playAssetFile(clipPath, audioAttributes)
                 }
@@ -269,7 +263,6 @@ class VoicePlaybackService : Service() {
         audioManager: AudioManager,
         usage: Int,
         language: String,
-        gender: String,
         kind: String,
         prayer: String,
         minutes: Int,
@@ -289,11 +282,11 @@ class VoicePlaybackService : Service() {
             }
 
             if (prayer.equals("sunrise", ignoreCase = true)) {
-                SunriseVoiceAnnouncer.speakSunrise(this, language, gender, usage)
+                SunriseVoiceAnnouncer.speakSunrise(this, language, usage)
             } else if (kind == "after_prayer") {
-                PostPrayerVoiceAnnouncer.speakPostPrayer(this, language, gender, minutes, usage)
+                PostPrayerVoiceAnnouncer.speakPostPrayer(this, language, minutes, usage)
             } else {
-                val clipPath = resolveClipPath(language, gender, kind, prayer, minutes)
+                val clipPath = resolveClipPath(language, kind, prayer, minutes)
                 if (clipPath != null) {
                     playAssetFile(clipPath, audioAttributes)
                 }
@@ -389,7 +382,6 @@ class VoicePlaybackService : Service() {
 
     private fun resolveClipPath(
         language: String,
-        gender: String,
         kind: String,
         prayer: String,
         minutes: Int

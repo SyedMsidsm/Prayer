@@ -23,7 +23,6 @@ object PostPrayerVoiceAnnouncer {
     suspend fun speakPostPrayer(
         context: Context,
         language: String,
-        gender: String = "male",
         minutes: Int = 10,
         usage: Int = AudioAttributes.USAGE_MEDIA
     ) {
@@ -50,8 +49,8 @@ object PostPrayerVoiceAnnouncer {
                 tts.language = Locale.ENGLISH
             }
 
-            // Apply Samsung and Google TTS male/female matching & pitch styling
-            TtsVoiceHelper.applyVoiceAndPitch(tts, targetLocale, gender)
+            // Pick a male system voice (when the phone has one) and use a deep, calm male delivery
+            TtsVoiceHelper.applyMaleVoiceAndPitch(tts, targetLocale)
 
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)

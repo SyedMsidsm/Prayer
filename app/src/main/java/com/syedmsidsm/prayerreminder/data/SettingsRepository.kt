@@ -43,7 +43,6 @@ class SettingsRepository(
 
         val KEY_VOICE_ENABLED = booleanPreferencesKey("voice_enabled")
         val KEY_VOICE_LANGUAGE = stringPreferencesKey("voice_language")
-        val KEY_VOICE_GENDER = stringPreferencesKey("voice_gender")
         val KEY_VOICE_CHIME = booleanPreferencesKey("voice_chime")
         val KEY_VOICE_ON_SILENT = booleanPreferencesKey("voice_on_silent")
 
@@ -150,12 +149,6 @@ class SettingsRepository(
 
     suspend fun setVoiceLanguage(lang: String) {
         dataStore.edit { it[KEY_VOICE_LANGUAGE] = lang }
-    }
-
-    val voiceGender: Flow<String> = dataStore.data.map { "male" }
-
-    suspend fun setVoiceGender(gender: String) {
-        dataStore.edit { it[KEY_VOICE_GENDER] = "male" }
     }
 
     val voiceChime: Flow<Boolean> = dataStore.data.map { prefs ->

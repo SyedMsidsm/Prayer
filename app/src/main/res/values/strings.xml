@@ -101,8 +101,6 @@
     <string name="reminders_voice">Reminders &amp; voice</string>
     <string name="voice_language">Voice language</string>
     <string name="voice">Voice</string>
-    <string name="voice_male">Male</string>
-    <string name="voice_female">Female</string>
     <string name="before_azan">Before azan</string>
     <string name="at_azan">At azan</string>
     <string name="before_jamaat">Before jamaat</string>

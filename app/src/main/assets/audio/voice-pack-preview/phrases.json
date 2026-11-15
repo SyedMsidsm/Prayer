@@ -1,16 +1,13 @@
 {
   "voices": {
     "ur": {
-      "male": "ur-IN-SalmanNeural",
-      "female": "ur-IN-GulNeural"
+      "male": "ur-IN-SalmanNeural"
     },
     "ar": {
-      "male": "ar-SA-HamedNeural",
-      "female": "ar-SA-ZariyahNeural"
+      "male": "ar-SA-HamedNeural"
     },
     "en": {
-      "male": "en-IN-PrabhatNeural",
-      "female": "en-IN-NeerjaNeural"
+      "male": "en-IN-PrabhatNeural"
     }
   },
   "before_azan_minutes": [

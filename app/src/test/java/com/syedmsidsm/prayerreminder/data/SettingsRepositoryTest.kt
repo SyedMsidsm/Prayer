@@ -51,7 +51,6 @@ class SettingsRepositoryTest {
         assertEquals(5, settingsRepository.remBeforeJamaatMin.first())
         assertTrue(settingsRepository.voiceEnabled.first())
         assertEquals("ur", settingsRepository.voiceLanguage.first())
-        assertEquals("male", settingsRepository.voiceGender.first())
         assertTrue(settingsRepository.voiceChime.first())
         assertFalse(settingsRepository.voiceOnSilent.first())
         assertEquals("normal", settingsRepository.fontScale.first())
@@ -133,9 +132,6 @@ class SettingsRepositoryTest {
 
         settingsRepository.setVoiceLanguage("ar")
         assertEquals("ar", settingsRepository.voiceLanguage.first())
-
-        settingsRepository.setVoiceGender("female")
-        assertEquals("female", settingsRepository.voiceGender.first())
 
         settingsRepository.setVoiceChime(false)
         assertFalse(settingsRepository.voiceChime.first())

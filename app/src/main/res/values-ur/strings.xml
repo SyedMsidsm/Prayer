@@ -101,8 +101,6 @@
     <string name="reminders_voice">یاد دہانیاں اور آواز</string>
     <string name="voice_language">آواز کی زبان</string>
     <string name="voice">آواز</string>
-    <string name="voice_male">مرد</string>
-    <string name="voice_female">خاتون</string>
     <string name="before_azan">اذان سے پہلے</string>
     <string name="at_azan">اذان کے وقت</string>
     <string name="before_jamaat">جماعت سے پہلے</string>

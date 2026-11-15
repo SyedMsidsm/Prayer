@@ -168,12 +168,6 @@ class SettingsViewModel(
         "ur"
     )
 
-    val voiceGender: StateFlow<String> = settingsRepository.voiceGender.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        "male"
-    )
-
     val voiceChime: StateFlow<Boolean> = settingsRepository.voiceChime.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -347,25 +341,12 @@ class SettingsViewModel(
             context?.let { AppRefresher.refreshAll(it, "voice_language_changed") }
         }
         if (playPreview) {
-            val gender = voiceGender.value
-            audioPlayer.playVoicePreview(lang, gender)
+            audioPlayer.playVoicePreview(lang)
         }
     }
 
-    fun setVoiceGender(gender: String, playPreview: Boolean = true) {
-        viewModelScope.launch {
-            settingsRepository.setVoiceGender(gender)
-            context?.let { AppRefresher.refreshAll(it, "voice_gender_changed") }
-        }
-        if (playPreview) {
-            val lang = voiceLanguage.value
-            audioPlayer.playVoicePreview(lang, gender)
-        }
-    }
-
-    fun playVoicePreview(gender: String) {
-        val lang = voiceLanguage.value
-        audioPlayer.playVoicePreview(lang, gender)
+    fun playVoicePreview() {
+        audioPlayer.playVoicePreview(voiceLanguage.value)
     }
 
     fun setVoiceChime(enabled: Boolean) {
@@ -633,11 +614,9 @@ class SettingsViewModel(
 
     fun playSample(kind: String, minutes: Int = 10) {
         val lang = voiceLanguage.value
-        val gender = voiceGender.value
         val chime = voiceChime.value
         audioPlayer.playSample(
             language = lang,
-            gender = gender,
             kind = kind,
             minutes = minutes,
             chime = chime

@@ -101,8 +101,6 @@
     <string name="reminders_voice">التذكيرات والصوت</string>
     <string name="voice_language">لغة الصوت</string>
     <string name="voice">الصوت</string>
-    <string name="voice_male">رجل</string>
-    <string name="voice_female">امرأة</string>
     <string name="before_azan">قبل الأذان</string>
     <string name="at_azan">عند الأذان</string>
     <string name="before_jamaat">قبل الإقامة</string>

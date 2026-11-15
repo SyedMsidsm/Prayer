@@ -16,9 +16,9 @@ BEFORE_AZAN = [5, 10, 15, 20, 30]
 BEFORE_JAMAAT = [2, 5, 10, 15]
 
 VOICES = {
-    'ur': {'male': 'ur-IN-SalmanNeural', 'female': 'ur-IN-GulNeural'},
-    'ar': {'male': 'ar-SA-HamedNeural', 'female': 'ar-SA-ZariyahNeural'},
-    'en': {'male': 'en-IN-PrabhatNeural', 'female': 'en-IN-NeerjaNeural'},
+    'ur': {'male': 'ur-IN-SalmanNeural'},
+    'ar': {'male': 'ar-SA-HamedNeural'},
+    'en': {'male': 'en-IN-PrabhatNeural'},
 }
 
 # ---- Urdu ----
@@ -77,10 +77,6 @@ async def main():
         folder = os.path.join(OUT, 'voice-pack-preview', lang); os.makedirs(folder, exist_ok=True)
         tasks.append(one(sem, lang, gender, name, text, folder))
         manifest.setdefault(lang, {})[name] = text
-    # female samples (one sentence each) so the owner can compare voices
-    sfolder = os.path.join(OUT, 'female-voice-samples'); os.makedirs(sfolder, exist_ok=True)
-    for lang in ['ur', 'ar', 'en']:
-        tasks.append(one(sem, lang, 'female', f'female_{lang}_before_azan_asr_10', TEXT[lang]('before_azan', 'asr', 10), sfolder))
     res = await asyncio.gather(*tasks)
     with open(os.path.join(OUT, 'voice-pack-preview', 'phrases.json'), 'w', encoding='utf-8') as f:
         json.dump({'voices': VOICES, 'before_azan_minutes': BEFORE_AZAN, 'before_jamaat_minutes': BEFORE_JAMAAT,

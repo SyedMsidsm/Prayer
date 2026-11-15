@@ -250,7 +250,7 @@ fun RemindersVoiceSettingsScreen(
                     }
                 }
 
-                // Voice Language & Gender
+                // Voice language
                 SanctuaryGlassCard(bg = glassCardBg, border = glassBorder) {
                     Text(
                         text = stringResource(R.string.voice_language),

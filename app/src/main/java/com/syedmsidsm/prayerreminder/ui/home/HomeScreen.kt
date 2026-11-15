@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,8 +49,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -65,7 +73,7 @@ import com.syedmsidsm.prayerreminder.domain.model.NextPrayer
 import com.syedmsidsm.prayerreminder.domain.model.NextPrayerPhase
 import com.syedmsidsm.prayerreminder.domain.model.Prayer
 import com.syedmsidsm.prayerreminder.domain.model.ScheduleSource
-import com.syedmsidsm.prayerreminder.ui.components.MosqueBackdrop
+import com.syedmsidsm.prayerreminder.ui.components.MosqueSilhouette
 import com.syedmsidsm.prayerreminder.ui.components.SanctuaryBottomNavBar
 import com.syedmsidsm.prayerreminder.ui.components.SanctuarySkyThemes
 import com.syedmsidsm.prayerreminder.ui.components.SanctuaryTab
@@ -74,12 +82,124 @@ import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val SanctuaryDarkSurface = Color(0xFF03080C)
-private val SanctuaryLightSurface = Color(0xFFF6F1E6)
 private val AmberBright = Color(0xFFFBBF24)
 private val AmberSoft = Color(0xFFFCD34D)
 private val AmberTint = Color(0xFFFDE68A)
 private val EmeraldSoft = Color(0xFF6EE7B7)
+
+/**
+ * ONE sky for the whole screen.
+ *
+ * Why the old version showed a seam: the hero (mosque + countdown) had its own
+ * background that ended in a solid dark "ground" edge, and the prayer list below
+ * had a second gradient that started fresh. Where they met you saw a hard line
+ * right behind the "Remaining" row, and the orange horizon glow sat behind the
+ * list instead of behind the mosque.
+ *
+ * Fix: draw a single gradient behind everything, put the horizon glow where the
+ * mosque actually stands, and fade the mosque's base into the sky.
+ * The header and the list must both have a TRANSPARENT background.
+ */
+data class SkyPalette(
+    val top: Color,        // zenith
+    val upper: Color,      // upper sky
+    val horizon: Color,    // glow at the mosque base
+    val afterGlow: Color,  // glow dying out below the horizon
+    val ground: Color,     // where the list sits
+    val deep: Color,       // very bottom (behind nav pill)
+)
+
+val NightSky = SkyPalette(
+    top = Color(0xFF0A1330),
+    upper = Color(0xFF1B2A52),
+    horizon = Color(0xFF8A5530),
+    afterGlow = Color(0xFF2A2230),
+    ground = Color(0xFF0B1220),
+    deep = Color(0xFF04070D),
+)
+
+@Composable
+fun PrayerSkyBackground(
+    modifier: Modifier = Modifier,
+    sky: SkyPalette = NightSky,
+    horizonFraction: Float = 0.22f, // where the mosque base sits, as a fraction of screen height
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier
+            .fillMaxSize()
+            .background(sky.deep)
+            .drawBehind {
+                val h = size.height
+                val f = horizonFraction.coerceIn(0.05f, 0.45f)
+                val hy = h * f
+
+                fun at(x: Float) = x.coerceIn(0f, 0.99f)
+
+                // 1) single continuous vertical gradient
+                drawRect(
+                    Brush.verticalGradient(
+                        colorStops = arrayOf(
+                            0f to sky.top,
+                            at(f * 0.60f) to sky.upper,
+                            at(f * 0.95f) to sky.horizon,
+                            at(f * 1.30f) to sky.afterGlow,
+                            at(f * 2.10f) to sky.ground,
+                            1f to sky.deep,
+                        )
+                    )
+                )
+
+                // 2) soft glow centred on the dome so the light seems to come from behind it
+                drawRect(
+                    Brush.radialGradient(
+                        colors = listOf(sky.horizon.copy(alpha = 0.40f), Color.Transparent),
+                        center = Offset(size.width / 2f, hy),
+                        radius = size.width * 0.80f,
+                    )
+                )
+            },
+        content = content,
+    )
+}
+
+/**
+ * Apply to your mosque silhouette. Its lower part fades to transparent, so the
+ * sky shows through and there is no solid "ground" edge any more.
+ * Make the silhouette extend ~40-60dp below the horizon so the fade has room.
+ */
+fun Modifier.fadeOutBottom(startFraction: Float = 0.60f): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        drawRect(
+            brush = Brush.verticalGradient(
+                startFraction to Color.Black,
+                1f to Color.Transparent,
+            ),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+
+/**
+ * Prayer-row card that reads the same everywhere on the screen.
+ * Same translucent fill on every row, so rows no longer look lighter or darker
+ * depending on what gradient happens to be behind them.
+ */
+fun Modifier.glassCard(
+    active: Boolean = false,
+    shape: Shape = RoundedCornerShape(22.dp),
+): Modifier {
+    val gold = Color(0xFFFBBF24)
+    return this
+        .clip(shape)
+        .background(if (active) gold.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.055f))
+        .border(
+            width = 1.dp,
+            color = if (active) gold.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.09f),
+            shape = shape,
+        )
+}
 
 @Composable
 fun HomeScreen(
@@ -97,169 +217,170 @@ fun HomeScreen(
     val pmMarker = stringResource(R.string.pm_marker)
 
     val isDark = PrayerReminderColors.isDark
-    val surfaceColor = if (isDark) SanctuaryDarkSurface else SanctuaryLightSurface
-    val cardTextPrimary = if (isDark) Color.White else Color(0xFF14262A)
-    val cardTextSecondary = if (isDark) Color(0xFFA8A29E) else Color(0xFF5E6D70)
-    val rowBgNormal = if (isDark) Color.White.copy(alpha = 0.055f) else Color.White.copy(alpha = 0.88f)
-    val rowBgNext = if (isDark) Color.White.copy(alpha = 0.13f) else Color(0xFFFFF8E7)
-    val rowBorderNormal = if (isDark) Color.White.copy(alpha = 0.11f) else Color(0xFFE6DEC8)
+    val cardTextPrimary = Color.White
+    val cardTextSecondary = Color(0xFFA8A29E)
+    val next = uiState.nextPrayer
+    val schedule = uiState.schedule
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(surfaceColor)
-    ) {
-        // 1. Seamless Layered Mosque Sanctuary Backdrop
-        MosqueBackdrop(
-            activeSky = uiState.activeSky,
-            surfaceFadeColor = surfaceColor
-        )
-
-        // 2. Main Vertical Scroll Content
+    PrayerSkyBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 104.dp)
         ) {
-            // MINIMALIST HEADER
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left: Place & Hijri / Timetable Subtitle
+            // Header: NO background of its own
+            Box(modifier = Modifier.fillMaxWidth()) {
+                MosqueSilhouette(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .fadeOutBottom(),
+                    activeSky = uiState.activeSky
+                )
+
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { onNavigateToTimetables() }
-                        .padding(end = 8.dp, top = 2.dp, bottom = 2.dp)
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(bottom = 12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Place,
-                            contentDescription = null,
-                            tint = AmberBright,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = uiState.place,
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    val hijri = uiState.schedule?.hijri
-                    val subtitleText = if (hijri != null) {
-                        val hijriMonthName = HijriNames.getMonthName(hijri.month, languageCode)
-                        "${hijri.day} $hijriMonthName ${hijri.year}"
-                    } else {
-                        uiState.selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM", currentLocale))
-                    }
-                    Text(
-                        text = subtitleText,
-                        color = Color(0xFFD6D3D1).copy(alpha = 0.88f),
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 22.dp, top = 2.dp)
-                    )
-                }
-
-                // Right: Sky Vibe Switcher & Theme Toggle Button ONLY
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Sky Vibe Switcher Pill
-                    val skyLabel = if (uiState.skyOverride.isBlank()) {
-                        stringResource(R.string.auto_sky)
-                    } else {
-                        SanctuarySkyThemes.forPrayer(uiState.activeSky).label
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = Color.Black.copy(alpha = 0.38f),
-                        border = BorderStroke(
-                            1.dp,
-                            if (uiState.skyOverride.isNotBlank()) AmberBright.copy(alpha = 0.55f)
-                            else Color.White.copy(alpha = 0.14f)
-                        ),
+                    // MINIMALIST HEADER
+                    Row(
                         modifier = Modifier
-                            .height(36.dp)
-                            .clip(RoundedCornerShape(50))
-                            .clickable { viewModel.cycleSkyVibe() }
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Left: Place & Hijri / Timetable Subtitle
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onNavigateToTimetables() }
+                                .padding(end = 8.dp, top = 2.dp, bottom = 2.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Place,
+                                    contentDescription = null,
+                                    tint = AmberBright,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = uiState.place,
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            val hijri = uiState.schedule?.hijri
+                            val subtitleText = if (hijri != null) {
+                                val hijriMonthName = HijriNames.getMonthName(hijri.month, languageCode)
+                                "${hijri.day} $hijriMonthName ${hijri.year}"
+                            } else {
+                                uiState.selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM", currentLocale))
+                            }
+                            Text(
+                                text = subtitleText,
+                                color = Color(0xFFD6D3D1).copy(alpha = 0.88f),
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(start = 22.dp, top = 2.dp)
+                            )
+                        }
+
+                        // Right: Sky Vibe Switcher & Theme Toggle Button ONLY
                         Row(
-                            modifier = Modifier.padding(horizontal = 11.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "Sky Vibe",
-                                tint = AmberBright,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = skyLabel,
-                                color = AmberTint,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1
-                            )
+                            // Sky Vibe Switcher Pill
+                            val skyLabel = if (uiState.skyOverride.isBlank()) {
+                                stringResource(R.string.auto_sky)
+                            } else {
+                                SanctuarySkyThemes.forPrayer(uiState.activeSky).label
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color.Black.copy(alpha = 0.38f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (uiState.skyOverride.isNotBlank()) AmberBright.copy(alpha = 0.55f)
+                                    else Color.White.copy(alpha = 0.14f)
+                                ),
+                                modifier = Modifier
+                                    .height(36.dp)
+                                    .clip(RoundedCornerShape(50))
+                                    .clickable { viewModel.cycleSkyVibe() }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = "Sky Vibe",
+                                        tint = AmberBright,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = skyLabel,
+                                        color = AmberTint,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+
+                            // Theme toggle button
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.Black.copy(alpha = 0.38f),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                IconButton(onClick = onToggleTheme) {
+                                    Icon(
+                                        imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                        contentDescription = "Toggle Theme",
+                                        tint = AmberBright,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    // Theme toggle button
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.38f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        IconButton(onClick = onToggleTheme) {
-                            Icon(
-                                imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                contentDescription = "Toggle Theme",
-                                tint = AmberBright,
-                                modifier = Modifier.size(16.dp)
+                    // CountdownBlock
+                    if (next != null) {
+                        Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                            HeroNextPrayerSection(
+                                next = next,
+                                countdownHms = uiState.countdownHms,
+                                progressPct = uiState.progressPct,
+                                use24Hour = uiState.use24Hour,
+                                amMarker = amMarker,
+                                pmMarker = pmMarker,
+                                hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true
                             )
                         }
                     }
                 }
             }
 
-            // MAIN SCROLLABLE BODY
+            // List: NO background of its own
             Column(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp)
-                    .padding(top = 6.dp, bottom = 104.dp)
             ) {
-                // HERO NEXT PRAYER FOCUS
-                val next = uiState.nextPrayer
-                val schedule = uiState.schedule
-
-                if (next != null) {
-                    HeroNextPrayerSection(
-                        next = next,
-                        countdownHms = uiState.countdownHms,
-                        progressPct = uiState.progressPct,
-                        use24Hour = uiState.use24Hour,
-                        amMarker = amMarker,
-                        pmMarker = pmMarker,
-                        hasWarning = schedule?.fixedTimeBeforeAzanWarnings?.contains(next.prayer) == true
-                    )
-                }
-
                 // Status / Warning Banners
                 if (schedule != null && schedule.source.isEstimated) {
                     Spacer(modifier = Modifier.height(10.dp))
@@ -286,7 +407,7 @@ fun HomeScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // DAILY PRAYER LIST
                 if (schedule != null && schedule.source != ScheduleSource.NONE) {
@@ -311,6 +432,7 @@ fun HomeScreen(
                             }
 
                             SanctuaryPrayerRow(
+                                modifier = Modifier.glassCard(active = isNext),
                                 prayer = prayer,
                                 isFriday = schedule.isFriday,
                                 azanTime = azan,
@@ -320,10 +442,6 @@ fun HomeScreen(
                                 amMarker = amMarker,
                                 pmMarker = pmMarker,
                                 alertMode = alertMode,
-                                isDark = isDark,
-                                rowBgNormal = rowBgNormal,
-                                rowBgNext = rowBgNext,
-                                rowBorderNormal = rowBorderNormal,
                                 cardTextPrimary = cardTextPrimary,
                                 cardTextSecondary = cardTextSecondary,
                                 hasWarning = schedule.fixedTimeBeforeAzanWarnings.contains(prayer),
@@ -502,6 +620,7 @@ private fun HeroNextPrayerSection(
 
 @Composable
 private fun SanctuaryPrayerRow(
+    modifier: Modifier = Modifier,
     prayer: Prayer,
     isFriday: Boolean,
     azanTime: java.time.LocalTime,
@@ -511,10 +630,6 @@ private fun SanctuaryPrayerRow(
     amMarker: String,
     pmMarker: String,
     alertMode: String,
-    isDark: Boolean,
-    rowBgNormal: Color,
-    rowBgNext: Color,
-    rowBorderNormal: Color,
     cardTextPrimary: Color,
     cardTextSecondary: Color,
     hasWarning: Boolean,
@@ -527,176 +642,158 @@ private fun SanctuaryPrayerRow(
     }
     val prayerIcon = getPrayerIcon(prayer)
 
-    val rowBg = if (isNext) rowBgNext else rowBgNormal
-    val borderStroke = if (isNext) {
-        BorderStroke(1.2.dp, AmberBright.copy(alpha = 0.65f))
-    } else {
-        BorderStroke(1.dp, rowBorderNormal)
-    }
-
-    Surface(
-        modifier = Modifier
+    Row(
+        modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 58.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = rowBg,
-        border = borderStroke,
-        shadowElevation = if (isNext) 6.dp else if (!isDark) 1.dp else 0.dp
+            .defaultMinSize(minHeight = 58.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Left: Icon Box + Name + Iqamah Subtitle
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
         ) {
-            // Left: Icon Box + Name + Iqamah Subtitle
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isNext) AmberBright
+                        else Color.White.copy(alpha = 0.09f)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isNext) AmberBright
-                            else if (isDark) Color.White.copy(alpha = 0.09f)
-                            else Color(0xFFEDE6D4)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = prayerIcon,
-                        contentDescription = null,
-                        tint = if (isNext) Color(0xFF020617)
-                        else if (isDark) Color(0xFFD6D3D1)
-                        else Color(0xFF4A5859),
-                        modifier = Modifier.size(18.dp)
+                Icon(
+                    imageVector = prayerIcon,
+                    contentDescription = null,
+                    tint = if (isNext) Color(0xFF020617)
+                    else Color(0xFFD6D3D1),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = prayerName,
+                        color = if (isNext) cardTextPrimary else cardTextPrimary.copy(alpha = 0.92f),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
                     )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = prayerName,
-                            color = if (isNext) cardTextPrimary else cardTextPrimary.copy(alpha = 0.92f),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1
-                        )
-                        if (isNext) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = if (isDark) AmberBright.copy(alpha = 0.22f) else AmberBright.copy(alpha = 0.30f)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.next_tag).uppercase(Locale.US),
-                                    color = if (isDark) AmberSoft else Color(0xFF78350F),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.6.sp,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
+                    if (isNext) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = AmberBright.copy(alpha = 0.22f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.next_tag).uppercase(Locale.US),
+                                color = AmberSoft,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.6.sp,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
                         }
                     }
+                }
 
-                    if (jamaatTime != null) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "${stringResource(R.string.jamaat)} ${TimeFormatter.formatTime(jamaatTime, use24Hour, amMarker, pmMarker)}",
-                                color = cardTextSecondary,
-                                fontSize = 12.sp
+                if (jamaatTime != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${stringResource(R.string.jamaat)} ${TimeFormatter.formatTime(jamaatTime, use24Hour, amMarker, pmMarker)}",
+                            color = cardTextSecondary,
+                            fontSize = 12.sp
+                        )
+                        if (hasWarning) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = stringResource(R.string.jamaat_fixed_before_azan),
+                                tint = AmberBright,
+                                modifier = Modifier.size(12.dp)
                             )
-                            if (hasWarning) {
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(
-                                    imageVector = Icons.Default.Warning,
-                                    contentDescription = stringResource(R.string.jamaat_fixed_before_azan),
-                                    tint = AmberBright,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                            }
                         }
                     }
                 }
             }
+        }
 
-            // Right: Monospace Adhan Time + One-Tap Alert Mode Toggle Button
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    text = TimeFormatter.formatTime(azanTime, use24Hour, amMarker, pmMarker),
-                    color = if (isNext) (if (isDark) AmberSoft else Color(0xFF92400E)) else cardTextPrimary,
-                    fontSize = 15.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.SemiBold
-                )
+        // Right: Monospace Adhan Time + One-Tap Alert Mode Toggle Button
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = TimeFormatter.formatTime(azanTime, use24Hour, amMarker, pmMarker),
+                color = if (isNext) AmberSoft else cardTextPrimary,
+                fontSize = 15.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold
+            )
 
-                if (prayer.hasReminders) {
-                    val (btnBg, btnBorder, btnTint, btnIcon) = when (alertMode) {
-                        "sound" -> AlertBtnStyle(
-                            bg = AmberBright.copy(alpha = if (isDark) 0.16f else 0.22f),
-                            border = AmberBright.copy(alpha = 0.45f),
-                            tint = if (isDark) AmberSoft else Color(0xFF92400E),
-                            icon = Icons.AutoMirrored.Filled.VolumeUp
-                        )
-                        "vibrate" -> AlertBtnStyle(
-                            bg = Color(0xFF34D399).copy(alpha = if (isDark) 0.16f else 0.20f),
-                            border = Color(0xFF34D399).copy(alpha = 0.45f),
-                            tint = if (isDark) EmeraldSoft else Color(0xFF065F46),
-                            icon = Icons.Default.Vibration
-                        )
-                        else -> AlertBtnStyle(
-                            bg = if (isDark) Color.White.copy(alpha = 0.06f) else Color(0xFFE7E2D6),
-                            border = if (isDark) Color.White.copy(alpha = 0.12f) else Color(0xFFD5CEBF),
-                            tint = cardTextSecondary,
-                            icon = Icons.Default.NotificationsOff
-                        )
-                    }
+            if (prayer.hasReminders) {
+                val (btnBg, btnBorder, btnTint, btnIcon) = when (alertMode) {
+                    "sound" -> AlertBtnStyle(
+                        bg = AmberBright.copy(alpha = 0.16f),
+                        border = AmberBright.copy(alpha = 0.45f),
+                        tint = AmberSoft,
+                        icon = Icons.AutoMirrored.Filled.VolumeUp
+                    )
+                    "vibrate" -> AlertBtnStyle(
+                        bg = Color(0xFF34D399).copy(alpha = 0.16f),
+                        border = Color(0xFF34D399).copy(alpha = 0.45f),
+                        tint = EmeraldSoft,
+                        icon = Icons.Default.Vibration
+                    )
+                    else -> AlertBtnStyle(
+                        bg = Color.White.copy(alpha = 0.06f),
+                        border = Color.White.copy(alpha = 0.12f),
+                        tint = cardTextSecondary,
+                        icon = Icons.Default.NotificationsOff
+                    )
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(btnBg)
-                            .border(1.dp, btnBorder, RoundedCornerShape(12.dp))
-                            .clickable { onToggleAlert() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = btnIcon,
-                            contentDescription = "Toggle $prayerName alert ($alertMode)",
-                            tint = btnTint,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isDark) Color.White.copy(alpha = 0.04f) else Color(0xFFEDE8DC))
-                            .border(
-                                1.dp,
-                                if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFDAD3C3),
-                                RoundedCornerShape(12.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.NotificationsOff,
-                            contentDescription = null,
-                            tint = cardTextSecondary.copy(alpha = 0.6f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(btnBg)
+                        .border(1.dp, btnBorder, RoundedCornerShape(12.dp))
+                        .clickable { onToggleAlert() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = btnIcon,
+                        contentDescription = "Toggle $prayerName alert ($alertMode)",
+                        tint = btnTint,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .border(
+                            1.dp,
+                            Color.White.copy(alpha = 0.08f),
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.NotificationsOff,
+                        contentDescription = null,
+                        tint = cardTextSecondary.copy(alpha = 0.6f),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

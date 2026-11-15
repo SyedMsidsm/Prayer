@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -45,36 +47,52 @@ import com.syedmsidsm.prayerreminder.R
 import com.syedmsidsm.prayerreminder.ui.theme.PrayerReminderColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Brand landing animation (~3 s): moon sweeps in, five prayer dots pop (Fajr -> Isha),
+ * a ripple leaves the Asr dot, then the name, Arabic/Urdu titles and tagline appear.
+ * Tap anywhere to skip.
+ */
 @Composable
 fun LandingScreen(
     onFinished: () -> Unit
 ) {
     val context = LocalContext.current
-    val animatorDurationScale = Settings.Global.getFloat(
-        context.contentResolver,
-        Settings.Global.ANIMATOR_DURATION_SCALE,
-        1.0f
-    )
-    val animationsEnabled = animatorDurationScale > 0f
+
+    // Read once. If the phone has animations turned off we show the finished logo briefly instead.
+    val animationsEnabled = remember {
+        Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1.0f
+        ) > 0f
+    }
+
+    // Make sure onFinished fires exactly once (timer and tap can both try).
+    val latestOnFinished = rememberUpdatedState(onFinished)
+    val finishedFlag = remember { AtomicBoolean(false) }
+    val finish: () -> Unit = remember {
+        {
+            if (finishedFlag.compareAndSet(false, true)) {
+                latestOnFinished.value()
+            }
+        }
+    }
 
     // Crescent animation states
     val crescentRotation = remember { Animatable(if (animationsEnabled) -55f else 0f) }
     val crescentScale = remember { Animatable(if (animationsEnabled) 0.55f else 1f) }
     val crescentAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
 
-    // 5 prayer dots animation states (scale from 0 to 1 with overshoot)
-    val dot0Scale = remember { Animatable(if (animationsEnabled) 0f else 1f) }
-    val dot1Scale = remember { Animatable(if (animationsEnabled) 0f else 1f) }
-    val dot2Scale = remember { Animatable(if (animationsEnabled) 0f else 1f) }
-    val dot3Scale = remember { Animatable(if (animationsEnabled) 0f else 1f) }
-    val dot4Scale = remember { Animatable(if (animationsEnabled) 0f else 1f) }
+    // 5 prayer dots (scale from 0 to 1)
+    val dotScales = remember { List(5) { Animatable(if (animationsEnabled) 0f else 1f) } }
 
     // Pulse ring animation states
     val ringRadius = remember { Animatable(3.9f) }
     val ringAlpha = remember { Animatable(0f) }
 
-    // Text & Mosque animation states
+    // Text & mosque animation states
     val textAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
     val textOffsetY = remember { Animatable(if (animationsEnabled) 20f else 0f) }
     val arabicAlpha = remember { Animatable(if (animationsEnabled) 0f else 1f) }
@@ -91,91 +109,62 @@ fun LandingScreen(
 
     LaunchedEffect(Unit) {
         if (!animationsEnabled) {
-            delay(600)
-            onFinished()
+            delay(1000)
+            finish()
             return@LaunchedEffect
         }
 
-        // 0. Mosque silhouette gently fades in
-        launch {
-            mosqueAlpha.animateTo(1f, tween(600, easing = LinearEasing))
-        }
-
-        // 1. Crescent sweeps in: 0 - 450ms
-        launch {
-            crescentAlpha.animateTo(1f, tween(350, easing = LinearEasing))
-        }
-        launch {
-            crescentRotation.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
-        }
-        launch {
-            crescentScale.animateTo(1f, tween(450, easing = FastOutSlowInEasing))
-        }
-
-        // 2. Five dots pop in sequentially: 350ms - 890ms
-        delay(350)
-        launch {
-            dot0Scale.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
-        }
-
-        delay(80)
-        launch {
-            dot1Scale.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
-        }
-
-        delay(80)
-        launch {
-            dot2Scale.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
-        }
-
-        delay(80)
-        launch {
-            dot3Scale.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
-        }
-
-        delay(80)
-        launch {
-            dot4Scale.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
-        }
-
-        // 3. Pulse ring ripples out from center gold dot (Asr)
-        delay(100)
-        launch {
-            ringAlpha.snapTo(0.85f)
-            ringAlpha.animateTo(0f, tween(350, easing = LinearEasing))
-        }
-        launch {
-            ringRadius.animateTo(14f, tween(350, easing = FastOutSlowInEasing))
-        }
-
-        // 4. "PrayerReminder" typography fades and slides up
-        delay(60)
-        launch {
-            textAlpha.animateTo(1f, tween(350))
-            textOffsetY.animateTo(0f, tween(350, easing = FastOutSlowInEasing))
-        }
-
-        // 5. Arabic subtitle
+        // Cold start is busy (ViewModels, DataStore). Wait until the first frame is really on
+        // screen, otherwise the first half-second of the animation is skipped.
+        withFrameNanos { }
         delay(150)
-        launch {
-            arabicAlpha.animateTo(1f, tween(300))
+
+        // Everything below is scheduled from this one starting point (t = 0).
+        // 0. Mosque silhouette fades in
+        launch { mosqueAlpha.animateTo(1f, tween(900, easing = LinearEasing)) }
+
+        // 1. Crescent sweeps in: 0 - 700 ms
+        launch { crescentAlpha.animateTo(1f, tween(450, easing = LinearEasing)) }
+        launch { crescentRotation.animateTo(0f, tween(700, easing = FastOutSlowInEasing)) }
+        launch { crescentScale.animateTo(1f, tween(700, easing = FastOutSlowInEasing)) }
+
+        // 2. Five dots pop in one after another: 500 - 1220 ms
+        dotScales.forEachIndexed { index, dot ->
+            launch {
+                delay(500L + index * 110L)
+                dot.animateTo(1f, tween(280, easing = FastOutSlowInEasing))
+            }
         }
 
-        // 6. Urdu subtitle
-        delay(120)
+        // 3. Ripple leaves the gold (Asr) dot: 1100 - 1550 ms
         launch {
-            urduAlpha.animateTo(1f, tween(300))
+            delay(1100)
+            ringAlpha.snapTo(0.85f)
+            ringAlpha.animateTo(0f, tween(450, easing = LinearEasing))
+        }
+        launch {
+            delay(1100)
+            ringRadius.animateTo(14f, tween(450, easing = FastOutSlowInEasing))
         }
 
-        // 7. Tagline
-        delay(120)
+        // 4. "PrayerReminder" fades and slides up (both at the same time)
         launch {
-            taglineAlpha.animateTo(1f, tween(300))
+            delay(1250)
+            textAlpha.animateTo(1f, tween(450))
+        }
+        launch {
+            delay(1250)
+            textOffsetY.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
         }
 
-        // 8. Total presentation delay, then transition to Home
-        delay(400)
-        onFinished()
+        // 5. Arabic, Urdu, tagline
+        launch { delay(1650); arabicAlpha.animateTo(1f, tween(350)) }
+        launch { delay(1850); urduAlpha.animateTo(1f, tween(350)) }
+        launch { delay(2050); taglineAlpha.animateTo(1f, tween(350)) }
+
+        // 6. Let the finished logo rest for a moment, then go to Home / onboarding
+        delay(3000)
+        finish()
     }
 
     Box(
@@ -185,7 +174,7 @@ fun LandingScreen(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { onFinished() }
+            ) { finish() }
     ) {
         // Subtle mosque silhouette at bottom
         Canvas(
@@ -242,42 +231,42 @@ fun LandingScreen(
                     }
 
                     // 5 Prayer Dots (bottom to top: Fajr -> Isha)
-                    if (dot0Scale.value > 0f) {
+                    if (dotScales[0].value > 0f) {
                         drawCircle(
                             color = Color(0xFFF7F4EC),
-                            radius = 2.8f * dot0Scale.value,
+                            radius = 2.8f * dotScales[0].value,
                             center = Offset(52.75f, 66.02f)
                         )
                     }
 
-                    if (dot1Scale.value > 0f) {
+                    if (dotScales[1].value > 0f) {
                         drawCircle(
                             color = Color(0xFFF7F4EC),
-                            radius = 2.8f * dot1Scale.value,
+                            radius = 2.8f * dotScales[1].value,
                             center = Offset(45.98f, 59.25f)
                         )
                     }
 
-                    if (dot2Scale.value > 0f) {
+                    if (dotScales[2].value > 0f) {
                         drawCircle(
                             color = PrayerReminderColors.Gold,
-                            radius = 3.9f * dot2Scale.value,
+                            radius = 3.9f * dotScales[2].value,
                             center = Offset(43.5f, 50.0f)
                         )
                     }
 
-                    if (dot3Scale.value > 0f) {
+                    if (dotScales[3].value > 0f) {
                         drawCircle(
                             color = Color(0xFFF7F4EC),
-                            radius = 2.8f * dot3Scale.value,
+                            radius = 2.8f * dotScales[3].value,
                             center = Offset(45.98f, 40.75f)
                         )
                     }
 
-                    if (dot4Scale.value > 0f) {
+                    if (dotScales[4].value > 0f) {
                         drawCircle(
                             color = Color(0xFFF7F4EC),
-                            radius = 2.8f * dot4Scale.value,
+                            radius = 2.8f * dotScales[4].value,
                             center = Offset(52.75f, 33.98f)
                         )
                     }

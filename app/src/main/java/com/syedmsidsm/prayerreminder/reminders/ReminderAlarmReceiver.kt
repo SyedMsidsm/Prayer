@@ -93,14 +93,12 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             notificationHelper.postReminderNotification(event, voiceEnabled = true)
 
             val voiceLang = settingsRepo.voiceLanguage.first()
-            val voiceGender = settingsRepo.voiceGender.first()
             val voiceChime = settingsRepo.voiceChime.first()
             val voiceOnSilent = settingsRepo.voiceOnSilent.first()
 
             VoicePlaybackService.start(
                 context = context,
                 language = voiceLang,
-                gender = voiceGender,
                 kind = "before_azan",
                 prayer = "asr",
                 minutes = 10,
@@ -168,7 +166,6 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         // Play voice if enabled and alert mode is sound (skip for vibrate-only mode)
         if (playSoundForPrayer && prayer != null) {
             val voiceLang = settingsRepo.voiceLanguage.first()
-            val voiceGender = settingsRepo.voiceGender.first()
             val voiceChime = settingsRepo.voiceChime.first()
             val voiceOnSilent = settingsRepo.voiceOnSilent.first()
             val atAzanType = settingsRepo.atAzanType.first()
@@ -194,8 +191,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 VoicePlaybackService.start(
                     context = context,
                     language = voiceLang,
-                    gender = voiceGender,
-                    kind = voiceKindStr,
+                        kind = voiceKindStr,
                     prayer = voicePrayer,
                     minutes = minutesOffset,
                     chime = voiceChime,

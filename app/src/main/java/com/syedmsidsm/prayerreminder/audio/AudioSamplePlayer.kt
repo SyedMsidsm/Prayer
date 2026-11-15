@@ -44,7 +44,6 @@ class AudioSamplePlayer(private val context: Context) {
 
     fun playSample(
         language: String,
-        gender: String,
         kind: String, // "before_azan", "at_azan", "before_jamaat", "jumuah_before_azan"
         minutes: Int = 10,
         chime: Boolean = true
@@ -61,11 +60,11 @@ class AudioSamplePlayer(private val context: Context) {
                 }
 
                 if (kind.contains("sunrise")) {
-                    SunriseVoiceAnnouncer.speakSunrise(context, language, gender)
+                    SunriseVoiceAnnouncer.speakSunrise(context, language)
                 } else if (kind == "after_prayer") {
-                    PostPrayerVoiceAnnouncer.speakPostPrayer(context, language, gender, minutes)
+                    PostPrayerVoiceAnnouncer.speakPostPrayer(context, language, minutes)
                 } else {
-                    val clipPath = resolveClipPath(language, gender, kind, minutes)
+                    val clipPath = resolveClipPath(language, kind, minutes)
                     if (clipPath != null) {
                         playAssetFile(clipPath)
                     }
@@ -81,10 +80,9 @@ class AudioSamplePlayer(private val context: Context) {
     }
 
     fun playVoicePreview(
-        language: String,
-        gender: String
+        language: String
     ) {
-        val targetKind = "voice_${gender.lowercase()}"
+        val targetKind = "voice_preview"
         if (_isPlaying.value && _playingKind.value == targetKind) {
             stop()
             return
@@ -97,7 +95,6 @@ class AudioSamplePlayer(private val context: Context) {
             try {
                 val clipPath = resolveClipPath(
                     language = language,
-                    gender = gender,
                     kind = "before_azan",
                     minutes = 10
                 )
@@ -105,7 +102,7 @@ class AudioSamplePlayer(private val context: Context) {
                     playAssetFile(clipPath)
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AudioSamplePlayer", "Error playing voice preview for $gender", e)
+                android.util.Log.e("AudioSamplePlayer", "Error playing voice preview", e)
             } finally {
                 _isPlaying.value = false
                 _currentTrack.value = null
@@ -225,7 +222,6 @@ class AudioSamplePlayer(private val context: Context) {
 
     fun resolveClipPath(
         language: String,
-        gender: String,
         kind: String,
         minutes: Int
     ): String? {

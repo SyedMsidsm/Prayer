@@ -4,14 +4,41 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
 import java.util.Locale
 
+/**
+ * The app speaks with a male voice only.
+ *
+ * Sunrise and "after prayer" announcements use the phone's text-to-speech engine, so we
+ * pick a male system voice when the phone has one and always use a deep, calm delivery.
+ */
 object TtsVoiceHelper {
 
-    fun applyVoiceAndPitch(
+    // "male" as its own word: matches "#male_1-local" or "_male", but NOT "female".
+    // (A plain contains("male") also matches "female", which made the old code pick female voices.)
+    private val MALE_WORD = Regex("(^|[^a-z])male")
+    private val FEMALE_WORD = Regex("female")
+
+    private fun looksMale(text: String): Boolean {
+        val t = text.lowercase()
+        return MALE_WORD.containsMatchIn(t) ||
+            t.contains("_m0") || t.contains("-m-") || t.contains("_m_") || t.endsWith("_m")
+    }
+
+    private fun looksFemale(text: String): Boolean {
+        val t = text.lowercase()
+        return FEMALE_WORD.containsMatchIn(t) ||
+            t.contains("_f0") || t.contains("-f-") || t.contains("_f_") || t.endsWith("_f")
+    }
+
+    private fun isMale(v: Voice): Boolean =
+        looksMale(v.name) || v.features?.any { looksMale(it) } == true
+
+    private fun isFemale(v: Voice): Boolean =
+        looksFemale(v.name) || v.features?.any { looksFemale(it) } == true
+
+    fun applyMaleVoiceAndPitch(
         tts: TextToSpeech,
-        targetLocale: Locale,
-        gender: String
+        targetLocale: Locale
     ) {
-        val isFemale = gender.lowercase() == "female"
         try {
             val allVoices = tts.voices
             if (!allVoices.isNullOrEmpty()) {
@@ -19,36 +46,10 @@ object TtsVoiceHelper {
                     it.locale.language.equals(targetLocale.language, ignoreCase = true)
                 }
 
-                fun isVoiceExplicitlyFemale(v: Voice): Boolean {
-                    val n = v.name.lowercase()
-                    return n.contains("female") ||
-                            n.contains("_f0") ||
-                            n.contains("-f-") ||
-                            n.contains("_f_") ||
-                            n.endsWith("_f") ||
-                            v.features?.any { it.contains("female", ignoreCase = true) } == true
-                }
-
-                fun isVoiceExplicitlyMale(v: Voice): Boolean {
-                    val n = v.name.lowercase()
-                    return n.contains("male") ||
-                            n.contains("_m0") ||
-                            n.contains("-m-") ||
-                            n.contains("_m_") ||
-                            n.endsWith("_m") ||
-                            v.features?.any { it.contains("male", ignoreCase = true) } == true
-                }
-
-                val chosenVoice = if (isFemale) {
-                    localeVoices.firstOrNull { isVoiceExplicitlyFemale(it) }
-                        ?: localeVoices.firstOrNull { !isVoiceExplicitlyMale(it) }
-                        ?: localeVoices.firstOrNull()
-                } else {
-                    // Male: Prioritize male voice, then non-female, then any
-                    localeVoices.firstOrNull { isVoiceExplicitlyMale(it) }
-                        ?: localeVoices.firstOrNull { !isVoiceExplicitlyFemale(it) }
-                        ?: localeVoices.firstOrNull()
-                }
+                // 1) a voice that says it is male, 2) any voice that is not female, 3) whatever exists
+                val chosenVoice = localeVoices.firstOrNull { isMale(it) && !isFemale(it) }
+                    ?: localeVoices.firstOrNull { !isFemale(it) }
+                    ?: localeVoices.firstOrNull()
 
                 if (chosenVoice != null) {
                     tts.voice = chosenVoice
@@ -56,14 +57,8 @@ object TtsVoiceHelper {
             }
         } catch (_: Exception) {}
 
-        // Enforce unmistakable pitch distinction for male vs female
-        if (isFemale) {
-            tts.setPitch(1.15f)
-            tts.setSpeechRate(1.0f)
-        } else {
-            // Authoritative, deep masculine pitch and cadence
-            tts.setPitch(0.76f)
-            tts.setSpeechRate(0.92f)
-        }
+        // Deep, calm male delivery
+        tts.setPitch(0.76f)
+        tts.setSpeechRate(0.92f)
     }
 }

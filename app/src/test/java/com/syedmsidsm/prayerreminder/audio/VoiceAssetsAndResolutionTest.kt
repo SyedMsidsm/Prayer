@@ -25,10 +25,10 @@ class VoiceAssetsAndResolutionTest {
     }
 
     @Test
-    fun `all 360 male and female voice clips exist and are non-empty across en, ar, ur`() {
+    fun `all male voice clips exist and are non-empty across en, ar, ur`() {
         val root = assetsRoot()
         val languages = listOf("en", "ar", "ur")
-        val packs = listOf("audio/voice-pack-preview", "audio/voice-pack-female")
+        val packs = listOf("audio/voice-pack-preview")
         val prayers = listOf("fajr", "dhuhr", "asr", "maghrib", "isha")
         val beforeAzanMins = listOf(5, 10, 15, 20, 30)
         val beforeJamaatMins = listOf(2, 5, 10, 15)
@@ -63,17 +63,17 @@ class VoiceAssetsAndResolutionTest {
                 }
             }
         }
-        // 55 clips per language * 3 languages * 2 genders = 330 core clips (+ jumuah at_azan/before_jamaat = 360 total)
-        assertTrue("Expected at least 330 verified clips, got $checkedCount", checkedCount >= 330)
+        // 55 core clips per language * 3 languages = 165 (male voice only)
+        assertTrue("Expected at least 165 verified clips, got $checkedCount", checkedCount >= 165)
     }
 
     @Test
-    fun `all 4 sample buttons resolve to 4 distinct MP3 files with distinct audio content for both Male and Female`() {
+    fun `all 4 sample buttons resolve to 4 distinct MP3 files with distinct audio content`() {
         val root = assetsRoot()
         val languages = listOf("en", "ar", "ur")
-        val genders = listOf("male" to "audio/voice-pack-preview", "female" to "audio/voice-pack-female")
+        val packDir = "audio/voice-pack-preview"
 
-        for ((gender, packDir) in genders) {
+        run {
             for (lang in languages) {
                 val expectedSamples = mapOf(
                     "before_azan" to "$packDir/$lang/before_azan_asr_10.mp3",
@@ -89,11 +89,11 @@ class VoiceAssetsAndResolutionTest {
                 val hashes = mutableMapOf<String, String>()
                 for ((kind, relPath) in expectedSamples) {
                     val file = File(root, relPath)
-                    assertTrue("Sample missing for $gender/$lang/$kind: ${file.path}", file.exists())
+                    assertTrue("Sample missing for $lang/$kind: ${file.path}", file.exists())
                     val hash = sha256(file)
                     for ((otherKind, otherHash) in hashes) {
                         assertNotEquals(
-                            "Sample audio for $gender/$lang/$kind must not be identical to $otherKind",
+                            "Sample audio for $lang/$kind must not be identical to $otherKind",
                             otherHash,
                             hash
                         )

@@ -9,10 +9,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -426,6 +428,280 @@ fun MosqueBackdrop(
             ),
             topLeft = Offset(0f, sy(130f)),
             size = Size(w, sy(260f) - sy(130f))
+        )
+    }
+}
+
+/**
+ * Mosque silhouette without its own sky background or solid ground fade.
+ * Pair with PrayerSkyBackground and Modifier.fadeOutBottom().
+ */
+@Composable
+fun MosqueSilhouette(
+    modifier: Modifier = Modifier,
+    activeSky: Prayer = Prayer.ISHA,
+) {
+    val theme = SanctuarySkyThemes.forPrayer(activeSky)
+    val animSpec = tween<Color>(durationMillis = 800)
+    val domeColor by animateColorAsState(theme.domeColor, animationSpec = animSpec, label = "dome")
+    val domeMidColor by animateColorAsState(theme.domeMidColor, animationSpec = animSpec, label = "domeMid")
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val horizonBottom = h
+        val mosqueTop = h * 0.14f
+
+        // Twinkling Starfield for Night/Dawn
+        if (theme.starsOpacity > 0.01f) {
+            val stars = listOf(
+                Triple(0.11f, 0.06f, 2.2f),
+                Triple(0.26f, 0.11f, 1.6f),
+                Triple(0.41f, 0.05f, 2.6f),
+                Triple(0.60f, 0.09f, 1.9f),
+                Triple(0.77f, 0.055f, 2.3f),
+                Triple(0.89f, 0.12f, 1.8f),
+                Triple(0.18f, 0.16f, 1.4f),
+                Triple(0.52f, 0.14f, 1.5f)
+            )
+            stars.forEachIndexed { idx, (rx, ry, r) ->
+                val starColor = if (idx % 2 == 0) Color(0xFFFDE68A) else Color.White
+                drawCircle(
+                    color = starColor.copy(alpha = theme.starsOpacity * 0.85f),
+                    radius = r * (w / 420f).coerceAtLeast(0.8f),
+                    center = Offset(w * rx, horizonBottom * ry * 2.1f)
+                )
+            }
+        }
+
+        // Celestial Crescent or Glowing Sun
+        val celCenter = Offset(w * 0.5f, horizonBottom * 0.16f)
+        val celRadius = (w * 0.034f).coerceIn(12f, 26f)
+        if (theme.isCrescent) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0x45FBBF24), Color.Transparent),
+                    center = celCenter,
+                    radius = celRadius * 2.4f
+                ),
+                radius = celRadius * 2.4f,
+                center = celCenter
+            )
+            val outerPath = Path().apply {
+                addOval(Rect(center = celCenter, radius = celRadius))
+            }
+            val innerCenter = Offset(celCenter.x + celRadius * 0.34f, celCenter.y - celRadius * 0.22f)
+            val innerPath = Path().apply {
+                addOval(Rect(center = innerCenter, radius = celRadius * 0.86f))
+            }
+            val crescentPath = Path().apply {
+                op(outerPath, innerPath, PathOperation.Difference)
+            }
+            drawPath(
+                path = crescentPath,
+                color = Color(0xFFFDE68A).copy(alpha = 0.92f)
+            )
+        } else {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0x99FBBF24), Color(0x00FBBF24)),
+                    center = celCenter,
+                    radius = celRadius * 2.8f
+                ),
+                radius = celRadius * 2.8f,
+                center = celCenter
+            )
+            drawCircle(
+                brush = Brush.linearGradient(
+                    colors = listOf(Color(0xFFFEF3C7), Color(0xFFFCD34D))
+                ),
+                radius = celRadius * 0.95f,
+                center = celCenter
+            )
+        }
+
+        val scaleX = w / 420f
+        val scaleY = (horizonBottom - mosqueTop) / 260f
+        fun sx(x: Float) = x * scaleX
+        fun sy(y: Float) = mosqueTop + y * scaleY
+
+        // Distant Minarets & Domes (Back Horizon Layer)
+        val midFill = domeMidColor.copy(alpha = 0.6f)
+        drawRect(
+            color = midFill,
+            topLeft = Offset(sx(28f), sy(92f)),
+            size = Size(sx(8f), (sy(197f) - sy(92f)))
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(28f), sy(92f))
+                lineTo(sx(32f), sy(72f))
+                lineTo(sx(36f), sy(92f))
+                close()
+            },
+            color = midFill
+        )
+        drawRect(
+            color = midFill,
+            topLeft = Offset(sx(384f), sy(92f)),
+            size = Size(sx(8f), (sy(197f) - sy(92f)))
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(384f), sy(92f))
+                lineTo(sx(388f), sy(72f))
+                lineTo(sx(392f), sy(92f))
+                close()
+            },
+            color = midFill
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(52f), sy(185f))
+                quadraticTo(sx(85f), sy(135f), sx(118f), sy(185f))
+                close()
+            },
+            color = midFill
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(302f), sy(185f))
+                quadraticTo(sx(335f), sy(135f), sx(368f), sy(185f))
+                close()
+            },
+            color = midFill
+        )
+
+        // Foreground Grand Mosque Silhouette
+        val goldFinial = Color(0xFFFBBF24)
+
+        // Left Minaret
+        drawRect(color = domeColor, topLeft = Offset(sx(68f), sy(52f)), size = Size(sx(13f), sy(212f) - sy(52f)))
+        drawRoundRect(
+            color = domeColor,
+            topLeft = Offset(sx(65f), sy(80f)),
+            size = Size(sx(19f), 3.5f * scaleY),
+            cornerRadius = CornerRadius(1.5f * scaleX, 1.5f * scaleY)
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(68f), sy(52f))
+                quadraticTo(sx(74.5f), sy(28f), sx(81f), sy(52f))
+                close()
+            },
+            color = domeColor
+        )
+        drawLine(
+            color = goldFinial,
+            start = Offset(sx(74.5f), sy(18f)),
+            end = Offset(sx(74.5f), sy(30f)),
+            strokeWidth = (1.6f * scaleX).coerceAtLeast(2f),
+            cap = StrokeCap.Round
+        )
+
+        // Right Minaret
+        drawRect(color = domeColor, topLeft = Offset(sx(339f), sy(52f)), size = Size(sx(13f), sy(212f) - sy(52f)))
+        drawRoundRect(
+            color = domeColor,
+            topLeft = Offset(sx(336f), sy(80f)),
+            size = Size(sx(19f), 3.5f * scaleY),
+            cornerRadius = CornerRadius(1.5f * scaleX, 1.5f * scaleY)
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(339f), sy(52f))
+                quadraticTo(sx(345.5f), sy(28f), sx(352f), sy(52f))
+                close()
+            },
+            color = domeColor
+        )
+        drawLine(
+            color = goldFinial,
+            start = Offset(sx(345.5f), sy(18f)),
+            end = Offset(sx(345.5f), sy(30f)),
+            strokeWidth = (1.6f * scaleX).coerceAtLeast(2f),
+            cap = StrokeCap.Round
+        )
+
+        // Central Grand Dome
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(140f), sy(168f))
+                cubicTo(sx(140f), sy(106f), sx(185f), sy(75f), sx(210f), sy(56f))
+                cubicTo(sx(235f), sy(75f), sx(280f), sy(106f), sx(280f), sy(168f))
+                close()
+            },
+            color = domeColor,
+            style = Fill
+        )
+        drawLine(
+            color = goldFinial,
+            start = Offset(sx(210f), sy(38f)),
+            end = Offset(sx(210f), sy(57f)),
+            strokeWidth = (2.0f * scaleX).coerceAtLeast(2.5f),
+            cap = StrokeCap.Round
+        )
+        drawCircle(
+            color = goldFinial,
+            radius = (2.4f * scaleX).coerceAtLeast(3f),
+            center = Offset(sx(210f), sy(46f))
+        )
+
+        // Flanking Domes
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(94f), sy(175f))
+                cubicTo(sx(94f), sy(140f), sx(120f), sy(124f), sx(135f), sy(113f))
+                cubicTo(sx(150f), sy(124f), sx(174f), sy(140f), sx(174f), sy(175f))
+                close()
+            },
+            color = domeColor
+        )
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(246f), sy(175f))
+                cubicTo(sx(246f), sy(140f), sx(270f), sy(124f), sx(285f), sy(113f))
+                cubicTo(sx(300f), sy(124f), sx(326f), sy(140f), sx(326f), sy(175f))
+                close()
+            },
+            color = domeColor
+        )
+
+        // Sanctuary Wall (extends to bottom of canvas so fadeOutBottom() fades it smoothly into the sky)
+        drawRect(
+            color = domeColor,
+            topLeft = Offset(0f, sy(165f)),
+            size = Size(w, sy(260f) - sy(165f))
+        )
+
+        // Subtle Glowing Arched Sanctuary Windows
+        val windowBrush = Brush.verticalGradient(
+            colors = listOf(Color(0xD9FDE68A), Color(0x33D97706)),
+            startY = sy(142f),
+            endY = sy(196f)
+        )
+        listOf(190f to 152f, 206f to 150f, 222f to 152f).forEach { (wx, wy) ->
+            drawPath(
+                path = Path().apply {
+                    moveTo(sx(wx), sy(wy))
+                    quadraticTo(sx(wx + 4f), sy(wy - 8f), sx(wx + 8f), sy(wy))
+                    lineTo(sx(wx + 8f), sy(160f))
+                    lineTo(sx(wx), sy(160f))
+                    close()
+                },
+                brush = windowBrush
+            )
+        }
+        drawPath(
+            path = Path().apply {
+                moveTo(sx(200f), sy(176f))
+                quadraticTo(sx(210f), sy(162f), sx(220f), sy(176f))
+                lineTo(sx(220f), sy(196f))
+                lineTo(sx(200f), sy(196f))
+                close()
+            },
+            brush = windowBrush,
+            alpha = 0.7f
         )
     }
 }
