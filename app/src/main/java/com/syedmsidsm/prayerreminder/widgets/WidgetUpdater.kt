@@ -8,10 +8,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.util.SizeF
 import android.widget.RemoteViews
 import java.time.LocalDateTime
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 object WidgetUpdater {
     private val PROVIDERS = listOf(
@@ -20,28 +22,43 @@ object WidgetUpdater {
         LargeWidgetProvider::class.java to WidgetSize.LARGE
     )
 
+    private fun extractBoundsDp(options: Bundle): Pair<Int, Int> {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            @Suppress("DEPRECATION")
+            val sizes = options.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+            val portrait = sizes?.firstOrNull { it.width > 0f && it.height > 0f }
+            if (portrait != null) {
+                return portrait.width.roundToInt() to portrait.height.roundToInt()
+            }
+        }
+        val w = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+        val maxH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        val minH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+        val h = if (maxH > 0) maxH else minH
+        return w to h
+    }
+
     /** Call this from your app whenever language, location or prayer settings change. */
     fun updateAll(context: Context) {
         val mgr = AppWidgetManager.getInstance(context)
         for ((cls, size) in PROVIDERS) {
             for (id in mgr.getAppWidgetIds(ComponentName(context, cls))) {
-                val h = mgr.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-                mgr.updateAppWidget(id, WidgetRenderer.render(context, size, h))
+                val (w, h) = extractBoundsDp(mgr.getAppWidgetOptions(id))
+                mgr.updateAppWidget(id, WidgetRenderer.render(context, size, heightDp = h, widthDp = w))
             }
         }
 
         val adaptive = ComponentName(context, AdaptiveWidgetProvider::class.java)
         for (id in mgr.getAppWidgetIds(adaptive)) {
             val o = mgr.getAppWidgetOptions(id)
-            val w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 110)
-            val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110)
+            val (w, h) = extractBoundsDp(o)
             val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 // Android 12+: the launcher swaps layouts instantly while the user drags.
                 RemoteViews(
                     mapOf(
-                        SizeF(110f, 110f) to WidgetRenderer.render(context, WidgetSize.SMALL, 110),
-                        SizeF(250f, 110f) to WidgetRenderer.render(context, WidgetSize.MEDIUM, 110),
-                        SizeF(250f, 250f) to WidgetRenderer.render(context, WidgetSize.LARGE, 250)
+                        SizeF(110f, 110f) to WidgetRenderer.render(context, WidgetSize.SMALL, heightDp = 221, widthDp = 125),
+                        SizeF(250f, 110f) to WidgetRenderer.render(context, WidgetSize.MEDIUM, heightDp = 221, widthDp = 480),
+                        SizeF(250f, 250f) to WidgetRenderer.render(context, WidgetSize.LARGE, heightDp = 458, widthDp = 267)
                     )
                 )
             } else {
@@ -50,7 +67,7 @@ object WidgetUpdater {
                     w >= 230 -> WidgetSize.MEDIUM
                     else -> WidgetSize.SMALL
                 }
-                WidgetRenderer.render(context, size, h)
+                WidgetRenderer.render(context, size, heightDp = h, widthDp = w)
             }
             mgr.updateAppWidget(id, views)
         }
@@ -88,6 +105,7 @@ object WidgetScheduler {
             val s = PrayerDataSource.scheduleFor(ctx, d)
             s.slots.forEach {
                 times += LocalDateTime.of(d, it.adhan)
+                times += LocalDateTime.of(d, it.adhan).minusHours(1)
                 it.namaz?.let { n -> times += LocalDateTime.of(d, n) }
             }
             Sky.boundaries(s).forEach { times += LocalDateTime.of(d, it) }

@@ -1,60 +1,548 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
-    tools:ignore="SpUsage,HardcodedText">
-<ImageView android:id="@+id/sky_bg" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/sky_dusk" android:importantForAccessibility="no" />
-<ImageView android:id="@+id/sky_stars" android:layout_width="100dp" android:layout_height="56dp" android:layout_gravity="top|end" android:layout_marginTop="34dp" android:scaleType="fitXY" android:src="@drawable/ic_stars" android:importantForAccessibility="no" />
-<ImageView android:id="@+id/sky_body" android:layout_width="34dp" android:layout_height="34dp" android:layout_gravity="top|end" android:layout_marginTop="36dp" android:layout_marginEnd="18dp" android:src="@drawable/ic_sun_warm" android:importantForAccessibility="no" />
-<LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="14dp" >
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" >
-<TextView android:id="@+id/date_en" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Sunday, 15 Nov 2026" android:textColor="#FFFFFF" android:textSize="11dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="8dp" android:autoSizeMaxTextSize="11dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/date_hijri" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4 Jumada al-Akhirah 1448" android:textColor="#FFFFFF" android:textSize="11dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:gravity="end" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="8dp" android:autoSizeMaxTextSize="11dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-<FrameLayout android:layout_width="match_parent" android:layout_height="8dp" />
-<TextView android:id="@+id/next_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="NEXT PRAYER" android:textColor="#E6FFFFFF" android:textSize="9dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:textAllCaps="true" android:letterSpacing="0.06" android:layout_marginEnd="56dp"/>
-<TextView android:id="@+id/next_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Maghrib" android:textColor="#FFFFFF" android:textSize="26dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="16dp" android:autoSizeMaxTextSize="26dp" android:autoSizeStepGranularity="1dp" android:layout_marginEnd="56dp"/>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" >
-<TextView android:id="@+id/in_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="in" android:textColor="#FFFFFF" android:textSize="13dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" />
-<Chronometer android:id="@+id/countdown" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0:36:12" android:textColor="#FFFFFF" android:textSize="13dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:layout_marginStart="4dp"/>
-</LinearLayout>
-<ProgressBar style="?android:attr/progressBarStyleHorizontal" android:id="@+id/progress" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="8dp" android:max="1000" android:progress="650" android:progressDrawable="@drawable/progress_sky" />
-<FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_glass" android:padding="6dp" >
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingStart="6dp" android:paddingEnd="6dp" android:layout_marginBottom="2dp">
-<TextView android:id="@+id/h_prayer" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="PRAYER" android:textColor="#E6FFFFFF" android:textSize="9dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textAllCaps="true" android:letterSpacing="0.06" />
-<TextView android:id="@+id/h_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="ADHAN" android:textColor="#E6FFFFFF" android:textSize="9dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textAllCaps="true" android:letterSpacing="0.06" />
-<TextView android:id="@+id/h_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="NAMAZ" android:textColor="#E6FFFFFF" android:textSize="9dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textAllCaps="true" android:letterSpacing="0.06" />
-</LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:background="@drawable/bg_row" android:padding="6dp" android:id="@+id/r1" android:layout_marginTop="1dp">
-<TextView android:id="@+id/r1_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="Fajr" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r1_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5:06 AM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r1_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5:21 AM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:background="@drawable/bg_row" android:padding="6dp" android:id="@+id/r2" android:layout_marginTop="1dp">
-<TextView android:id="@+id/r2_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="Sunrise" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r2_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="6:17 AM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r2_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="—" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:background="@drawable/bg_row" android:padding="6dp" android:id="@+id/r3" android:layout_marginTop="1dp">
-<TextView android:id="@+id/r3_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="Dhuhr" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r3_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="12:10 PM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r3_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="12:25 PM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:background="@drawable/bg_row" android:padding="6dp" android:id="@+id/r4" android:layout_marginTop="1dp">
-<TextView android:id="@+id/r4_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="Asr" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r4_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3:32 PM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r4_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3:45 PM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:background="@drawable/bg_next_row" android:padding="6dp" android:id="@+id/r5" android:layout_marginTop="1dp">
-<TextView android:id="@+id/r5_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="Maghrib" android:textColor="#1A1F3C" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r5_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5:56 PM" android:textColor="#1A1F3C" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r5_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5:58 PM" android:textColor="#1A1F3C" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:background="@drawable/bg_row" android:padding="6dp" android:id="@+id/r6" android:layout_marginTop="1dp">
-<TextView android:id="@+id/r6_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:text="Isha" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r6_adhan" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="7:12 PM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-<TextView android:id="@+id/r6_namaz" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="7:27 PM" android:textColor="#FFFFFF" android:textSize="12dp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:textStyle="bold" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9dp" android:autoSizeMaxTextSize="12dp" android:autoSizeStepGranularity="1dp" />
-</LinearLayout>
-</LinearLayout>
-</LinearLayout>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/sky_dusk"
+    android:clipToOutline="true"
+    tools:ignore="HardcodedText,UnusedAttribute">
+
+    <ImageView
+        android:id="@+id/sky_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:importantForAccessibility="no" />
+
+    <ImageView
+        android:id="@+id/sky_stars"
+        android:layout_width="100dp"
+        android:layout_height="56dp"
+        android:layout_gravity="top|end"
+        android:visibility="gone"
+        android:importantForAccessibility="no" />
+
+    <ImageView
+        android:id="@+id/sky_body"
+        android:layout_width="27dp"
+        android:layout_height="27dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="17dp"
+        android:layout_marginEnd="17dp"
+        android:src="@drawable/ic_sun_warm"
+        android:importantForAccessibility="no" />
+
+    <LinearLayout
+        android:id="@+id/content_box"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="18dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:id="@+id/header_block"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="36dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/date_en"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sunday, 15 Nov 2026"
+                android:textColor="#FFFFFF"
+                android:textSize="12.5sp"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"
+                android:textFontWeight="700"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="none" />
+
+            <TextView
+                android:id="@+id/date_hijri"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="5 Jumada al-Akhirah 1448"
+                android:textColor="#CCFFFFFF"
+                android:textSize="9.8sp"
+                android:fontFamily="sans-serif-medium"
+                android:textFontWeight="600"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="none" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/next_block"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginEnd="36dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/next_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="NEXT PRAYER"
+                android:textColor="#BFFFFFFF"
+                android:textSize="8.8sp"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"
+                android:textFontWeight="700"
+                android:textAllCaps="true"
+                android:letterSpacing="0.14"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="none" />
+
+            <TextView
+                android:id="@+id/next_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Maghrib"
+                android:textColor="#FFFFFF"
+                android:textSize="35sp"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"
+                android:textFontWeight="800"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="none" />
+
+            <Chronometer
+                android:id="@+id/countdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="in 00:11"
+                android:textColor="#F2FFFFFF"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
+                android:textFontWeight="600"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="none" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="14dp"
+            android:max="1000"
+            android:progress="920"
+            android:progressDrawable="@drawable/progress_sky" />
+
+        <LinearLayout
+            android:id="@+id/table_box"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_glass"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <LinearLayout
+                android:id="@+id/table_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="5dp">
+
+                <TextView
+                    android:id="@+id/h_prayer"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="PRAYER"
+                    android:textColor="#BFFFFFFF"
+                    android:textSize="8.4sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.12"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/h_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="ADHAN"
+                    android:textColor="#BFFFFFFF"
+                    android:textSize="8.4sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.12"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/h_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="NAMAZ"
+                    android:textColor="#BFFFFFFF"
+                    android:textSize="8.4sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.12"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/r1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_row"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:id="@+id/r1_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="Fajr"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r1_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="5:13 AM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r1_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="5:28 AM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/r2"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_row"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:id="@+id/r2_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="Sunrise"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r2_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="6:31 AM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r2_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="—"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/r3"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_row"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:id="@+id/r3_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="Dhuhr"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r3_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="12:22 PM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r3_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="12:37 PM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/r4"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_row"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:id="@+id/r4_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="Asr"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r4_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="3:36 PM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r4_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="3:51 PM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/r5"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_next_row"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:id="@+id/r5_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="Maghrib"
+                    android:textColor="#2A1442"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r5_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="6:04 PM"
+                    android:textColor="#2A1442"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r5_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="6:19 PM"
+                    android:textColor="#2A1442"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/r6"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_row"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:id="@+id/r6_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:text="Isha"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif"
+                    android:textStyle="bold"
+                    android:textFontWeight="700"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r6_adhan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="7:11 PM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+
+                <TextView
+                    android:id="@+id/r6_namaz"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="7:26 PM"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="600"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
 </FrameLayout>
