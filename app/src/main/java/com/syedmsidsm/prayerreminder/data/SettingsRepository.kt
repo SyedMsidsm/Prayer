@@ -152,12 +152,10 @@ class SettingsRepository(
         dataStore.edit { it[KEY_VOICE_LANGUAGE] = lang }
     }
 
-    val voiceGender: Flow<String> = dataStore.data.map { prefs ->
-        prefs[KEY_VOICE_GENDER] ?: "male"
-    }
+    val voiceGender: Flow<String> = dataStore.data.map { "male" }
 
     suspend fun setVoiceGender(gender: String) {
-        dataStore.edit { it[KEY_VOICE_GENDER] = gender }
+        dataStore.edit { it[KEY_VOICE_GENDER] = "male" }
     }
 
     val voiceChime: Flow<Boolean> = dataStore.data.map { prefs ->

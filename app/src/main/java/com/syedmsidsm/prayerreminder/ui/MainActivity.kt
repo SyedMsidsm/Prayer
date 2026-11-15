@@ -13,6 +13,13 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -39,6 +46,7 @@ import com.syedmsidsm.prayerreminder.ui.home.HomeScreen
 import com.syedmsidsm.prayerreminder.ui.home.HomeViewModel
 import com.syedmsidsm.prayerreminder.ui.importing.ImportReviewScreen
 import com.syedmsidsm.prayerreminder.ui.importing.ImportSavedScreen
+import com.syedmsidsm.prayerreminder.ui.landing.LandingScreen
 import com.syedmsidsm.prayerreminder.ui.manualentry.ManualEntryScreen
 import com.syedmsidsm.prayerreminder.ui.onboarding.BrandIntroScreen
 import com.syedmsidsm.prayerreminder.ui.onboarding.OnboardingScreen
@@ -54,6 +62,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 enum class Screen {
+    LANDING,
     HOME,
     SETTINGS,
     JAMAAT_SETTINGS,
@@ -122,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         homeViewModel
         settingsViewModel
 
-        // Dismiss system splash immediately - brand landing MP4 animation plays directly in BrandIntroScreen
+        // Dismiss system splash immediately - brand landing animation plays directly in LandingScreen
         splash.setKeepOnScreenCondition { false }
         splash.setOnExitAnimationListener { provider ->
             provider.remove()
@@ -171,13 +180,13 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private fun MainAppNavigation() {
         val isOnboardingDone by settingsViewModel.isOnboardingDone.collectAsState()
-        var currentScreen by remember {
-            mutableStateOf(Screen.BRAND_INTRO)
+        var currentScreen by rememberSaveable {
+            mutableStateOf(Screen.LANDING)
         }
 
         LaunchedEffect(isOnboardingDone) {
             if (isOnboardingDone == false && currentScreen == Screen.HOME) {
-                currentScreen = Screen.BRAND_INTRO
+                currentScreen = Screen.LANDING
             }
         }
 
@@ -246,7 +255,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        BackHandler(enabled = currentScreen != Screen.HOME) {
+        BackHandler(enabled = currentScreen != Screen.HOME && currentScreen != Screen.LANDING) {
             currentScreen = when (currentScreen) {
                 Screen.JAMAAT_SETTINGS,
                 Screen.REMINDERS_VOICE_SETTINGS,
@@ -266,20 +275,44 @@ class MainActivity : AppCompatActivity() {
 
                 Screen.IMPORT_SAVED -> Screen.HOME
                 Screen.SETTINGS -> Screen.HOME
-                Screen.ONBOARDING, Screen.BRAND_INTRO -> Screen.HOME
+                Screen.ONBOARDING, Screen.BRAND_INTRO, Screen.LANDING -> Screen.HOME
                 Screen.HOME -> Screen.HOME
                 else -> Screen.HOME
             }
         }
 
-        when (currentScreen) {
-            Screen.BRAND_INTRO -> {
-                BrandIntroScreen(
-                    onFinished = {
-                        currentScreen = if (isOnboardingDone == false) Screen.ONBOARDING else Screen.HOME
-                    }
-                )
-            }
+        AnimatedContent(
+            targetState = currentScreen,
+            transitionSpec = {
+                if (initialState == Screen.LANDING && targetState == Screen.HOME) {
+                    (fadeIn(animationSpec = tween(400, easing = FastOutSlowInEasing)) +
+                            slideInVertically(animationSpec = tween(400, easing = FastOutSlowInEasing)) { 40 })
+                        .togetherWith(fadeOut(animationSpec = tween(300)))
+                } else if (initialState == Screen.LANDING && targetState == Screen.ONBOARDING) {
+                    fadeIn(animationSpec = tween(400)).togetherWith(fadeOut(animationSpec = tween(300)))
+                } else {
+                    fadeIn(animationSpec = tween(250)).togetherWith(fadeOut(animationSpec = tween(200)))
+                }
+            },
+            label = "ScreenTransition"
+        ) { screen ->
+            when (screen) {
+                Screen.LANDING -> {
+                    LandingScreen(
+                        onFinished = {
+                            currentScreen = if (settingsViewModel.isOnboardingDone.value == false) {
+                                Screen.ONBOARDING
+                            } else {
+                                Screen.HOME
+                            }
+                        }
+                    )
+                }
+                Screen.BRAND_INTRO -> {
+                    LandingScreen(
+                        onFinished = { currentScreen = Screen.ONBOARDING }
+                    )
+                }
             Screen.ONBOARDING -> {
                 OnboardingScreen(
                     viewModel = settingsViewModel,
@@ -419,4 +452,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+}
 }

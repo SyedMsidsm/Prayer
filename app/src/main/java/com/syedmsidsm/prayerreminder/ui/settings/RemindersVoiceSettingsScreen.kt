@@ -85,7 +85,6 @@ fun RemindersVoiceSettingsScreen(
 ) {
     val voiceEnabled by viewModel.voiceEnabled.collectAsState()
     val voiceLanguage by viewModel.voiceLanguage.collectAsState()
-    val voiceGender by viewModel.voiceGender.collectAsState()
     val voiceChime by viewModel.voiceChime.collectAsState()
     val voiceOnSilent by viewModel.voiceOnSilent.collectAsState()
 
@@ -290,55 +289,6 @@ fun RemindersVoiceSettingsScreen(
                             textPrimary = textPrimary,
                             modifier = Modifier.weight(1f),
                             onClick = { viewModel.setVoiceLanguage("en", playPreview = true) }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = glassBorder)
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = stringResource(R.string.voice),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        VoiceOptionChip(
-                            label = stringResource(R.string.voice_male),
-                            isSelected = voiceGender.lowercase() == "male",
-                            isPlaying = isPlaying && playingKind == "voice_male",
-                            unselectedBg = chipUnselectedBg,
-                            border = glassBorder,
-                            textPrimary = textPrimary,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                if (isPlaying && playingKind == "voice_male") {
-                                    viewModel.stopSample()
-                                } else {
-                                    viewModel.setVoiceGender("male", playPreview = true)
-                                }
-                            }
-                        )
-                        VoiceOptionChip(
-                            label = stringResource(R.string.voice_female),
-                            isSelected = voiceGender.lowercase() == "female",
-                            isPlaying = isPlaying && playingKind == "voice_female",
-                            unselectedBg = chipUnselectedBg,
-                            border = glassBorder,
-                            textPrimary = textPrimary,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                if (isPlaying && playingKind == "voice_female") {
-                                    viewModel.stopSample()
-                                } else {
-                                    viewModel.setVoiceGender("female", playPreview = true)
-                                }
-                            }
                         )
                     }
                 }

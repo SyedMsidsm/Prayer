@@ -264,8 +264,7 @@ class AudioSamplePlayer(private val context: Context) {
             else -> "before_azan_${prayer}_10.mp3"
         }
 
-        val isFemale = gender.lowercase() == "female"
-        val folder = if (isFemale) "voice-pack-female" else "voice-pack-preview"
+        val folder = "voice-pack-preview"
 
         val packPath = "audio/$folder/$lang/$filename"
         if (assetExists(packPath)) {

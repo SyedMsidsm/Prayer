@@ -141,7 +141,7 @@ class VoicePlaybackService : Service() {
         }
 
         val language = intent.getStringExtra(EXTRA_LANGUAGE) ?: "ur"
-        val gender = intent.getStringExtra(EXTRA_GENDER) ?: "male"
+        val gender = "male"
         val kind = intent.getStringExtra(EXTRA_KIND) ?: "before_azan"
         val prayer = intent.getStringExtra(EXTRA_PRAYER) ?: "asr"
         val minutes = intent.getIntExtra(EXTRA_MINUTES, 10)
@@ -429,8 +429,7 @@ class VoicePlaybackService : Service() {
             else -> "before_azan_${prayerName}_10.mp3"
         }
 
-        val isFemale = gender.lowercase() == "female"
-        val folder = if (isFemale) "voice-pack-female" else "voice-pack-preview"
+        val folder = "voice-pack-preview"
 
         val packPath = "audio/$folder/$lang/$filename"
         if (assetExists(packPath)) {
