@@ -17,6 +17,7 @@
     <string name="widget_small_name">الصلاة · صغير</string>
     <string name="widget_medium_name">الصلاة · متوسط</string>
     <string name="widget_large_name">الصلاة · كبير</string>
+    <string name="widget_adaptive_name">الصلاة · قابل لتغيير الحجم</string>
     <string name="widget_small_desc">الصلاة القادمة وأوقات الأذان والإقامة</string>
     <string name="widget_medium_desc">الصلوات الخمس مع أوقات الأذان والإقامة</string>
     <string name="widget_large_desc">جدول اليوم كاملاً والعد التنازلي والتاريخان</string>

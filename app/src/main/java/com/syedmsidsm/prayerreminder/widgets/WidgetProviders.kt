@@ -19,3 +19,4 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
 class SmallWidgetProvider : BaseWidgetProvider()
 class MediumWidgetProvider : BaseWidgetProvider()
 class LargeWidgetProvider : BaseWidgetProvider()
+class AdaptiveWidgetProvider : BaseWidgetProvider()

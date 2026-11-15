@@ -17,6 +17,7 @@
     <string name="widget_small_name">Prayer · Small</string>
     <string name="widget_medium_name">Prayer · Medium</string>
     <string name="widget_large_name">Prayer · Large</string>
+    <string name="widget_adaptive_name">Prayer · Resizable</string>
     <string name="widget_small_desc">Next prayer, adhan and namaz times, with the sky of the day</string>
     <string name="widget_medium_desc">All five prayers with adhan and namaz times</string>
     <string name="widget_large_desc">Full day schedule, countdown and both dates</string>

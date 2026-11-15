@@ -8,6 +8,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.SizeF
+import android.widget.RemoteViews
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -27,12 +29,42 @@ object WidgetUpdater {
                 mgr.updateAppWidget(id, WidgetRenderer.render(context, size, h))
             }
         }
+
+        val adaptive = ComponentName(context, AdaptiveWidgetProvider::class.java)
+        for (id in mgr.getAppWidgetIds(adaptive)) {
+            val o = mgr.getAppWidgetOptions(id)
+            val w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 110)
+            val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110)
+            val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Android 12+: the launcher swaps layouts instantly while the user drags.
+                RemoteViews(
+                    mapOf(
+                        SizeF(110f, 110f) to WidgetRenderer.render(context, WidgetSize.SMALL, 110),
+                        SizeF(250f, 110f) to WidgetRenderer.render(context, WidgetSize.MEDIUM, 110),
+                        SizeF(250f, 250f) to WidgetRenderer.render(context, WidgetSize.LARGE, 250)
+                    )
+                )
+            } else {
+                val size = when {
+                    h >= 230 -> WidgetSize.LARGE
+                    w >= 230 -> WidgetSize.MEDIUM
+                    else -> WidgetSize.SMALL
+                }
+                WidgetRenderer.render(context, size, h)
+            }
+            mgr.updateAppWidget(id, views)
+        }
+
         WidgetScheduler.scheduleNext(context)
     }
 
     fun hasAnyWidget(context: Context): Boolean {
         val mgr = AppWidgetManager.getInstance(context)
-        return PROVIDERS.any { (cls, _) -> mgr.getAppWidgetIds(ComponentName(context, cls)).isNotEmpty() }
+        val hasFixed = PROVIDERS.any { (cls, _) ->
+            mgr.getAppWidgetIds(ComponentName(context, cls)).isNotEmpty()
+        }
+        val hasAdaptive = mgr.getAppWidgetIds(ComponentName(context, AdaptiveWidgetProvider::class.java)).isNotEmpty()
+        return hasFixed || hasAdaptive
     }
 }
 
